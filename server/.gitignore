@@ -1,0 +1,15 @@
+# 忽略依赖目录
+node_modules/
+bower_components/
+vendor/
+dist/
+build/
+out/
+*.log
+
+# 忽略本地环境变量文件
+.env
+.env.local
+.env.development
+.env.test
+.env.production
