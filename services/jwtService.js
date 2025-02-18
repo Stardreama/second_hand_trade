@@ -6,11 +6,6 @@ const generateToken = (user) => {
     expiresIn: config.jwt.expiresIn,
   });
 };
-const RefreshToken = (user) => {
-  return jwt.sign({ student_id: user.student_id }, config.jwt.secret, {
-    expiresIn: config.jwt.refreshTokenExpiresIn,
-  });
-};
 
 const verifyToken = (token) => {
   try {
@@ -20,4 +15,4 @@ const verifyToken = (token) => {
   }
 };
 
-module.exports = { generateToken, RefreshToken, verifyToken };
+module.exports = { generateToken, verifyToken };

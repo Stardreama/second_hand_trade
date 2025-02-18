@@ -63,4 +63,21 @@ const login = (req, res) => {
   });
 };
 
-module.exports = { register, login };
+// 验证JWT
+const authenticateJWT = (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1]; // 获取Authorization头部的Token
+
+  if (!token) {
+    return res.status(401).json({ message: "没有提供JWT" });
+  }
+
+  const userData = jwtService.verifyToken(token);
+  if (!userData) {
+    return res.status(403).json({ message: "无效的JWT" });
+  }
+
+  // 将用户数据附加到请求对象上，供后续中间件使用
+  req.user = userData;
+  next();
+};
+module.exports = { register, login, authenticateJWT };

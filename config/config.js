@@ -18,8 +18,7 @@ db.connect((err) => {
 // JWT 配置
 const jwt = {
   secret: "secret_key", // 用于JWT的签名密钥
-  expiresIn: "1h", // JWT有效期
-  refreshTokenExpiresIn: "7d", // 刷新Token有效期
+  expiresIn: "5h", // JWT有效期
 };
 
 module.exports = { db, jwt };
