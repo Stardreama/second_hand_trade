@@ -1,13 +1,13 @@
 const mysql = require("mysql2");
 
-const config = mysql.createConnection({
+const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "123456",
   database: "second_hand_trade",
 });
 
-config.connect((err) => {
+db.connect((err) => {
   if (err) {
     console.error("数据库连接失败:", err);
     process.exit(1);
@@ -15,4 +15,11 @@ config.connect((err) => {
   console.log("数据库连接成功");
 });
 
-module.exports = config;
+// JWT 配置
+const jwt = {
+  secret: "secret_key", // 用于JWT的签名密钥
+  expiresIn: "1h", // JWT有效期
+  refreshTokenExpiresIn: "7d", // 刷新Token有效期
+};
+
+module.exports = { db, jwt };
