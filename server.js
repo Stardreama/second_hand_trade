@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const bodyParser = require("body-parser");
-const authRoutes = require("./routes/authRoutes");
+const authRoutes = require("./routes/index");
 
 app.use(bodyParser.json()); // 解析JSON格式的请求体
 
