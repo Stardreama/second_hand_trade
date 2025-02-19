@@ -23,4 +23,30 @@ const createProduct = (req, res) => {
   });
 };
 
-module.exports = { createProduct };
+// 搜索商品
+const searchProduct = (req, res) => {
+  const { keyword } = req.query;
+
+  if (!keyword) {
+    return res.status(400).json({ message: "缺少搜索关键词" });
+  }
+
+  // 根据关键词查询商品
+  Product.search(keyword, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "数据库错误" });
+    }
+
+    // 返回匹配的商品列表
+    const products = results.map((product) => ({
+      product_id: product.id,
+      price: product.price,
+      description: product.description,
+      image: product.image, // 假设商品图片是一个URL
+    }));
+
+    res.status(200).json(products);
+  });
+};
+
+module.exports = { createProduct, searchProduct };

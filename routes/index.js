@@ -14,5 +14,5 @@ router.post(
   authController.authenticateJWT,
   productController.createProduct
 );
-
+router.get("/products/search", productController.searchProduct);
 module.exports = router;
