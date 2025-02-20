@@ -9,6 +9,7 @@ router.post("/api/login", authController.login);
 router.get("/protected", authController.authenticateJWT, (req, res) => {
   res.status(200).json({ message: "你已经成功通过JWT认证！" });
 });
+
 router.post(
   "/products",
   authController.authenticateJWT,
