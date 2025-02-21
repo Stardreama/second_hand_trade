@@ -1,17 +1,24 @@
+<template>
+  <div id="app">
+    <Header />
+    <router-view />
+    <Footer />
+  </div>
+</template>
+
 <script>
+import Header from './components/Header/Header.vue';
+import Footer from './components/Footer/Footer.vue';
+
 export default {
-  onLaunch: function () {
-    console.log('App Launch')
-  },
-  onShow: function () {
-    console.log('App Show')
-  },
-  onHide: function () {
-    console.log('App Hide')
-  },
-}
+  name: 'App',
+  components: {
+    Header,
+    Footer
+  }
+};
 </script>
 
 <style>
-/*每个页面公共css */
+/* 全局样式 */
 </style>
