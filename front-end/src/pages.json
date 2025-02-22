@@ -1,19 +1,51 @@
 {
-  "name": "frontend",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+  "pages": [
+    {
+      "path": "pages/Home/Home",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/Login/Login",
+      "style": {
+        "navigationBarTitleText": "登录页"
+      }
+    },
+    {
+      "path": "pages/Register/Register",
+      "style": {
+        "navigationBarTitleText": "注册页"
+      }
+    },
+    {
+      "path": "pages/ProductDetail/ProductDetail",
+      "style": {
+        "navigationBarTitleText": "商品详情页"
+      }
+    },
+    {
+      "path": "pages/Chat/Chat",
+      "style": {
+        "navigationBarTitleText": "聊天页"
+      }
+    },
+    {
+      "path": "pages/Order/Order",
+      "style": {
+        "navigationBarTitleText": "订单页"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
   },
-  "dependencies": {
-    "axios": "^0.21.1",
-    "vue": "^2.6.11",
-    "vue-router": "^3.2.0",
-    "vuex": "^3.4.0"
-  },
-  "devDependencies": {
-    "@vue/cli-service": "^4.5.0",
-    "vue-template-compiler": "^2.6.11"
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+    }
   }
 }
