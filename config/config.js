@@ -1,10 +1,17 @@
+require('dotenv').config();
+
+console.log('环境变量 DB_HOST:', process.env.DB_HOST);
+console.log('环境变量 DB_USER:', process.env.DB_USER);
+console.log('环境变量 DB_PASSWORD:', process.env.DB_PASSWORD);
+console.log('环境变量 DB_DATABASE:', process.env.DB_DATABASE);
+
 const mysql = require("mysql2");
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "123456",
-  database: "second_hand_trade",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
 });
 
 db.connect((err) => {
