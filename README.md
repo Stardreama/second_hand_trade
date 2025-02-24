@@ -400,6 +400,16 @@ CREATE TABLE messages (
 );
 ```
 
+### 5.env配置
+```
+DB_HOST=
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+```
+
+
+
 ## 六. 项目文件结构
 
 ```csharp
