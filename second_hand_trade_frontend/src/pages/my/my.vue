@@ -1,10 +1,7 @@
 <template>
   <view>
     <view class="UCenter-bg" catchtap="toMy_detail">
-      <image
-        src="https://image.weilanwl.com/color2.0/plugin/sylb2244.jpg"
-        class="png"
-      ></image>
+      <image src="../../static/img/avatar.jpg" class="png"></image>
       <view class="text-xl">
         <!-- <text>Amibition</text>   -->
       </view>

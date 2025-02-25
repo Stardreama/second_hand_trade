@@ -3,7 +3,7 @@
 		<!-- 内容 -->
 		<view class='pg'>
 		<view class='container bg-white'>
-		<view class='container-top'><image src='https://image.weilanwl.com/color2.0/plugin/sylb2244.jpg'> </image></view>
+		<view class='container-top'><image src='../../../static/img/avatar.jpg'></image></view>
 		
 		<view class='container-top_rigth'>
 		<view class='container-top_rigth_1'><text>【转卖】厨房下水道管道疏通剂方 【转卖】厨房下水道管道疏通剂方厨房下水道管道疏通剂方厨房下水道管道疏通剂方厨房下水道管道疏通剂方</text></view>

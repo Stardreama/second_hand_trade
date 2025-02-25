@@ -44,7 +44,7 @@
 		
 		<!-- 商品描述 -->
 		<view class='shoppin_detail bg-white'>
-		<view class='shoppin_detail_img'><image src='https://ss0.bdstatic.com/94oJfD_bAAcT8t7mm9GUKT-xh_/timg?image&quality=100&size=b4000_4000&sec=1560593578&di=c63122f96fa12927ad3e1fa3cd0c7768&src=http://hbimg.b0.upaiyun.com/a7cc4caad8efd98b9d318c7c17da9bf621c7fc286912c-XTy19U_fw658'></image></view>
+		<view class='shoppin_detail_img'><image src='../../../static/img/avatar.jpg'></image></view>
 		
 		<view class='shopping_detail '>
 		<view class='shopping_detail_title'>

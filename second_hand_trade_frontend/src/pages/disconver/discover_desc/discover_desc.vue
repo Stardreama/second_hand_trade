@@ -6,7 +6,7 @@
 		  <view class='user-top  padding-sm bg-white '>
 		
 		    <view class='user-top-1'>
-		      <image src='https://image.weilanwl.com/color2.0/plugin/sylb2244.jpg'></image>
+		      <image src='../../../static/img/avatar.jpg'></image>
 		    </view>
 		    <view class='user-top-2'>
 		      <view class='user-top-2_1'>

@@ -6,7 +6,7 @@
       <view class="cf padding-sm">
         <view class="radius fl padding-sm">
           <image
-            src="http://k.zol-img.com.cn/sjbbs/7692/a7691515_s.jpg"
+            src="../../../static/img/avatar.jpg"
           ></image>
           <view class="fr padding-name">
             <view>Amibition</view>

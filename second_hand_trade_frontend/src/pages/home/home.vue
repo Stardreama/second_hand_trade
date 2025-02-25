@@ -13,7 +13,7 @@
       <text class="cuIcon-search"></text>
       <input type="text" placeholder="搜索物品" confirm-type="search"></input>
     </view>
-  <view class="cu-avatar round search_img" style="background-image:url(https://image.weilanwl.com/img/square-2.jpg);"></view>
+  <view class="cu-avatar round search_img" style="background-image:url(../../static/img/avatar.jpg);"></view>
   </view>
 <!-- 搜索end -->
 

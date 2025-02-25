@@ -15,7 +15,7 @@
 	   
 	<view class='contianer shadow-warp bg-white' v-for="(item,index) in 10" :key="index">
 	<view class='contianer-title'>
-	<view class='contianer-title_image'> <image src='https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'></image></view>
+	<view class='contianer-title_image'> <image src='../../static/img/avatar.jpg'></image></view>
 	<view class='contianer-name'>Amibition</view>
 	</view>
 
@@ -64,7 +64,7 @@
 			return {
 				//图片
 				     imgArr: [
-				    'http://bpic.588ku.com/element_origin_min_pic/16/10/30/528aa13209e86d5d9839890967a6b9c1.jpg',
+				    '../../static/img/2.jpg',
 				  ],
 				  // end 
 				  
