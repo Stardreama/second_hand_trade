@@ -19,13 +19,13 @@
 
 
 <!-- 轮播图 -->
-<swiper class="screen-swiper square-dot " :indicator-dots="true" :circular="true"
+<!-- <swiper class="screen-swiper square-dot " :indicator-dots="true" :circular="true"
 		 :autoplay="true" interval="5000" duration="500">
 			<swiper-item v-for="(item,index) in swiperList" :key="index">
 				<image :src="item.url" mode="aspectFill" v-if="item.type=='image'"></image>
 				<video :src="item.url" autoplay loop muted :show-play-btn="false" :controls="false" objectFit="cover" v-if="item.type=='video'"></video>
 			</swiper-item>
-		</swiper>
+		</swiper> -->
 <!-- 轮播图end -->
 
 <!--头条滚动区域-->
@@ -44,10 +44,10 @@
 <!-- end -->
 
 <!-- 宫格列表 -->
- <view class="cu-list no-border grid  card-menu "  :class="['col-' + gridCol]" >
+<!-- <view class="cu-list no-border grid  card-menu "  :class="['col-' + gridCol]" >
     <view class="cu-item" v-for="(item,index) in iconList" :key="index" v-if="index<gridCol*2">
     <navigator :url="item.name == '全部分类' ? '/pages/home/home_classify/home_classify' : '/pages/home/home_grid/home_grid' "  :data-value='item.name' hover-class='none'>
-      <!-- <view class="cuIcon-{{item.icon}} text-{{item.color}}"> -->
+      
 	   <view :class=" ['cuIcon-' + item.icon,'text-'+item.color] " >
         <view class="cu-tag badge" v-if="item.badge!=0">
           <block v-if="item.badge!=1"> {{item.badge>99?"99+":item.badge}}</block>
@@ -56,7 +56,7 @@
       <text>{{item.name}}</text>
       </navigator>
     </view>
-  </view>
+  </view> -->
 <!-- 宫格列表end -->
 
 
@@ -155,40 +155,40 @@
 				 scrollTop:0,//屏幕位置
 				 TabCurTab:0,//吸附置顶的偏差值
 				 ceil_top:'',//导航条置顶高度
-				 // 轮播图
-				    cardCur: 0,
-				    swiperList: [{
-				      id: 0,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big84000.jpg'
-				    }, {
-				      id: 1,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big84001.jpg',
-				    }, {
-				      id: 2,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big39000.jpg'
-				    }, {
-				      id: 3,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'
-				    }, {
-				      id: 4,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big25011.jpg'
-				    }, {
-				      id: 5,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big21016.jpg'
-				    }, {
-				      id: 6,
-				      type: 'image',
-				      url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big99008.jpg'
-				    }],
-				    // 轮播图end
+				//  // 轮播图
+				//     cardCur: 0,
+				//     swiperList: [{
+				//       id: 0,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big84000.jpg'
+				//     }, {
+				//       id: 1,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big84001.jpg',
+				//     }, {
+				//       id: 2,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big39000.jpg'
+				//     }, {
+				//       id: 3,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'
+				//     }, {
+				//       id: 4,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big25011.jpg'
+				//     }, {
+				//       id: 5,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big21016.jpg'
+				//     }, {
+				//       id: 6,
+				//       type: 'image',
+				//       url: 'https://ossweb-img.qq.com/images/lol/web201310/skin/big99008.jpg'
+				//     }],
+				//     // 轮播图end
 					// 宫格列表
-					    iconList: [{
+					iconList: [{
 					      icon: 'cardboardfill',
 					      color: 'red',
 					      badge: 120,

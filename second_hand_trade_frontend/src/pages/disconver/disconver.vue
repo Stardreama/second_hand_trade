@@ -7,7 +7,7 @@
 	<!-- 导航条 -->
 
 	<!-- 轮播图 -->
-	<min-swiper></min-swiper>
+	<!-- <min-swiper></min-swiper> -->
 	<!-- end -->
 
    <!-- 内容 -->

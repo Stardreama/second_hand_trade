@@ -37,16 +37,20 @@
     // {
     // 	"path":"pages/home/home_grid/home_grid",
     // 	"style":{
-    // 		"navigationBarTitleText":"详细"
+    // 		"navigationBarTitleText":"分类详情"
     // 	}
-    // }
-    // ,{
+    // },
+    // {
     //     "path" : "pages/home/home_classify/home_classify",
-    //     "style" : {}
-    // }
+    //     "style" : {
+    //       "navigationBarTitleText": "全部分类"
+    //     }
+    // },
     {
         "path" : "pages/home/home_detail/home_detail",
-        "style" : {}
+        "style" : {
+          "navigationBarTitleText": "商品详情"
+        }
     },
     // ,{
     //     "path" : "pages/home/home_grid_detail/home_grid_detail",
@@ -54,12 +58,15 @@
     // }
     {
         "path" : "pages/home/confirm_order/confirm_order",
-        "style" : {}
+        "style" : {
+          "navigationBarTitleText": "确认订单"
+        }
     },
-    // ,{
-    //     "path" : "pages/home/order_detail/order_detail",
-    //     "style" : {}
-    // },
+    {
+        "path" : "pages/home/order_detail/order_detail",
+        "style" : {
+          "navigationBarTitleText": "订单详情"}
+    },
     {
       "path": "pages/disconver/discover_desc/discover_desc",
       "style": {
@@ -74,7 +81,9 @@
     },
     {
       "path": "pages/msg/msg_chat/msg_chat",
-      "style": {}
+      "style": {
+        "navigationBarTitleText": "用户名"
+      }
     },
     //// ,{
     ////     "path" : "pages/msg/msg_inform/msg_inform",
@@ -124,10 +133,23 @@
         "navigationBarTitleText": "收货地址"
       }
     },
+    
     {
       "path": "pages/my/my_feedback/my_feedback",
       "style": {
         "navigationBarTitleText": "意见反馈"
+      }
+    },
+    {
+      "path": "pages/my/my_detail/my_detail",
+      "style": {
+        "navigationBarTitleText": "用户详情"
+      }
+    },
+    {
+      "path": "pages/my/my_address/address_edit",
+      "style": {
+        "navigationBarTitleText": "编辑地址"
       }
     }
   ],
