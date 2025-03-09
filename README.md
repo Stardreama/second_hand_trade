@@ -1,1 +1,0 @@
-# second_hand_trade
