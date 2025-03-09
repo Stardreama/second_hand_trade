@@ -2,6 +2,14 @@
   "pages": [
     //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
     {
+      "path": "pages/auth/register",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationBarBackgroundColor": "#5677FC",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/home/home",
       "style": {
         "enablePullDownRefresh": true,
@@ -33,7 +41,15 @@
         "navigationBarTitleText": "我的"
       }
     },
-
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#5677FC",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    
     // {
     // 	"path":"pages/home/home_grid/home_grid",
     // 	"style":{

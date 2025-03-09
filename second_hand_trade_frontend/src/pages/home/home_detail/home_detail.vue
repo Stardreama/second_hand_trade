@@ -10,9 +10,9 @@
           ></image>
           <view class="fr padding-name">
             <view>Amibition</view>
-            <view>
+            <!-- <view>
               <text>发布于毕节</text>
-            </view>
+            </view> -->
           </view>
         </view>
         <view class="fr padding-time">
