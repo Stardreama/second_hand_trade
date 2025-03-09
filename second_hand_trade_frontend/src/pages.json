@@ -1,0 +1,212 @@
+{
+  "pages": [
+    //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+    {
+      "path": "pages/auth/register",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationBarBackgroundColor": "#5677FC",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/home/home",
+      "style": {
+        "enablePullDownRefresh": true,
+        "navigationBarTitleText": "主页"
+      }
+    },
+    {
+      "path": "pages/disconver/disconver",
+      "style": {
+        "enablePullDownRefresh": true,
+        "navigationBarTitleText": "发现"
+      }
+    },
+    {
+      "path": "pages/issue/issue",
+      "style": {
+        "navigationBarTitleText": "发布"
+      }
+    },
+    {
+      "path": "pages/msg/msg",
+      "style": {
+        "navigationBarTitleText": "消息"
+      }
+    },
+    {
+      "path": "pages/my/my",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationBarBackgroundColor": "#5677FC",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    
+    // {
+    // 	"path":"pages/home/home_grid/home_grid",
+    // 	"style":{
+    // 		"navigationBarTitleText":"分类详情"
+    // 	}
+    // },
+    // {
+    //     "path" : "pages/home/home_classify/home_classify",
+    //     "style" : {
+    //       "navigationBarTitleText": "全部分类"
+    //     }
+    // },
+    {
+        "path" : "pages/home/home_detail/home_detail",
+        "style" : {
+          "navigationBarTitleText": "商品详情"
+        }
+    },
+    // ,{
+    //     "path" : "pages/home/home_grid_detail/home_grid_detail",
+    //     "style" : {}
+    // }
+    {
+        "path" : "pages/home/confirm_order/confirm_order",
+        "style" : {
+          "navigationBarTitleText": "确认订单"
+        }
+    },
+    {
+        "path" : "pages/home/order_detail/order_detail",
+        "style" : {
+          "navigationBarTitleText": "订单详情"}
+    },
+    {
+      "path": "pages/disconver/discover_desc/discover_desc",
+      "style": {
+        "navigationBarTitleText": "评论"
+      }
+    },
+    {
+      "path": "pages/disconver/discover_desc_more/discover_desc_more",
+      "style": {
+        "navigationBarTitleText": "更多评论"
+      }
+    },
+    {
+      "path": "pages/msg/msg_chat/msg_chat",
+      "style": {
+        "navigationBarTitleText": "用户名"
+      }
+    },
+    //// ,{
+    ////     "path" : "pages/msg/msg_inform/msg_inform",
+    ////     "style" : {}
+    //// }
+    //// ,{
+    ////     "path" : "pages/msg/msg_logistics_all/msg_logistics_all",
+    ////     "style" : {}
+    //// }
+    //// ,{
+    ////     "path" : "pages/msg/message_logistics/message_logistics",
+    ////     "style" : {}
+    //// }
+    {
+      "path": "pages/my/my_issue/my_issue",
+      "style": {
+        "navigationBarTitleText": "我的发布"
+      }
+    },
+    {
+        "path" : "pages/issue/issue_edit/issue_edit",
+        "style" : {
+          "navigationBarTitleText": "修改发布"
+        }
+    },
+    {
+      "path": "pages/my/my_sale/my_sale",
+      "style": {
+        "navigationBarTitleText": "我卖出的"
+      }
+    },
+    {
+      "path": "pages/my/my_buy/my_buy",
+      "style": {
+        "navigationBarTitleText": "我买到的"
+      }
+    },
+    {
+      "path": "pages/my/my_collect/my_collect",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
+    {
+      "path": "pages/my/my_address/my_address",
+      "style": {
+        "navigationBarTitleText": "收货地址"
+      }
+    },
+    
+    {
+      "path": "pages/my/my_feedback/my_feedback",
+      "style": {
+        "navigationBarTitleText": "意见反馈"
+      }
+    },
+    {
+      "path": "pages/my/my_detail/my_detail",
+      "style": {
+        "navigationBarTitleText": "用户详情"
+      }
+    },
+    {
+      "path": "pages/my/my_address/address_edit",
+      "style": {
+        "navigationBarTitleText": "编辑地址"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "iconPath": "static/img/h1.png",
+        "selectedIconPath": "static/img/h2.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/disconver/disconver",
+        "iconPath": "static/img/f1.png",
+        "selectedIconPath": "static/img/f2.png",
+        "text": "发现"
+      },
+      {
+        "pagePath": "pages/issue/issue",
+        "iconPath": "static/img/e1.png",
+        "selectedIconPath": "static/img/e2.png",
+        "text": "发布"
+      },
+      {
+        "pagePath": "pages/msg/msg",
+        "iconPath": "static/img/l.png",
+        "selectedIconPath": "static/img/m2.png",
+        "text": "消息"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "iconPath": "static/img/m1.png",
+        "selectedIconPath": "static/img/w2.png",
+        "text": "我的"
+      }
+    ]
+  }
+}
