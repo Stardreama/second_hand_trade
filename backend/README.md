@@ -79,3 +79,225 @@ npm install
 node server.js
 ```
 
+## API文档
+
+
+### 用户认证
+
+#### 用户注册
+
+- **URL**: `/api/register`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "student_id": "string", // 学生ID
+    "username": "string",   // 用户名
+    "password": "string",   // 密码
+    "student_card": "string" // 学生证信息
+  }
+  ```
+- **Success Response**:
+  - **Code**: `200 OK`
+  - **Content**:
+    ```json
+    {
+      "message": "注册成功"
+    }
+    ```
+- **Error Response**:
+  - **Code**: `400 Bad Request`
+  - **Content**:
+    ```json
+    {
+      "message": "该学生ID已被注册"
+    }
+    ```
+  - **Code**: `500 Internal Server Error`
+  - **Content**:
+    ```json
+    {
+      "message": "数据库错误" 或 "密码加密失败"
+    }
+    ```
+
+####  用户登录
+
+- **URL**: `/api/login`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "student_id": "string", // 学生ID
+    "password": "string"    // 密码
+  }
+  ```
+- **Success Response**:
+  - **Code**: `200 OK`
+  - **Content**:
+    ```json
+    {
+      "token": "string" // JWT Token
+    }
+    ```
+- **Error Response**:
+  - **Code**: `404 Not Found`
+  - **Content**:
+    ```json
+    {
+      "message": "用户不存在"
+    }
+    ```
+  - **Code**: `401 Unauthorized`
+  - **Content**:
+    ```json
+    {
+      "message": "密码错误"
+    }
+    ```
+
+#### JWT 认证保护的路由
+
+- **URL**: `/api/protected`
+- **Method**: `GET`
+- **Headers**:
+  - `Authorization: Bearer <JWT Token>`
+- **Success Response**:
+  - **Code**: `200 OK`
+  - **Content**:
+    ```json
+    {
+      "message": "你已经成功通过JWT认证！"
+    }
+    ```
+- **Error Response**:
+  - **Code**: `401 Unauthorized`
+  - **Content**:
+    ```json
+    {
+      "message": "没有提供JWT"
+    }
+    ```
+  - **Code**: `403 Forbidden`
+  - **Content**:
+    ```json
+    {
+      "message": "无效的JWT"
+    }
+    ```
+
+### 商品相关
+
+#### 发布商品
+
+**请求方法**：`POST`
+
+**请求路径**：`/api/products/create`
+
+**请求参数**：
+- `price`（必需）：商品价格。
+- `description`（必需）：商品描述。
+- `image`（必需）：商品图片的 URL。
+
+**返回值**：
+- 成功时返回状态码 `201`，返回值示例：
+  ```json
+  {
+    "message": "商品发布成功",
+    "product_id": 1
+  }
+  ```
+- 如果缺少必要的商品信息，返回状态码 `400`，返回值示例：
+  ```json
+  {
+    "message": "缺少必要的商品信息"
+  }
+  ```
+- 如果数据库操作失败，返回状态码 `500`，返回值示例：
+  ```json
+  {
+    "message": "数据库错误"
+  }
+  ```
+
+#### 搜索商品
+
+**请求方法**：`GET`
+
+**请求路径**：`/api/products/search`
+
+**请求参数**：
+- `keyword`（必需）：搜索关键词。
+
+**返回值**：
+- 成功时返回状态码 `200`，返回值示例：
+  ```json
+  [
+    {
+      "product_id": 1,
+      "price": 100,
+      "description": "商品描述",
+      "image": "https://example.com/image.jpg"
+    }
+  ]
+  ```
+- 如果缺少搜索关键词，返回状态码 `400`，返回值示例：
+  ```json
+  {
+    "message": "缺少搜索关键词"
+  }
+  ```
+- 如果数据库操作失败，返回状态码 `500`，返回值示例：
+  ```json
+  {
+    "message": "数据库错误"
+  }
+  ```
+
+### 订单相关
+
+#### 创建订单并获取支付信息
+
+**请求方法**：`POST`
+
+**请求路径**：`/api/orders/create`
+
+**请求参数**：
+- `product_id`（必需）：商品的 ID。
+- `buyer_id`（必需）：买家的 ID。
+
+**返回值**：
+- **成功时**：
+  - 返回状态码 `201`。
+  - 返回值示例：
+    ```json
+    {
+      "order_id": "123456789",
+      "payment_params": {
+        "prepay_id": "wx123456789",
+        "nonce_str": "random_string",
+        "time_stamp": "1678456789",
+        "sign": "signature_string",
+        "package": "Sign=WXPay"
+      }
+    }
+    ```
+    其中，`payment_params` 是微信支付所需的参数。
+
+- **商品未找到时**：
+  - 返回状态码 `404`。
+  - 返回值示例：
+    ```json
+    {
+      "message": "Product not found"
+    }
+    ```
+
+- **服务器错误时**：
+  - 返回状态码 `500`。
+  - 返回值示例：
+    ```json
+    {
+      "message": "Server error"
+    }
+    ```
