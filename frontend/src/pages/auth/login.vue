@@ -60,89 +60,89 @@
           return
         }
   
-        // 本地测试：验证用户输入与本地存储的测试用户是否匹配
-      try {
-        // 获取注册时保存的测试用户数据
-        const testUser = uni.getStorageSync('test_user');
+        // 仅有前端测试：验证用户输入与本地存储的测试用户是否匹配
+      // try {
+      //   // 获取注册时保存的测试用户数据
+      //   const testUser = uni.getStorageSync('test_user');
         
-        if (testUser && testUser.student_id === this.student_id && testUser.password === this.password) {
-          // 登录成功，生成模拟的token
-          const mockToken = 'mock_token_' + Date.now();
-          uni.setStorageSync('token', mockToken);
-          uni.setStorageSync('current_user', {
-            student_id: testUser.student_id,
-            username: testUser.username
-          });
+      //   if (testUser && testUser.student_id === this.student_id && testUser.password === this.password) {
+      //     // 登录成功，生成模拟的token
+      //     const mockToken = 'mock_token_' + Date.now();
+      //     uni.setStorageSync('token', mockToken);
+      //     uni.setStorageSync('current_user', {
+      //       student_id: testUser.student_id,
+      //       username: testUser.username
+      //     });
           
-          // 显示成功提示
-          uni.showToast({
-            title: '登录成功',
-            icon: 'success'
-          });
+      //     // 显示成功提示
+      //     uni.showToast({
+      //       title: '登录成功',
+      //       icon: 'success'
+      //     });
           
-          // 跳转到首页
-          setTimeout(() => {
-            uni.switchTab({
-              url: '/pages/home/home'
-            });
-          }, 1500);
-        } else {
-          // 登录失败提示
-          uni.showToast({
-            title: '学号或密码错误',
-            icon: 'none'
-          });
-        }
-      } catch(e) {
-        console.error('读取本地存储数据失败:', e);
-        // 如果没有找到测试用户数据，可以默认成功登录（测试模式）
-        const mockToken = 'default_mock_token_' + Date.now();
-        uni.setStorageSync('token', mockToken);
+      //     // 跳转到首页
+      //     setTimeout(() => {
+      //       uni.switchTab({
+      //         url: '/pages/home/home'
+      //       });
+      //     }, 1500);
+      //   } else {
+      //     // 登录失败提示
+      //     uni.showToast({
+      //       title: '学号或密码错误',
+      //       icon: 'none'
+      //     });
+      //   }
+      // } catch(e) {
+      //   console.error('读取本地存储数据失败:', e);
+      //   // 如果没有找到测试用户数据，可以默认成功登录（测试模式）
+      //   const mockToken = 'default_mock_token_' + Date.now();
+      //   uni.setStorageSync('token', mockToken);
         
-        uni.showToast({
-          title: '测试模式：登录成功',
-          icon: 'success'
-        });
+      //   uni.showToast({
+      //     title: '测试模式：登录成功',
+      //     icon: 'success'
+      //   });
         
-        setTimeout(() => {
-          uni.switchTab({
-            url: '/pages/home/home'
-          });
-        }, 1500);
-      }
+      //   setTimeout(() => {
+      //     uni.switchTab({
+      //       url: '/pages/home/home'
+      //     });
+      //   }, 1500);
+      // }
 
 
 
-        // 调用登录API
-        // uni.request({
-        //   url: 'API_BASE_URL/api/login',
-        //   method: 'POST',
-        //   data: {
-        //     student_id: this.student_id,
-        //     password: this.password
-        //   },
-        //   success: (res) => {
-        //     if (res.data.token) {
-        //       // 保存token
-        //       uni.setStorageSync('token', res.data.token)
-        //       // 跳转到首页
-        //       uni.switchTab({
-        //         url: '/pages/home/home'
-        //       })
-        //     } else {
-        //       uni.showToast({
-        //         title: '登录失败，请检查用户名和密码',
-        //         icon: 'none'
-        //       })
-        //     }
-        //   },
-        //   fail: () => {
-        //     uni.showToast({
-        //       title: '网络错误，请稍后再试',
-        //       icon: 'none'
-        //     })
-        //   }
-        // })
+        //实际前后端协同测试 调用登录API
+        uni.request({
+          url: 'API_BASE_URL/api/login',
+          method: 'POST',
+          data: {
+            student_id: this.student_id,
+            password: this.password
+          },
+          success: (res) => {
+            if (res.data.token) {
+              // 保存token
+              uni.setStorageSync('token', res.data.token)
+              // 跳转到首页
+              uni.switchTab({
+                url: '/pages/home/home'
+              })
+            } else {
+              uni.showToast({
+                title: '登录失败，请检查用户名和密码',
+                icon: 'none'
+              })
+            }
+          },
+          fail: () => {
+            uni.showToast({
+              title: '网络错误，请稍后再试',
+              icon: 'none'
+            })
+          }
+        })
       }
     }
   }
