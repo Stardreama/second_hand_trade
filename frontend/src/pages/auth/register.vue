@@ -1,4 +1,3 @@
-<!-- filepath: /D:/document/4c2025/second_hand_trade/second_hand_trade_frontend/src/pages/auth/register.vue -->
 <template>
   <view class="register-container">
     <!-- 顶部背景装饰 -->
@@ -14,59 +13,34 @@
         <view class="icon-box">
           <text class="iconfont icon-idcard"></text>
         </view>
-        <input
-          class="input"
-          type="text"
-          v-model="student_id"
-          placeholder="请输入学号"
-        />
+        <input class="input" type="text" v-model="student_id" placeholder="请输入学号" />
       </view>
 
       <view class="input-group">
         <view class="icon-box">
           <text class="iconfont icon-user"></text>
         </view>
-        <input
-          class="input"
-          type="text"
-          v-model="username"
-          placeholder="请输入用户名"
-        />
+        <input class="input" type="text" v-model="username" placeholder="请输入用户名" />
       </view>
 
       <view class="input-group">
         <view class="icon-box">
           <text class="iconfont icon-lock"></text>
         </view>
-        <input
-          class="input"
-          type="password"
-          v-model="password"
-          placeholder="请设置密码"
-        />
+        <input class="input" type="password" v-model="password" placeholder="请设置密码" />
       </view>
 
       <view class="input-group">
         <view class="icon-box">
           <text class="iconfont icon-lock"></text>
         </view>
-        <input
-          class="input"
-          type="password"
-          v-model="confirmPassword"
-          placeholder="请确认密码"
-        />
+        <input class="input" type="password" v-model="confirmPassword" placeholder="请确认密码" />
       </view>
 
       <view class="upload-box">
         <text class="upload-title">上传学生卡照片</text>
         <view class="upload-area" @click="chooseImage">
-          <image
-            v-if="studentCardImage"
-            :src="studentCardImage"
-            mode="aspectFit"
-            class="preview-image"
-          ></image>
+          <image v-if="studentCardImage" :src="studentCardImage" mode="aspectFit" class="preview-image"></image>
           <view v-else class="upload-placeholder">
             <text class="iconfont icon-camera"></text>
             <text class="upload-text">点击上传</text>
@@ -77,11 +51,7 @@
       <button class="register-btn" @click="handleRegister">注册</button>
 
       <view class="links">
-        <navigator
-          url="/pages/auth/login"
-          open-type="navigate"
-          class="login-link"
-        >
+        <navigator url="/pages/auth/login" open-type="navigate" class="login-link">
           已有账号？立即登录 >
         </navigator>
       </view>
@@ -187,9 +157,12 @@ export default {
         const reader = new FileReader();
 
         // 先将图片URL转换为Blob对象
-        fetch(this.studentCardImage)
-          .then((response) => response.blob())
-          .then((blob) => {
+        uni.request({
+          url: this.studentCardImage,
+          method: "GET",
+          responseType: "arraybuffer",
+          success: (response) => {
+            const blob = new Blob([response.data]);
             reader.onload = (e) => {
               // 获取base64字符串，去掉前缀 "data:image/xxx;base64,"
               const base64 = e.target.result.split(",")[1];
@@ -203,14 +176,15 @@ export default {
             };
             // 读取Blob为DataURL
             reader.readAsDataURL(blob);
-          })
-          .catch((err) => {
+          },
+          fail: (err) => {
             console.error("获取图片数据失败:", err);
             uni.showToast({
               title: "图片处理失败，请重试",
               icon: "none",
             });
-          });
+          },
+        });
       } else {
         // 如果是测试环境，可以使用一个占位符
         this.submitRegistration("test_image_base64");
