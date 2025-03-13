@@ -1,3 +1,4 @@
+<!-- filepath: /D:/document/4c2025/second_hand_trade/second_hand_trade_frontend/src/pages/auth/register.vue -->
 <template>
   <view class="register-container">
     <!-- 顶部背景装饰 -->
@@ -105,27 +106,54 @@ export default {
       }
       if (!this.studentCardImage) {
         uni.showToast({ title: "请上传学生卡照片", icon: "none" });
-        console.error("照片未输入");
+        console.error("照片未上传");
         return;
       }
 
-      // 检查当前环境
-      // #ifdef APP-PLUS || MP
-      // 在小程序或APP环境中，使用 getFileSystemManager
-      this.processImageAndRegister();
-      // #endif
-
-      // #ifdef H5
-      // 在H5环境中，直接使用图片路径或转换为base64
-      this.registerInH5Environment();
-      // #endif
-
-      // #ifndef APP-PLUS || MP || H5
-      // 其他环境，使用本地测试模式
-      this.registerWithMockData();
-      // #endif
+      // 直接使用统一的文件上传接口
+      this.uploadAndRegister();
+    },
+    uploadAndRegister() {
+      uni.uploadFile({
+        url: "http://localhost:3000/api/register", // 后端注册接口地址
+        filePath: this.studentCardImage,           // 图片文件路径
+        name: "student_card",                        // 与后端 multer 中间件配置一致的字段名
+        formData: {
+          student_id: this.student_id,
+          username: this.username,
+          password: this.password,
+        },
+        success: (res) => {
+          console.log("注册响应:", res);
+          if (res.statusCode === 200) {
+            uni.showToast({
+              title: "注册成功",
+              icon: "success",
+              duration: 2000,
+            });
+            setTimeout(() => {
+              uni.navigateTo({
+                url: "/pages/auth/login",
+              });
+            }, 2000);
+          } else {
+            uni.showToast({
+              title: "注册失败，请重试",
+              icon: "none",
+            });
+          }
+        },
+        fail: (err) => {
+          console.error("注册请求失败:", err);
+          uni.showToast({
+            title: "网络错误，请稍后再试",
+            icon: "none",
+          });
+        },
+      });
     },
 
+    /* 原有的环境判断方法已合并为统一上传方式
     // 小程序或APP环境中处理图片并注册
     processImageAndRegister() {
       uni.getFileSystemManager().readFile({
@@ -143,28 +171,18 @@ export default {
         },
       });
     },
-
     // H5环境中的注册处理
     registerInH5Environment() {
       console.log("在H5环境中注册");
-
-      // 如果是通过uni.chooseImage获取的本地临时文件URL
       if (
         this.studentCardImage.startsWith("blob:") ||
         this.studentCardImage.startsWith("http")
       ) {
-        // 创建一个新的FileReader
         const reader = new FileReader();
-
-        // 先将图片URL转换为Blob对象
-        uni.request({
-          url: this.studentCardImage,
-          method: "GET",
-          responseType: "arraybuffer",
-          success: (response) => {
-            const blob = new Blob([response.data]);
+        fetch(this.studentCardImage)
+          .then((response) => response.blob())
+          .then((blob) => {
             reader.onload = (e) => {
-              // 获取base64字符串，去掉前缀 "data:image/xxx;base64,"
               const base64 = e.target.result.split(",")[1];
               this.submitRegistration(base64);
             };
@@ -174,101 +192,48 @@ export default {
                 icon: "none",
               });
             };
-            // 读取Blob为DataURL
             reader.readAsDataURL(blob);
-          },
-          fail: (err) => {
+          })
+          .catch((err) => {
             console.error("获取图片数据失败:", err);
             uni.showToast({
               title: "图片处理失败，请重试",
               icon: "none",
             });
-          },
-        });
+          });
       } else {
-        // 如果是测试环境，可以使用一个占位符
         this.submitRegistration("test_image_base64");
       }
     },
-
     // 使用模拟数据进行测试
-    // registerWithMockData() {
-    //   console.log("使用模拟数据注册");
-    //   // 保存测试用户数据到本地存储
-    //   try {
-    //     uni.setStorageSync("test_user", {
-    //       student_id: this.student_id,
-    //       username: this.username,
-    //       password: this.password,
-    //     });
-
-    //     // 显示成功提示
-    //     uni.showToast({
-    //       title: "注册成功（测试模式）",
-    //       icon: "success",
-    //       duration: 2000,
-    //     });
-
-    //     // 2秒后跳转到登录页面
-    //     setTimeout(() => {
-    //       uni.navigateTo({
-    //         url: "/pages/auth/login",
-    //       });
-    //     }, 2000);
-    //   } catch (e) {
-    //     uni.showToast({
-    //       title: "注册失败，请重试",
-    //       icon: "none",
-    //     });
-    //     console.error("本地存储数据失败:", e);
-    //   }
-    // },
-
-    // 提交注册请求
-    submitRegistration(imageBase64) {
-      // 调用注册API
-      uni.request({
-        url: "http://localhost:3000/api/register", // 根据您的后端服务端口调整
-        method: "POST",
-        header: {
-          "Content-Type": "application/json", // 确保设置正确的请求头
-        },
-        data: {
+    registerWithMockData() {
+      console.log("使用模拟数据注册");
+      try {
+        uni.setStorageSync("test_user", {
           student_id: this.student_id,
           username: this.username,
           password: this.password,
-          student_card: imageBase64,
-        },
-        success: (res) => {
-          console.log("注册响应:", res);
-          if (res.statusCode === 200 && res.data.message === "注册成功") {
-            uni.showToast({
-              title: "注册成功",
-              icon: "success",
-              duration: 2000,
-            });
-            setTimeout(() => {
-              uni.navigateTo({
-                url: "/pages/auth/login",
-              });
-            }, 2000);
-          } else {
-            // 显示具体错误信息
-            uni.showToast({
-              title: res.data.message || "注册失败，请重试",
-              icon: "none",
-            });
-          }
-        },
-        fail: (err) => {
-          console.error("注册请求失败:", err);
-          uni.showToast({
-            title: "网络错误，请稍后再试",
-            icon: "none",
+        });
+        uni.showToast({
+          title: "注册成功（测试模式）",
+          icon: "success",
+          duration: 2000,
+        });
+        setTimeout(() => {
+          uni.navigateTo({
+            url: "/pages/auth/login",
           });
-        },
-      });
+        }, 2000);
+      } catch (e) {
+        uni.showToast({
+          title: "注册失败，请重试",
+          icon: "none",
+        });
+        console.error("本地存储数据失败:", e);
+      }
     },
+    // 原 submitRegistration 方法（基于 JSON 方式上传）已移除
+    */
   },
 };
 </script>
