@@ -1,5 +1,6 @@
 <template>
   <view>
+    <!-- 用户信息 -->
     <view class="UCenter-bg" catchtap="toMy_detail">
       <image src="../../static/img/avatar.jpg" class="png"></image>
       <view class="text-xl">
@@ -20,30 +21,25 @@
       <view class="flex flex-sub flex-direction solid-right" bindtap="toPraise">
         <view class="text-xxl text-orange">0</view>
         <view class="margin-top-sm">
-          <text class="cuIcon-attentionfill"></text> 超赞</view
-        >
+          <text class="cuIcon-attentionfill"></text> 超赞
+        </view>
       </view>
-      <view
-        class="flex flex-sub flex-direction solid-right"
-        bindtap="toAttention"
-      >
+      <view class="flex flex-sub flex-direction solid-right" bindtap="toAttention">
         <view class="text-xxl text-blue">5</view>
         <view class="margin-top-sm">
-          <text class="cuIcon-favorfill"></text>关注数</view
-        >
+          <text class="cuIcon-favorfill"></text>关注数
+        </view>
       </view>
       <view class="flex flex-sub flex-direction" bindtap="toFans">
         <view class="text-xxl text-green">0</view>
         <view class="margin-top-sm">
-          <text class="cuIcon-fork"></text>粉丝数</view
-        >
+          <text class="cuIcon-fork"></text>粉丝数
+        </view>
       </view>
     </view>
 
     <!-- 设置详细 -->
-    <view
-      class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius"
-    >
+    <view class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius">
       <view class="cu-item arrow">
         <view class="content" @tap="toIssue_page">
           <text class="cuIcon-moneybagfill text-red"></text>
@@ -51,24 +47,15 @@
           <text class="num">19</text>
         </view>
       </view>
-
       <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_sale/my_sale"
-        >
+        <navigator class="content" hover-class="none" url="/pages/my/my_sale/my_sale">
           <text class="cuIcon-titles text-green"></text>
           <text class="text-grey">我的卖出</text>
           <text class="num">99</text>
         </navigator>
       </view>
       <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_buy/my_buy"
-        >
+        <navigator class="content" hover-class="none" url="/pages/my/my_buy/my_buy">
           <text class="cuIcon-formfill text-green"></text>
           <text class="text-grey">我买到的</text>
           <text class="num">1</text>
@@ -100,6 +87,13 @@
         </button>
       </view>
     </view>
+
+    <!-- 红色的退出按钮 -->
+    <view class="logout-btn" @tap="logout">
+      <text>退出</text>
+    </view>
+
+    <!-- tabbar 预留高度 -->
     <view class="cu-tabbar-height"></view>
     <!-- 设置详细end -->
   </view>
@@ -137,6 +131,24 @@ export default {
         },
       });
     },
+    // 退出登录
+    logout() {
+      uni.showModal({
+        title: "退出登录",
+        content: "确定要退出当前账号吗？",
+        success: (res) => {
+          if (res.confirm) {
+            // 这里可做清除 token、清除用户信息等操作
+            uni.removeStorageSync("token");
+            uni.removeStorageSync("userInfo");
+            // 跳转到登录页，也可以选择 switchTab 或 reLaunch 根据需要来做
+            uni.reLaunch({
+              url: "/pages/auth/login",
+            });
+          }
+        },
+      });
+    },
 
     // 我的发布跳转
     toIssue_page: function () {
@@ -159,14 +171,33 @@ export default {
         url: "/pages/my/my_feedback/my_feedback",
       });
     },
+    toPraise() {
+      // 示例：点击“超赞”后，可弹出提示。根据你实际需要来修改
+      uni.showToast({
+        title: "暂未开放",
+        icon: "none",
+      });
+    },
+    toAttention() {
+      uni.showToast({
+        title: "暂未开放",
+        icon: "none",
+      });
+    },
+    toFans() {
+      uni.showToast({
+        title: "暂未开放",
+        icon: "none",
+      });
+    },
   },
 };
 </script>
 
-<style>
+<style scoped>
 /* pages/my/my.wxss */
-/* 用户信息 */
 
+/* 用户信息部分 */
 .UCenter-bg {
   background-image: url(https://image.weilanwl.com/color2.0/index.jpg);
   background-size: cover;
@@ -182,16 +213,13 @@ export default {
   font-weight: 300;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
-
 .UCenter-bg text {
   opacity: 0.8;
 }
-
 .UCenter-bg image {
   width: 200rpx;
   height: 200rpx;
 }
-
 .UCenter-bg .gif-wave {
   position: absolute;
   width: 100%;
@@ -201,7 +229,6 @@ export default {
   mix-blend-mode: screen;
   height: 100rpx;
 }
-
 map,
 .mapBox {
   left: 0;
@@ -209,7 +236,6 @@ map,
   mix-blend-mode: screen;
   height: 100rpx;
 }
-
 map,
 .mapBox {
   width: 750rpx;
@@ -222,10 +248,22 @@ map,
 .png {
   border-radius: 100%;
 }
-
 .num {
   direction: rtl;
   margin-left: 58%;
   font-size: 25rpx;
+}
+
+/* 退出按钮样式 */
+.logout-btn {
+  background-color: red;      /* 背景红色 */
+  color: #fff;               /* 文字白色 */
+  width: 100%;               /* 占满屏幕宽度 */
+  text-align: center;        /* 文字居中 */
+  font-size: 30rpx;          /* 根据需要调整文字大小 */
+  padding: 20rpx 0;          /* 上下内边距 */
+  margin-bottom: 20rpx;      /* 与下方留点距离（可根据需要调整） */
+  border-radius: 8rpx;       /* 可根据需求做圆角 */
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2); /* 视觉效果，可选 */
 }
 </style>
