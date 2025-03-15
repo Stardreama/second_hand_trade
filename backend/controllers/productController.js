@@ -2,20 +2,19 @@ const Product = require("../models/product");
 
 // 发布商品
 const createProduct = (req, res) => {
-  const { price, description } = req.body;
-  console.log(price,description);
+  const { price, description, seller_id } = req.body;
   // 从 multer 中获取上传文件的信息
   const image = req.file ? req.file.path : null;
   console.log(image);
   // 检查请求是否包含必要的信息
-  if (!price || !description || !image) {
+  if (!price || !description || !image || !seller_id) {
     return res.status(400).json({ message: "缺少必要的商品信息" });
   }
 
   // 在数据库中创建商品
-  Product.create(price, description, image, (err, result) => {
+  Product.create(price, description, image, seller_id, (err, result) => {
     if (err) {
-      return res.status(500).json({ message: "数据库错误" });
+      return res.status(500).json({ message: "数据库错误", error: err.message });
     }
 
     // 返回商品ID和成功消息
