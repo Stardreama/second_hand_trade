@@ -1,3 +1,13 @@
+/*
+ * @Author: ourEDA MaMing
+ * @Date: 2025-03-15 23:48:01
+ * @LastEditors: ourEDA MaMing
+ * @LastEditTime: 2025-03-15 23:49:20
+ * @FilePath: \undefinedd:\EduLibrary\OurEDA\second_hand_trade\backend\controllers\productController.js
+ * @Description: 李猴啊
+ * 
+ * Copyright (c) 2025 by FanZDStar , All Rights Reserved. 
+ */
 const Product = require('../models/product'); // 引入 Product 模型
 
 // 发布商品
