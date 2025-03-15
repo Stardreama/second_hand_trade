@@ -2,7 +2,8 @@
   <view>
     <!-- 用户信息 -->
     <view class="UCenter-bg" catchtap="toMy_detail">
-      <image src="../../static/img/avatar.jpg" class="png"></image>
+      <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
+      <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
       <view class="text-xl">
         <!-- <text>Amibition</text>   -->
       </view>
@@ -102,7 +103,10 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      // 头像地址，初始使用本地默认头像
+      avatar: '../../static/img/avatar.jpg'
+    };
   },
   methods: {
     // 清除全部缓存
@@ -149,7 +153,6 @@ export default {
         },
       });
     },
-
     // 我的发布跳转
     toIssue_page: function () {
       uni.navigateTo({
@@ -172,7 +175,6 @@ export default {
       });
     },
     toPraise() {
-      // 示例：点击“超赞”后，可弹出提示。根据你实际需要来修改
       uni.showToast({
         title: "暂未开放",
         icon: "none",
@@ -190,6 +192,47 @@ export default {
         icon: "none",
       });
     },
+    // 点击头像的事件，弹出预览或更换头像的选项
+    changeAvatar() {
+      uni.showActionSheet({
+        itemList: ['预览头像', '更换头像'],
+        success: res => {
+          if (res.tapIndex === 0) {
+            // 预览头像
+            uni.previewImage({
+              current: this.avatar,
+              urls: [this.avatar]
+            });
+          } else if (res.tapIndex === 1) {
+            // 选择新头像
+            uni.chooseImage({
+              count: 1,
+              success: chooseRes => {
+                // 更新头像地址
+                this.avatar = chooseRes.tempFilePaths[0];
+              },
+              fail: () => {
+                uni.showToast({
+                  title: '选择失败',
+                  icon: 'none'
+                });
+              }
+            });
+          }
+        },
+        fail: err => {
+          // 用户取消操作
+          console.log('操作取消', err);
+        }
+      });
+    },
+    // 跳转到个人详情（此处仍保留原有逻辑）
+    toMy_detail() {
+      // 根据需求可在此处添加查看个人详情的逻辑
+      uni.navigateTo({
+        url: "/pages/my/my_detail/my_detail",
+      });
+    }
   },
 };
 </script>
@@ -256,14 +299,14 @@ map,
 
 /* 退出按钮样式 */
 .logout-btn {
-  background-color: red;      /* 背景红色 */
-  color: #fff;               /* 文字白色 */
-  width: 100%;               /* 占满屏幕宽度 */
-  text-align: center;        /* 文字居中 */
-  font-size: 30rpx;          /* 根据需要调整文字大小 */
-  padding: 20rpx 0;          /* 上下内边距 */
-  margin-bottom: 20rpx;      /* 与下方留点距离（可根据需要调整） */
-  border-radius: 8rpx;       /* 可根据需求做圆角 */
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2); /* 视觉效果，可选 */
+  background-color: red;
+  color: #fff;
+  width: 100%;
+  text-align: center;
+  font-size: 30rpx;
+  padding: 20rpx 0;
+  margin-bottom: 20rpx;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
 </style>
