@@ -77,18 +77,6 @@
 						</view>
 					<!-- end -->
 					
-					<!-- 交易方式 -->
-					  <view class="cu-form-group">
-							<view class="title">交易方式</view>
-					<checkbox-group name="means" @change="checkboxChange">
-					    <checkbox  :class="checkboxs[0].checked?'checked':'' " :checked="checkboxs[0].checked?true:false"  value="自提"  ></checkbox> 自提
-					    <checkbox  :class="checkboxs[1].checked?'checked':'' " :checked="checkboxs[1].checked?true:false" 	value='同城面交'></checkbox> 同城面交
-					    <checkbox  :class="checkboxs[2].checked?'checked':'' " :checked="checkboxs[2].checked?true:false"  value='邮寄'></checkbox> 邮寄
-					</checkbox-group>
-					
-						</view>
-					<!-- end -->
-					
 					<!-- 确定发布 -->
 					<view class="padding flex flex-direction">
 					  <button class="cu-btn bg-green margin-tb-sm lg"  form-type="submit">确定发布</button>
@@ -134,12 +122,6 @@
 					      ['北京大学', '中国人民大学', '清华大学', '北京交通大学', '北京工业大学', '北京航空航天大学', '北京理工大学', '北京科技大学', '北方工业大学', '北京化工大学', '北京工商大学', '北京服装学院', '北京邮电大学', '北京印刷学院', '北京建筑大学', '北京石油化工学院', '北京电子科技学院', '中国农业大学', '北京农学院', '北京林业大学', '北京协和医学院', '首都医科大学', '北京中医药大学', '北京师范大学', '首都师范大学', '首都体育学院', '北京外国语大学', '北京第二外国语学院', '北京语言大学', '中国传媒大学', '中央财经大学', '对外经济贸易大学', '北京物资学院', '首都经济贸易大学', '外交学院', '中国人民公安大学', '国际关系学院', '北京体育大学', '中央音乐学院', '中国音乐学院', '中央美术学院', '中央戏剧学院', '中国戏曲学院', '北京电影学院', '北京舞蹈学院', '中央民族大学', '中国政法大学', '华北电力大学', '中华女子学院', '北京信息科技大学', '中国矿业大学（北京）', '中国石油大学（北京）', '中国地质大学（北京）', '北京联合大学', '北京城市学院', '中国青年政治学院', '首钢工学院', '中国劳动关系学院', '北京吉利学院', '首都师范大学科德学院', '北京工商大学嘉华学院', '北京邮电大学世纪学院', '北京工业大学耿丹学院', '北京警察学院', '北京第二外国语学院中瑞酒店管理学院', '北京工业职业技术学院', '北京信息职业技术学院', '北京电子科技职业学院', '北京京北职业技术学院', '北京交通职业技术学院', '北京青年政治学院', '北京农业职业学院', '北京政法职业学院', '北京财贸职业学院', '北京北大方正软件职业技术学院', '北京经贸职业学院', '北京经济技术职业学院', '北京戏曲艺术职业学院', '北京汇佳职业学院', '北京科技经营管理学院', '北京科技职业学院', '北京培黎职业学院', '北京经济管理职业学院', '北京劳动保障职业学院', '北京社会管理职业学院', '北京艺术传媒职业学院', '北京体育职业学院', '北京交通运输职业学院', '北京卫生职业学院', '北京网络职业学院', '其他']
 					    ],//默认选择地址
 						region: ['贵州省', '毕节市', '毕节职业技术学院'],//选择地址
-						// 交易方式
-						checkboxs:[
-							{value:"自提",checked:false},
-							{value:"同城面交",checked:false},
-							{value:"邮寄",checked:false},
-						],
 			}
 		},
 		methods: {
@@ -215,25 +197,6 @@
 				      this.newMoney = money;
 				  },
 				  
-				  
-				    // 选择交易方式
-				    checkboxChange:function(e){
-						console.log(e);
-						//获取选择状态
-						var item = this.checkboxs,
-							values = e.detail.value;
-							for (var i = 0; i < item.length; i++) {
-								item[i].checked = false;//初始化选择状态
-								for (var j = 0; j < values.length; j++) {
-									if(item[i].value == values[j]){
-										item[i].checked = true;
-										break;
-									}
-								}
-							}
-							
-						
-				    },
 					
 					  // 新旧程度
 					  newState:function(e){

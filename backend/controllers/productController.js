@@ -3,9 +3,10 @@ const Product = require("../models/product");
 // 发布商品
 const createProduct = (req, res) => {
   const { price, description } = req.body;
+  console.log(price,description);
   // 从 multer 中获取上传文件的信息
   const image = req.file ? req.file.path : null;
-
+  console.log(image);
   // 检查请求是否包含必要的信息
   if (!price || !description || !image) {
     return res.status(400).json({ message: "缺少必要的商品信息" });
