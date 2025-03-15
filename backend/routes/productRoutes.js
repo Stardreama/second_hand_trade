@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path');
+const jwt = require('jsonwebtoken');  
 const productController = require("../controllers/productController");
 
 // 确保上传目录存在
@@ -14,11 +14,11 @@ if (!fs.existsSync(uploadDir)) {
 // 配置 multer 存储策略
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadDir);
+        cb(null, uploadDir); // 设置上传路径
     },
     filename: function (req, file, cb) {
-        const ext = file.originalname.split('.').pop();
-        cb(null, `product_${Date.now()}.${ext}`);
+        const ext = file.originalname.split('.').pop(); // 获取文件后缀
+        cb(null, `product_${Date.now()}.${ext}`); // 设置文件名
     }
 });
 
@@ -31,16 +31,34 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
+// 配置 multer
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 限制文件大小为5MB
 });
 
+// 解析token并获取seller_id
+const authenticateToken = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1]; // 获取请求头中的token
+
+    if (!token) {
+        return res.status(403).json({ message: '未授权访问' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, 'secret_key');  // 解码token
+        req.seller_id = decoded.student_id;  // 从token中获取seller_id
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: '无效的token' });
+    }
+};
+
 // 创建商品
-router.post("/create", upload.single('image'), (err, req, res, next) => {
-    if (err) {
-        return res.status(400).json({ message: err.message });
+router.post("/create", authenticateToken, upload.single('image'), (req, res, next) => {
+    if (req.fileValidationError) {
+        return res.status(400).json({ message: req.fileValidationError });
     }
     next();
 }, productController.createProduct);
