@@ -13,12 +13,16 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     // 文件命名：时间戳-原始文件名
     cb(null, Date.now() + "-" + file.originalname);
-  }
+  },
 });
 const upload = multer({ storage: storage });
 
 // 注册路由：使用 multer 中间件处理文件上传
-router.post("/register", upload.single("student_card"), authController.register);
+router.post(
+  "/register",
+  upload.single("student_card"),
+  authController.register
+);
 router.post("/login", authController.login);
 
 // JWT 认证示例

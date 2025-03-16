@@ -31,7 +31,8 @@ const Product = {
     );
   },
   addImage: (productId, imagePath, callback) => {
-    const sql = 'INSERT INTO product_images (product_id, image_url) VALUES (?, ?)';
+    const sql =
+      "INSERT INTO product_images (product_id, image_url) VALUES (?, ?)";
     db.query(sql, [productId, imagePath], callback);
   },
   // 根据关键词搜索商品
