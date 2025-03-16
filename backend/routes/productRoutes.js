@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
-const jwt = require('jsonwebtoken');  
+const jwt = require('jsonwebtoken');
 const productController = require("../controllers/productController");
 
 // 确保上传目录存在
@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 
 // 限制上传文件类型
 const fileFilter = (req, file, cb) => {
-    if (['image/jpeg', 'image/png'].includes(file.mimetype)) {
+    if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
         cb(null, true);
     } else {
         cb(new Error('仅支持jpeg和png格式的图片'), false);

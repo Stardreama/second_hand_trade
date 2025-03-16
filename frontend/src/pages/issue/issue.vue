@@ -4,7 +4,8 @@
 			<!-- 标题 -->
 			<view class="cu-form-group margin-top">
 				<view class="title">标题</view>
-				<input bindinput="zgetTitleValue" name="title" placeholder="品类品牌型号都是买家喜欢搜索的"></input>
+				<input bindinput="zgetTitleValue" type="text" v-model="title" name="title"
+					placeholder="品类品牌型号都是买家喜欢搜索的"></input>
 			</view>
 			<!-- end -->
 
@@ -46,7 +47,7 @@
 					:range="multiArray">
 					<view class="picker">
 						{{ multiArray[0][multiIndex[0]] }}，{{ multiArray[1][multiIndex[1]] }}，{{
-							multiArray[2][multiIndex[2]] }}
+						multiArray[2][multiIndex[2]] }}
 					</view>
 				</picker>
 			</view>
@@ -127,17 +128,22 @@ import allSchool from "../../common/allSchool.js";
 export default {
 	data() {
 		return {
+			title: '',  // 产品标题绑定（对应数据库 product_title，类型 TEXT）
 			modalName: '',//模态框开关
 			picker: [
-				{ classify_id: 1, classify_name: '手机' },
+				{ classify_id: 1, classify_name: '数码产品' },
+				{ classify_id: 2, classify_name: '家电' },
+				{ classify_id: 3, classify_name: '服饰' },
+				{ classify_id: 4, classify_name: '图书' },
+				{ classify_id: 5, classify_name: '生活用品' }
 			],
-			itemListsIndex: 0,//几层新下标（默认全新）
-			itemLists: ['全新', '99新', '95新', '85新', '8新'],//几次新
-			classify: '其他闲置',//分类选择默认
-			content: '', // 在 data 中定义
-			money: '',//出售价
-			newMoney: '',//原价
-			imgList: [],//图片上传
+			itemListsIndex: 0, // 新旧程度下标（绑定到 product_status，类型 VARCHAR(255)）
+			itemLists: ['全新', '99新', '95新', '85新', '8新'],
+			classify: '其他闲置', // 分类默认值（绑定到 product_class，类型 VARCHAR(255)）
+			content: '', // 商品描述
+			money: '', // 出售价
+			newMoney: '', // 原价
+			imgList: [], // 图片上传列表
 			multiIndex: [0, 0, 0],//地址选择下标
 			multiArray: [
 				['北京市', '重庆市', '福建省', '江苏省', '广东省', '辽宁省', '内蒙古', '山西省', '青海省', '四川省', '贵州省', '云南省', '陕西省', '西藏', '宁夏', '新疆', '广西', '海南省', '湖南省', '湖北省', '河南省', '山东省', '江西省', '安徽省', '浙江省', '上海', '黑龙江省', '吉林省', '甘肃省', '天津市', '河北省'],
@@ -156,6 +162,7 @@ export default {
 	methods: {
 		formSubmit() {
 			// 从本地存储获取 token
+			console.log("Title:", this.title); // 调试输出
 			const token = uni.getStorageSync('token');
 
 			// 使用 uni.uploadFile 上传文件
@@ -164,9 +171,12 @@ export default {
 				filePath: this.imgList[0], // 上传的图片路径
 				name: 'image', // 注意，这里必须和后端 multer 期望的字段名称一致
 				formData: {
+					title: this.title, // 产品标题（对应 product_title）
 					// 其他需要提交的字段，通过 formData 一起发送
 					description: this.content,
 					price: this.money,
+					product_status: this.itemLists[this.itemListsIndex], // 新旧程度
+					product_class: this.classify, // 产品分类
 					token: token, // 可选，如果后端需要在请求体中接收 token（通常只需要在请求头中）
 				},
 				header: {
