@@ -105,12 +105,11 @@ const searchProduct = (req, res) => {
 
     // 返回匹配的商品列表
     const products = results.map((product) => ({
-      product_id: product.id,
+      product_id: product.product_id,
       price: product.price,
       description: product.description,
       image: product.image, // 假设商品图片是一个URL
     }));
-
     res.status(200).json(products);
   });
 };
