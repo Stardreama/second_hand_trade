@@ -56,12 +56,21 @@ const authenticateToken = (req, res, next) => {
 };
 
 // 创建商品
-router.post("/create", authenticateToken, upload.single('image'), (req, res, next) => {
+router.post("/create", authenticateToken, upload.array('image',5), (req, res, next) => {
     if (req.fileValidationError) {
         return res.status(400).json({ message: req.fileValidationError });
     }
     next();
 }, productController.createProduct);
+
+
+// 注册新增图片的路由（单张图片上传）
+router.post("/addImage", authenticateToken, upload.single('image'), (req, res, next) => {
+    if (req.fileValidationError) {
+        return res.status(400).json({ message: req.fileValidationError });
+    }
+    next();
+}, productController.addImage);
 
 // 搜索商品
 router.get("/search", productController.searchProduct);

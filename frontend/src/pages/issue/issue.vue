@@ -165,30 +165,74 @@ export default {
 			console.log("Title:", this.title); // 调试输出
 			const token = uni.getStorageSync('token');
 
-			// 使用 uni.uploadFile 上传文件
+			// 确保至少有一张图片
+			if (this.imgList.length === 0) {
+				uni.showToast({
+					title: '请上传至少一张图片',
+					icon: 'none',
+					duration: 2000,
+				});
+				return;
+			}
+
 			uni.uploadFile({
 				url: 'http://localhost:3000/api/products/create', // 后端接口地址
-				filePath: this.imgList[0], // 上传的图片路径
+				filePath: this.imgList[0], // 上传的封面图片路径
 				name: 'image', // 注意，这里必须和后端 multer 期望的字段名称一致
 				formData: {
 					title: this.title, // 产品标题（对应 product_title）
-					// 其他需要提交的字段，通过 formData 一起发送
-					description: this.content,
-					price: this.money,
+					description: this.content, // 商品描述
+					price: this.money, // 商品价格
 					product_status: this.itemLists[this.itemListsIndex], // 新旧程度
 					product_class: this.classify, // 产品分类
 					token: token, // 可选，如果后端需要在请求体中接收 token（通常只需要在请求头中）
 				},
 				header: {
-					// 不需要手动设置 'Content-Type'，uni.uploadFile 会自动处理
 					'Authorization': `Bearer ${token}` // 将 token 添加到请求头部
 				},
 				success: (res) => {
-					// 注意：uni.uploadFile 返回的数据在 res.data 中（通常是字符串，需要解析）
 					const data = JSON.parse(res.data);
 					if (res.statusCode === 201) {
+						const productId = data.product_id; // 获取插入的 product_id
+						console.log('封面图片上传成功，product_id:', productId);
+
+						// 上传其他图片（非封面图片）
+						this.imgList.slice(1).forEach((filePath, index) => {
+							uni.uploadFile({
+								url: 'http://localhost:3000/api/products/addImage', // 后端新增图片的接口地址
+								filePath: filePath, // 上传的其他图片路径
+								name: 'image', // 同样的字段名称
+								formData: {
+									product_id: productId, // 传递上一步返回的 product_id
+								},
+								header: {
+									'Authorization': `Bearer ${token}`,
+								},
+								success: (res) => {
+									const data = JSON.parse(res.data);
+									if (res.statusCode === 200) {
+										console.log(`图片 ${index + 1} 上传成功`);
+									} else {
+										uni.showToast({
+											title: data.message || '上传失败，请重试',
+											icon: 'none',
+											duration: 2000,
+										});
+									}
+								},
+								fail: (err) => {
+									uni.showToast({
+										title: '网络错误，请重试',
+										icon: 'none',
+										duration: 2000,
+									});
+								}
+							});
+						});
+
+						// 所有图片上传完成后，显示发布成功的提示
 						uni.showToast({
-							title: '发布成功',
+							title: '商品发布成功',
 							icon: 'success',
 							duration: 2000,
 						});
@@ -209,7 +253,6 @@ export default {
 				}
 			});
 		},
-
 
 		// 选择地址
 		MultiChange(e) {
