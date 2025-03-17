@@ -33,7 +33,7 @@
 							<text class="cuIcon-close"></text>
 						</view>
 					</view>
-					<view class="solids" @tap="ChooseImage" v-if="imgList.length < 1">
+					<view class="solids" @tap="ChooseImage" v-if="imgList.length < 5">
 						<text class="cuIcon-cameraadd"></text>
 					</view>
 				</view>
@@ -47,7 +47,7 @@
 					:range="multiArray">
 					<view class="picker">
 						{{ multiArray[0][multiIndex[0]] }}，{{ multiArray[1][multiIndex[1]] }}，{{
-						multiArray[2][multiIndex[2]] }}
+							multiArray[2][multiIndex[2]] }}
 					</view>
 				</picker>
 			</view>
@@ -174,7 +174,8 @@ export default {
 				});
 				return;
 			}
-
+			console.log(this.imgList);
+			
 			uni.uploadFile({
 				url: 'http://localhost:3000/api/products/create', // 后端接口地址
 				filePath: this.imgList[0], // 上传的封面图片路径
@@ -197,7 +198,7 @@ export default {
 						console.log('封面图片上传成功，product_id:', productId);
 
 						// 上传其他图片（非封面图片）
-						this.imgList.slice(1).forEach((filePath, index) => {
+						this.imgList.slice(1).forEach((filePath, index) => { //不知为什么用了slice(1)还是会上传第一张图片，这样正好
 							uni.uploadFile({
 								url: 'http://localhost:3000/api/products/addImage', // 后端新增图片的接口地址
 								filePath: filePath, // 上传的其他图片路径
@@ -269,12 +270,12 @@ export default {
 		// 图片上传
 		ChooseImage() {
 			uni.chooseImage({
-				count: 5, //默认9
+				count: 5 - this.imgList.length, // 限制还能选择的图片数量
 				sizeType: ['original', 'compressed'], //可以指定是原图还是压缩图，默认二者都有
 				sourceType: ['album'], //从相册选择
 				success: (res) => {
 					if (this.imgList.length != 0) {
-						this.imgList.concat(res.tempFilePaths)
+						this.imgList = this.imgList.concat(res.tempFilePaths)
 					} else {
 						this.imgList = res.tempFilePaths
 					}

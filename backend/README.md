@@ -1,4 +1,5 @@
 [toc]
+
 # 校园二手交易平台后端开发文档
 
 ## 后端技术栈
@@ -86,6 +87,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 ## 环境配置
 
 ### 1.配置文件（.env）
+
 ```
   DB_HOST=localhost
   DB_USER=root
@@ -101,8 +103,7 @@ npm install
 node server.js
 ```
 
-## API文档
-
+## API 文档
 
 ### 用户认证
 
@@ -114,8 +115,8 @@ node server.js
   ```json
   {
     "student_id": "string", // 学生ID
-    "username": "string",   // 用户名
-    "password": "string",   // 密码
+    "username": "string", // 用户名
+    "password": "string", // 密码
     "student_card": "string" // 学生证信息
   }
   ```
@@ -143,7 +144,7 @@ node server.js
     }
     ```
 
-####  用户登录
+#### 用户登录
 
 - **URL**: `/api/login`
 - **Method**: `POST`
@@ -151,7 +152,7 @@ node server.js
   ```json
   {
     "student_id": "string", // 学生ID
-    "password": "string"    // 密码
+    "password": "string" // 密码
   }
   ```
 - **Success Response**:
@@ -217,11 +218,13 @@ node server.js
 **请求路径**：`/api/products/create`
 
 **请求参数**：
+
 - `price`（必需）：商品价格。
 - `description`（必需）：商品描述。
 - `image`（必需）：商品图片的 URL。
 
 **返回值**：
+
 - 成功时返回状态码 `201`，返回值示例：
   ```json
   {
@@ -249,9 +252,11 @@ node server.js
 **请求路径**：`/api/products/search`
 
 **请求参数**：
+
 - `keyword`（必需）：搜索关键词。
 
 **返回值**：
+
 - 成功时返回状态码 `200`，返回值示例：
   ```json
   [
@@ -285,11 +290,14 @@ node server.js
 **请求路径**：`/api/orders/create`
 
 **请求参数**：
+
 - `product_id`（必需）：商品的 ID。
 - `buyer_id`（必需）：买家的 ID。
 
 **返回值**：
+
 - **成功时**：
+
   - 返回状态码 `201`。
   - 返回值示例：
     ```json
@@ -307,6 +315,7 @@ node server.js
     其中，`payment_params` 是微信支付所需的参数。
 
 - **商品未找到时**：
+
   - 返回状态码 `404`。
   - 返回值示例：
     ```json
