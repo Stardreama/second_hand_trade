@@ -30,6 +30,20 @@ router.get("/protected", authController.authenticateJWT, (req, res) => {
   res.status(200).json({ message: "你已经成功通过JWT认证！" });
 });
 
+// 头像更新路由
+router.post(
+  "/user/update-avatar",
+  authController.authenticateJWT,
+  upload.single("avatar"),
+  authController.updateAvatar
+);
+
+// 添加获取用户信息的路由
+router.get(
+  "/user/profile",
+  authController.authenticateJWT,
+  authController.getUserProfile
+);
 // 其他路由
 router.post(
   "/products",

@@ -4,17 +4,11 @@
     <view class="UCenter-bg" catchtap="toMy_detail">
       <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
       <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
-      <view class="text-xl">
-        <!-- <text>Amibition</text>   -->
-      </view>
       <view class="margin-top-sm">
         <text>Amibition</text>
       </view>
-      <image
-        src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif"
-        mode="scaleToFill"
-        class="gif-wave"
-      ></image>
+      <image src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif" mode="scaleToFill"
+        class="gif-wave"></image>
     </view>
     <!-- 用户信息end -->
 
@@ -105,7 +99,7 @@ export default {
   data() {
     return {
       // 头像地址，初始使用本地默认头像
-      avatar: '../../static/img/avatar.jpg'
+      avatar: "https://s21.ax1x.com/2025/03/18/pEdfnjP.jpg",
     };
   },
   methods: {
@@ -195,35 +189,82 @@ export default {
     // 点击头像的事件，弹出预览或更换头像的选项
     changeAvatar() {
       uni.showActionSheet({
-        itemList: ['预览头像', '更换头像'],
-        success: res => {
+        itemList: ["预览头像", "更换头像"],
+        success: (res) => {
           if (res.tapIndex === 0) {
             // 预览头像
             uni.previewImage({
               current: this.avatar,
-              urls: [this.avatar]
+              urls: [this.avatar],
             });
           } else if (res.tapIndex === 1) {
             // 选择新头像
             uni.chooseImage({
               count: 1,
-              success: chooseRes => {
-                // 更新头像地址
-                this.avatar = chooseRes.tempFilePaths[0];
+              success: (chooseRes) => {
+                const tempFilePath = chooseRes.tempFilePaths[0];
+
+                // 显示上传中
+                uni.showLoading({
+                  title: "上传中...",
+                });
+
+                // 获取token
+                const token = uni.getStorageSync("token");
+
+                // 上传头像
+                uni.uploadFile({
+                  url: "http://localhost:3000/api/user/update-avatar",
+                  filePath: tempFilePath,
+                  name: "avatar",
+                  header: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                  success: (uploadRes) => {
+                    uni.hideLoading();
+
+                    const data = JSON.parse(uploadRes.data);
+                    if (uploadRes.statusCode === 200) {
+                      // 更新头像地址
+                      this.avatar = tempFilePath;
+
+                      // 保存到本地存储
+                      let userInfo = uni.getStorageSync("userInfo") || {};
+                      userInfo.avatar = data.avatarUrl;
+                      uni.setStorageSync("userInfo", userInfo);
+
+                      uni.showToast({
+                        title: "头像更新成功",
+                        icon: "success",
+                      });
+                    } else {
+                      uni.showToast({
+                        title: data.message || "上传失败",
+                        icon: "none",
+                      });
+                    }
+                  },
+                  fail: () => {
+                    uni.hideLoading();
+                    uni.showToast({
+                      title: "网络错误，请重试",
+                      icon: "none",
+                    });
+                  },
+                });
               },
               fail: () => {
                 uni.showToast({
-                  title: '选择失败',
-                  icon: 'none'
+                  title: "选择失败",
+                  icon: "none",
                 });
-              }
+              },
             });
           }
         },
-        fail: err => {
-          // 用户取消操作
-          console.log('操作取消', err);
-        }
+        fail: (err) => {
+          console.log("操作取消", err);
+        },
       });
     },
     // 跳转到个人详情（此处仍保留原有逻辑）
@@ -232,7 +273,44 @@ export default {
       uni.navigateTo({
         url: "/pages/my/my_detail/my_detail",
       });
-    }
+    },
+  },
+  onShow() {
+    // 获取token
+    const token = uni.getStorageSync("token");
+    if (!token) return;
+
+    // 每次页面显示时从服务器获取最新用户信息
+    uni.request({
+      url: "http://localhost:3000/api/user/profile",
+      header: {
+        Authorization: `Bearer ${token}`,
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          const userInfo = res.data.user;
+          // 更新本地存储
+          uni.setStorageSync("userInfo", userInfo);
+
+          // 设置头像(确保使用完整URL)
+          if (userInfo.avatar) {
+            // 检查是否已经是完整URL
+            if (userInfo.avatar.startsWith("http")) {
+              this.avatar = userInfo.avatar;
+            } else {
+              // 拼接完整URL
+              this.avatar = `http://localhost:3000/${userInfo.avatar.replace(
+                /\\/g,
+                "/"
+              )}`;
+            }
+          }
+        }
+      },
+      fail: () => {
+        console.log("获取用户信息失败");
+      },
+    });
   },
 };
 </script>
@@ -256,13 +334,16 @@ export default {
   font-weight: 300;
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
+
 .UCenter-bg text {
   opacity: 0.8;
 }
+
 .UCenter-bg image {
   width: 200rpx;
   height: 200rpx;
 }
+
 .UCenter-bg .gif-wave {
   position: absolute;
   width: 100%;
@@ -272,6 +353,7 @@ export default {
   mix-blend-mode: screen;
   height: 100rpx;
 }
+
 map,
 .mapBox {
   left: 0;
@@ -279,18 +361,22 @@ map,
   mix-blend-mode: screen;
   height: 100rpx;
 }
+
 map,
 .mapBox {
   width: 750rpx;
   height: 300rpx;
 }
+
 .text-xl image {
   height: 100rpx;
   width: 100rpx;
 }
+
 .png {
   border-radius: 100%;
 }
+
 .num {
   direction: rtl;
   margin-left: 58%;

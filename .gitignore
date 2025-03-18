@@ -12,7 +12,6 @@ node_modules
 .DS_Store
 dist
 *.local
-
 # Editor directories and files
 .idea
 *.suo
@@ -24,3 +23,8 @@ dist
 *.png
 *.webp
 *.jpeg
+*.ico
+*.gif
+*.bmp
+*.tif
+*.tiff

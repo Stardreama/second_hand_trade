@@ -9,6 +9,9 @@ const register = (req, res) => {
   // 从 req.file 获取上传的文件信息，如果有文件，则取其路径
   const student_card = req.file ? req.file.path : null;
 
+  // 设置默认头像URL
+  const defaultAvatarUrl = "https://s21.ax1x.com/2025/03/18/pEdfnjP.jpg";
+
   console.log("注册请求数据：", req.body);
   console.log("上传的文件信息：", req.file);
 
@@ -30,11 +33,12 @@ const register = (req, res) => {
         return res.status(500).json({ message: "密码加密失败" });
       }
       // 创建新用户，将 student_card 的文件路径存入数据库
-      User.create(
+      User.createWithAvatar(
         student_id,
         username,
         hashedPassword,
         student_card,
+        defaultAvatarUrl,
         (err, result) => {
           if (err) {
             console.error("创建用户失败：", err);
@@ -116,4 +120,58 @@ const authenticateJWT = (req, res, next) => {
   next();
 };
 
-module.exports = { register, login, authenticateJWT };
+// 更新用户头像
+const updateAvatar = (req, res) => {
+  // 从认证中获取用户ID
+  const student_id = req.user.student_id;
+
+  // 从请求获取上传的文件路径
+  const avatarPath = req.file ? req.file.path : null;
+
+  if (!avatarPath) {
+    return res.status(400).json({ message: "没有接收到头像文件" });
+  }
+
+  // 更新用户头像
+  User.updateAvatar(student_id, avatarPath, (err, result) => {
+    if (err) {
+      console.error("更新头像失败：", err);
+      return res.status(500).json({ message: "数据库错误" });
+    }
+
+    // 构建可访问的URL路径
+    const avatarUrl = `http://localhost:3000/${avatarPath.replace(/\\/g, "/")}`;
+
+    console.log("头像更新成功");
+    res.status(200).json({
+      message: "头像更新成功",
+      avatarUrl: avatarUrl,
+    });
+  });
+};
+
+// 获取用户资料
+const getUserProfile = (req, res) => {
+  const student_id = req.user.student_id;
+
+  User.getUserProfile(student_id, (err, result) => {
+    if (err) {
+      console.error("获取用户信息失败：", err);
+      return res.status(500).json({ message: "数据库错误" });
+    }
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ message: "用户不存在" });
+    }
+
+    res.status(200).json({ user: result[0] });
+  });
+};
+
+module.exports = {
+  register,
+  login,
+  authenticateJWT,
+  updateAvatar,
+  getUserProfile,
+};
