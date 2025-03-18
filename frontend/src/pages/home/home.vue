@@ -116,21 +116,38 @@
 
 
  <!-- 内容 -->
-<view class='card-menu container margin-top ' v-for="(item,index) in 10" :key="index">
-    <navigator url='/pages/home/home_detail/home_detail' hover-class='none'>
-  <view class='container_img'><image src='../../static/img/deatil.jpg'></image></view>
-  <view class='container_text'><text class=''>Huawei/华为Mate 20 Pro运气真好双卡双待全网通</text></view>
-  <view class='container_price'>
-  <text class='container_price_text_0'>￥980</text>
-  <!-- <text class='container_price_text_1'>11人想要</text> -->
-  <view class="cu-tag line-orange">全新</view>
-  </view>
-  <view class='container_line'></view>
-  <view class='container_user'>
-  <image src='http://pic25.nipic.com/20121205/10197997_003647426000_2.jpg'></image>
-  <text>Amibition</text>
-  </view>
-  </navigator>
+ <!-- 商品列表容器 -->
+  <!-- 使用v-for循环渲染products数组中的每个商品 -->
+  <view class='card-menu container margin-top' 
+        v-for="item in products" 
+        :key="item.product_id">
+    <!-- 商品详情页导航 -->
+    <navigator url='/pages/home/home_detail/home_detail' 
+               hover-class='none'>
+      
+      <!-- 商品图片容器 -->
+      <view class='container_img'>
+        <!-- 动态绑定图片路径，调用方法处理图片地址 -->
+        <image :src="getImageUrl(item.image)"></image>
+      </view>
+
+      <!-- 商品标题容器 -->
+      <view class='container_text'>
+        <!-- 显示商品标题 -->
+        <text>{{ item.product_title }}</text>
+      </view>
+
+      <!-- 价格和状态容器 -->
+      <view class='container_price'>
+        <!-- 显示商品价格（建议后续添加价格格式化） -->
+        <text class='container_price_text_0'>￥{{ item.price }}</text>
+        <!-- 动态绑定状态标签样式 -->
+        <view class="cu-tag" :class="getStatusClass(item.product_status)">
+          {{ item.product_status }}
+        </view>
+
+      </view>
+        </navigator>
 </view>
 <!-- 内容end -->
 </view>
@@ -145,6 +162,7 @@
 <script>
 	import bar from "../component/bar.vue";
 	import TopBar from "../component/topTab.vue";
+	import axios from 'axios';
 	export default {
 		data() {
 			return {
@@ -273,6 +291,7 @@
 						// //end
 						// //显示异常屏幕回到初始化位置开关
 						showTop:false,//异常
+						 products: [] // 初始化商品数据为空数组,
 			}
 		},
 		components:{
@@ -306,7 +325,53 @@
 			console.log("出发上拉刷新事件");
 			
 		},
+		   // 生命周期钩子：组件挂载完成后自动执行
+  mounted() {
+    this.fetchProducts();
+  },
+
 		methods: {
+			// 获取商品数据的方法
+    async fetchProducts() {
+      try {
+        // 发送GET请求到后端API
+        const response = await axios.get('http://localhost:3000/api/products');
+        // 将响应数据赋值给products数组
+        this.products = response.data;
+      } catch (error) {
+        // 错误处理（建议后续添加用户提示）
+        console.error('获取商品数据失败:', error);
+      }
+    },
+
+    /**
+     * 处理图片路径的方法
+     * @param {string} path - 后端返回的图片路径
+     * @returns {string} 完整的图片URL地址
+     */
+    getImageUrl(path) {
+      // 将Windows路径分隔符转换为URL标准分隔符
+      const formattedPath = path.replace(/\\/g, '/');
+      // 拼接完整的图片访问地址（假设服务器运行在3000端口）
+      return `http://localhost:3000/${formattedPath}`;
+    },
+
+    /**
+     * 获取状态标签样式的动态类名
+     * @param {string} status - 商品状态
+     * @returns {Object} 包含样式类名的对象
+     */
+    getStatusClass(status) {
+      return {
+        // 全新状态使用橙色边框
+        'line-orange': status === '全新',
+        // 二手状态使用蓝色边框（需要定义对应的CSS类）
+        'line-blue': status === '二手',
+        // 其他状态使用绿色边框（需要定义对应的CSS类）
+        'line-green': !['全新', '二手'].includes(status)
+      };
+    }
+  ,
 			// 导航条点击
 			  tabSelect(e) {
 				  // console.log(e) ;
