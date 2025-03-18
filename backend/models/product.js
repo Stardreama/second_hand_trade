@@ -36,11 +36,11 @@ const Product = {
     db.query(sql, [productId, imagePath], callback);
   },
   // 根据关键词搜索商品
-  search: (keyword, callback) => {
-    const query = "SELECT * FROM products WHERE description LIKE ?";
-    const searchPattern = `%${keyword}%`; // 模糊匹配
-    db.query(query, [searchPattern], callback);
-  },
+  search: (keyword, callback) => {  
+    const query = "SELECT * FROM products WHERE description LIKE ? OR product_title LIKE ?";  
+    const searchPattern = `%${keyword}%`; // 模糊匹配  
+    db.query(query, [searchPattern, searchPattern], callback);  
+  },  
 };
 
 module.exports = Product;

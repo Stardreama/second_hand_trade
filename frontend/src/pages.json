@@ -17,6 +17,13 @@
       }
     },
     {
+      "path": "pages/search/search",
+      "style": {
+        "navigationBarTitleText": "搜索结果",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
       "path": "pages/disconver/disconver",
       "style": {
         "enablePullDownRefresh": true,

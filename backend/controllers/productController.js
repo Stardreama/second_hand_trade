@@ -109,6 +109,7 @@ const searchProduct = (req, res) => {
       price: product.price,
       description: product.description,
       image: product.image, // 假设商品图片是一个URL
+      product_title: product.product_title,
     }));
     res.status(200).json(products);
   });
