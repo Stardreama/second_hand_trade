@@ -82,7 +82,12 @@ router.post(
   },
   productController.addImage
 );
-
+// 不需要图片的求购路由
+router.post(
+  "/create-no-image",
+  authenticateToken,
+  productController.createProductNoImage
+);
 // 搜索商品
 router.get("/search", productController.searchProduct);
 

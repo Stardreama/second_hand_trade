@@ -1,5 +1,16 @@
 <template>
 	<view>
+		<!-- 导航栏 -->
+		<view class="cu-bar bg-white solid-bottom">
+			<view class="flex padding-sm text-center text-xl">
+				<view class="flex-sub" :class="{ 'text-blue': tabIndex === 0 }" @tap="switchTab(0)">
+					出售
+				</view>
+				<view class="flex-sub" :class="{ 'text-blue': tabIndex === 1 }" @tap="switchTab(1)">
+					求购
+				</view>
+			</view>
+		</view>
 		<form @submit="formSubmit" @reset="">
 			<!-- 标题 -->
 			<view class="cu-form-group margin-top">
@@ -54,7 +65,7 @@
 			<!-- end -->
 
 			<!-- 价钱 -->
-			<view class="cu-form-group margin-top">
+			<view class="cu-form-group margin-top" v-if="tabIndex === 0">
 				<view class="title">出售价:</view>
 				<input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7'
 					name="newPrice"></input>
@@ -62,7 +73,6 @@
 				<view class="title">原价:</view>
 				<input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价" maxlength='7'
 					name="oriPrice"></input>
-
 			</view>
 			<!-- end -->
 
@@ -76,10 +86,10 @@
 			<!-- end -->
 
 			<!-- 新旧 -->
-			<view class="cu-form-group">
+			<view class="cu-form-group" v-if="tabIndex === 0">
 				<view class="title">新旧:</view>
 				<input disabled="true" name="itemLists" :value='itemLists[itemListsIndex]'></input>
-				<button class="cu-btn  bg-green" role="button" aria-disabled="false" @tap="newState">选择</button>
+				<button class="cu-btn bg-green" role="button" aria-disabled="false" @tap="newState">选择</button>
 			</view>
 			<!-- end -->
 
@@ -100,7 +110,9 @@
 
 			<!-- 确定发布 -->
 			<view class="padding flex flex-direction">
-				<button class="cu-btn bg-green margin-tb-sm lg" form-type="submit">确定发布</button>
+				<button class="cu-btn bg-green margin-tb-sm lg" form-type="submit">
+					{{ tabIndex === 0 ? '发布出售' : '发布求购' }}
+				</button>
 			</view>
 			<!-- end -->
 		</form>
@@ -128,6 +140,7 @@ import allSchool from "../../common/allSchool.js";
 export default {
 	data() {
 		return {
+			tabIndex: 0, // 0: 出售, 1: 求购
 			title: '',  // 产品标题绑定（对应数据库 product_title，类型 TEXT）
 			modalName: '',//模态框开关
 			picker: [
@@ -160,98 +173,168 @@ export default {
 		}
 	},
 	methods: {
+		// 切换标签页
+		switchTab(index) {
+			this.tabIndex = index;
+			// 清空表单
+			this.resetForm();
+		},
+
+		// 重置表单
+		resetForm() {
+			this.title = '';
+			this.content = '';
+			this.imgList = [];
+			this.money = '';
+			this.newMoney = '';
+			this.multiIndex = [0, 0, 0];
+			this.classify = '其他闲置';
+			this.itemListsIndex = 0;
+			this.checkboxs.forEach(item => item.checked = false);
+		},
 		formSubmit() {
 			// 从本地存储获取 token
-			console.log("Title:", this.title); // 调试输出
+			console.log("Title:", this.title);
 			const token = uni.getStorageSync('token');
 
-			// 确保至少有一张图片
-			if (this.imgList.length === 0) {
+			// 仅在出售模式下强制要求上传图片
+			if (this.tabIndex === 0 && this.imgList.length === 0) {
 				uni.showToast({
-					title: '请上传至少一张图片',
+					title: '出售商品请上传至少一张图片',
 					icon: 'none',
 					duration: 2000,
 				});
 				return;
 			}
-			console.log(this.imgList);
-			
-			uni.uploadFile({
-				url: 'http://localhost:3000/api/products/create', // 后端接口地址
-				filePath: this.imgList[0], // 上传的封面图片路径
-				name: 'image', // 注意，这里必须和后端 multer 期望的字段名称一致
-				formData: {
-					title: this.title, // 产品标题（对应 product_title）
-					description: this.content, // 商品描述
-					price: this.money, // 商品价格
-					product_status: this.itemLists[this.itemListsIndex], // 新旧程度
-					product_class: this.classify, // 产品分类
-					token: token, // 可选，如果后端需要在请求体中接收 token（通常只需要在请求头中）
-				},
-				header: {
-					'Authorization': `Bearer ${token}` // 将 token 添加到请求头部
-				},
-				success: (res) => {
-					const data = JSON.parse(res.data);
-					if (res.statusCode === 201) {
-						const productId = data.product_id; // 获取插入的 product_id
-						console.log('封面图片上传成功，product_id:', productId);
 
-						// 上传其他图片（非封面图片）
-						this.imgList.slice(1).forEach((filePath, index) => { //不知为什么用了slice(1)还是会上传第一张图片，这样正好
-							uni.uploadFile({
-								url: 'http://localhost:3000/api/products/addImage', // 后端新增图片的接口地址
-								filePath: filePath, // 上传的其他图片路径
-								name: 'image', // 同样的字段名称
-								formData: {
-									product_id: productId, // 传递上一步返回的 product_id
-								},
-								header: {
-									'Authorization': `Bearer ${token}`,
-								},
-								success: (res) => {
-									const data = JSON.parse(res.data);
-									if (res.statusCode === 200) {
-										console.log(`图片 ${index + 1} 上传成功`);
-									} else {
-										uni.showToast({
-											title: data.message || '上传失败，请重试',
-											icon: 'none',
-											duration: 2000,
-										});
-									}
-								},
-								fail: (err) => {
-									uni.showToast({
-										title: '网络错误，请重试',
-										icon: 'none',
-										duration: 2000,
-									});
-								}
+			// 基本表单验证
+			if (!this.title || !this.content || !this.classify) {
+				uni.showToast({
+					title: '请填写完整信息',
+					icon: 'none',
+					duration: 2000,
+				});
+				return;
+			}
+
+			// 处理发布请求
+			const formData = {
+				title: this.title,
+				description: this.content,
+				price: this.tabIndex === 0 ? this.money : '0', // 求购时价格可为0
+				product_status: this.tabIndex === 0 ? this.itemLists[this.itemListsIndex] : '求购',
+				product_class: this.classify,
+				product_type: this.tabIndex === 0 ? 'sell' : 'buy', // 区分出售与求购
+				token: token,
+			};
+
+			// 区分有图和无图的情况
+			if (this.imgList.length > 0) {
+				// 有图片的情况
+				uni.uploadFile({
+					url: 'http://localhost:3000/api/products/create',
+					filePath: this.imgList[0],
+					name: 'image',
+					formData: formData,
+					header: {
+						'Authorization': `Bearer ${token}`
+					},
+					success: (res) => {
+						this.handleUploadSuccess(res, token);
+					},
+					fail: this.handleUploadFail
+				});
+			} else {
+				// 无图片的情况（仅适用于求购）
+				uni.request({
+					url: 'http://localhost:3000/api/products/create-no-image',
+					method: 'POST',
+					data: formData,
+					header: {
+						'Authorization': `Bearer ${token}`
+					},
+					success: (res) => {
+						if (res.statusCode === 201) {
+							uni.showToast({
+								title: '求购信息发布成功',
+								icon: 'success',
+								duration: 2000,
 							});
-						});
+							// 重置表单
+							this.resetForm();
+						} else {
+							uni.showToast({
+								title: res.data.message || '发布失败，请重试',
+								icon: 'none',
+								duration: 2000,
+							});
+						}
+					},
+					fail: this.handleUploadFail
+				});
+			}
+		},
 
-						// 所有图片上传完成后，显示发布成功的提示
-						uni.showToast({
-							title: '商品发布成功',
-							icon: 'success',
-							duration: 2000,
-						});
-					} else {
-						uni.showToast({
-							title: data.message || '发布失败，请重试',
-							icon: 'none',
-							duration: 2000,
-						});
-					}
-				},
-				fail: (err) => {
-					uni.showToast({
-						title: '网络错误，请重试',
-						icon: 'none',
-						duration: 2000,
+		// 添加处理上传成功的方法
+		handleUploadSuccess(res, token) {
+			const data = JSON.parse(res.data);
+			if (res.statusCode === 201) {
+				const productId = data.product_id;
+				console.log('封面图片上传成功，product_id:', productId);
+
+				// 上传其他图片（非封面图片）
+				this.imgList.slice(1).forEach((filePath, index) => {
+					uni.uploadFile({
+						url: 'http://localhost:3000/api/products/addImage',
+						filePath: filePath,
+						name: 'image',
+						formData: {
+							product_id: productId,
+						},
+						header: {
+							'Authorization': `Bearer ${token}`,
+						},
+						success: (res) => {
+							const data = JSON.parse(res.data);
+							if (res.statusCode === 200) {
+								console.log(`图片 ${index + 1} 上传成功`);
+							} else {
+								uni.showToast({
+									title: data.message || '上传失败，请重试',
+									icon: 'none',
+									duration: 2000,
+								});
+							}
+						},
+						fail: this.handleUploadFail
 					});
-				}
+				});
+
+				// 重置表单
+				this.resetForm();
+
+				// 显示发布成功提示
+				uni.showToast({
+					title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
+					icon: 'success',
+					duration: 2000,
+				});
+			} else {
+				uni.showToast({
+					title: data.message || '发布失败，请重试',
+					icon: 'none',
+					duration: 2000,
+				});
+			}
+		},
+
+		// 添加处理上传失败的方法
+		handleUploadFail(err) {
+			console.error('上传失败:', err);
+			uni.showToast({
+				title: '网络错误，请重试',
+				icon: 'none',
+				duration: 2000,
 			});
 		},
 

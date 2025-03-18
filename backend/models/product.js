@@ -11,21 +11,23 @@ const Product = {
     product_title,
     product_status,
     product_class,
+    product_type,
     callback
   ) => {
     const query =
-      "INSERT INTO products (seller_id, price, description, image, product_title, product_status, product_class) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
+      "INSERT INTO products (seller_id, price, description, image, product_title, product_status, product_class, product_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+  
     db.query(
       query,
       [
         seller_id,
         price,
         description,
-        image,
+        image, // 这里可能为null
         product_title,
         product_status,
         product_class,
+        product_type,
       ],
       callback
     );
