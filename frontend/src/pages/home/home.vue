@@ -255,33 +255,34 @@ export default {
 		if (!token) return;
 
 		// 每次页面显示时从服务器获取最新用户信息
-		uni.request({
-			url: "http://localhost:3000/api/user/profile",
-			header: {
-				Authorization: `Bearer ${token}`,
-			},
-			success: (res) => {
-				if (res.statusCode === 200) {
-					const userInfo = res.data.user;
-					// 更新本地存储
-					uni.setStorageSync("userInfo", userInfo);
+  // 每次页面显示时从服务器获取最新用户信息
+  uni.request({
+    url: "http://localhost:3000/api/user/profile",
+    header: {
+      Authorization: `Bearer ${token}`,
+    },
+    success: (res) => {
+      if (res.statusCode === 200) {
+        const userInfo = res.data.user;
+        // 更新本地存储
+        uni.setStorageSync("userInfo", userInfo);
 
-					// 设置头像(确保使用完整URL)
-					if (userInfo.avatar) {
-						// 检查是否已经是完整URL
-						if (userInfo.avatar.startsWith("http")) {
-							this.avatar = userInfo.avatar;
-						} else {
-							// 拼接完整URL
-							this.avatar = `http://localhost:3000/${userInfo.avatar.replace(/\\/g, "/")}`;
-						}
-					}
-				}
-			},
-			fail: () => {
-				console.log("获取用户信息失败");
-			},
-		});
+        // 设置头像(确保使用完整URL)
+        if (userInfo.avatar) {
+          // 检查是否已经是完整URL
+          if (userInfo.avatar.startsWith("http")) {
+            this.userAvatar = userInfo.avatar; 
+          } else {
+            // 拼接完整URL
+            this.userAvatar = `http://localhost:3000/${userInfo.avatar.replace(/\\/g, "/")}`;
+          }
+        }
+      }
+    },
+    fail: () => {
+      console.log("获取用户信息失败");
+    },
+  });
 		// 每次显示页面时重新获取最新商品数据
 		this.fetchProducts().then(() => {
 			console.log("首页商品数据已更新");
