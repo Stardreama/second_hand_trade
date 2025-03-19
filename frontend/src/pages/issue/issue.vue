@@ -1,35 +1,41 @@
 <template>
 	<view>
 		<!-- 导航栏 -->
-		<view class="cu-bar bg-white solid-bottom">
-			<view class="flex padding-sm text-center text-xl">
-				<view class="flex-sub" :class="{ 'text-blue': tabIndex === 0 }" @tap="switchTab(0)">
-					出售
+		<view class="cu-bar bg-white solid-bottom nav-bar">
+			<view class="flex padding-sm text-center text-xl tab-container">
+				<view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 0 }" @tap="switchTab(0)">
+					<font-awesome-icon :icon="['fas', 'tags']" class="tab-icon" />
+					<text>出售</text>
 				</view>
-				<view class="flex-sub" :class="{ 'text-blue': tabIndex === 1 }" @tap="switchTab(1)">
-					求购
+				<view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 1 }" @tap="switchTab(1)">
+					<font-awesome-icon :icon="['fas', 'shopping-cart']" class="tab-icon" />
+					<text>求购</text>
 				</view>
 			</view>
 		</view>
 		<form @submit="formSubmit" @reset="">
 			<!-- 标题 -->
-			<view class="cu-form-group margin-top">
-				<view class="title">标题</view>
-				<input bindinput="zgetTitleValue" type="text" v-model="title" name="title"
-					placeholder="品类品牌型号都是买家喜欢搜索的"></input>
-			</view>
+			<view class="cu-form-group margin-top form-item" :class="{'error-field': titleError}">
+    <view class="title">
+        <font-awesome-icon :icon="['fas', 'list']" class="form-icon" />
+        <text>标题</text>
+    </view>
+    <input type="text" v-model="title" name="title" 
+        placeholder="品类品牌型号都是买家喜欢搜索的" class="form-input"></input>
+</view>
 			<!-- end -->
 
 			<!-- 内容 -->
-			<view class="cu-form-group margin-top">
-				<textarea v-model="content" maxlength="1000" placeholder="描述宝贝的转手原因,入手渠道和使用感受"></textarea>
-			</view>
+			<view class="cu-form-group margin-top" :class="{'error-field': contentError}">
+    <textarea v-model="content" maxlength="1000" placeholder="描述宝贝的转手原因,入手渠道和使用感受"></textarea>
+</view>
 			<!-- end -->
 
 			<!-- 图片 -->
 			<view class="cu-bar bg-white margin-top">
 				<view class="action">
-					图片上传
+					<font-awesome-icon :icon="['fas', 'upload']" class="form-icon" />
+					<text class="section-title">图片上传</text>
 				</view>
 				<view class="action">
 					{{ imgList.length }}/5
@@ -52,8 +58,11 @@
 			<!-- end -->
 
 			<!-- 地址选择 -->
-			<view class="cu-form-group">
-				<view class="title">地址选择</view>
+			<view class="cu-form-group form-item">
+				<view class="title">
+					<font-awesome-icon :icon="['fas', 'map-marker-alt']" class="form-icon" />
+					<text>地址选择</text>
+				</view>
 				<picker mode="multiSelector" @change="MultiChange" @columnchange="MultiColumnChange" :value="multiIndex"
 					:range="multiArray">
 					<view class="picker">
@@ -66,14 +75,14 @@
 
 			<!-- 价钱 -->
 			<view class="cu-form-group margin-top" v-if="tabIndex === 0">
-				<view class="title">出售价:</view>
-				<input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7'
-					name="newPrice"></input>
+    <view class="title">出售价:</view>
+    <input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7'
+        name="newPrice" :class="{'error-input': sellPriceError}"></input>
 
-				<view class="title">原价:</view>
-				<input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价" maxlength='7'
-					name="oriPrice"></input>
-			</view>
+    <view class="title">原价:</view>
+    <input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价"
+        maxlength='7' name="oriPrice" :class="{'error-input': orginalPriceError}"></input>
+</view>
 			<!-- end -->
 
 			<!-- 选择分类  -->
@@ -88,7 +97,7 @@
 			<!-- 新旧 -->
 			<view class="cu-form-group" v-if="tabIndex === 0">
 				<view class="title">新旧:</view>
-				<input disabled="true" name="itemLists" :value='itemLists[itemListsIndex]'></input>
+				<input ref="status" disabled="true" name="itemLists" :value='itemLists[itemListsIndex]'></input>
 				<button class="cu-btn bg-green" role="button" aria-disabled="false" @tap="newState">选择</button>
 			</view>
 			<!-- end -->
@@ -110,7 +119,8 @@
 
 			<!-- 确定发布 -->
 			<view class="padding flex flex-direction">
-				<button class="cu-btn bg-green margin-tb-sm lg" form-type="submit">
+				<button class="cu-btn submit-btn margin-tb-sm lg" form-type="submit">
+					<font-awesome-icon :icon="['fas', 'paper-plane']" class="submit-icon" />
 					{{ tabIndex === 0 ? '发布出售' : '发布求购' }}
 				</button>
 			</view>
@@ -170,6 +180,11 @@ export default {
 				{ value: "同城面交", checked: false },
 				{ value: "邮寄", checked: false },
 			],
+		// 错误状态变量
+        titleError: false,
+        contentError: false,
+        sellPriceError: false,
+        orginalPriceError: false,
 		}
 	},
 	methods: {
@@ -196,19 +211,41 @@ export default {
 			// 从本地存储获取 token
 			console.log("Title:", this.title);
 			const token = uni.getStorageSync('token');
-
-			// 仅在出售模式下强制要求上传图片
-			if (this.tabIndex === 0 && this.imgList.length === 0) {
-				uni.showToast({
-					title: '出售商品请上传至少一张图片',
-					icon: 'none',
-					duration: 2000,
-				});
-				return;
+			let isValid = true;
+			// 验证标题
+			if (!this.validateField('title')) {
+				isValid = false;
 			}
+			// 验证内容
+			if (!this.validateField('content')) {
+				isValid = false;
+			}
+			// 仅在出售模式下验证价格和图片
+			if (this.tabIndex === 0) {
+				// 验证分类
+				if (!this.validateField('sellPrice')) {
+					isValid = false;
+				}
+				// 验证分类
+				if (!this.validateField('orginalPrice')) {
+					isValid = false;
+				}
 
-			// 基本表单验证
-			if (!this.title || !this.content || !this.classify) {
+				// 验证图片
+				if (this.imgList.length === 0) {
+					uni.showToast({
+						title: '出售商品请上传至少一张图片',
+						icon: 'none',
+						duration: 2000,
+					});
+					isValid = false;
+				}
+			}
+			// 验证分类
+			if (!this.validateField('status')) {
+				isValid = false;
+			}
+			if (!isValid) {
 				uni.showToast({
 					title: '请填写完整信息',
 					icon: 'none',
@@ -337,7 +374,62 @@ export default {
 				duration: 2000,
 			});
 		},
-
+		validateField(field) {
+    let isValid = true;
+    
+    // 根据不同字段类型进行处理
+    switch(field) {
+        case 'title':
+            isValid = this.title && this.title.trim() !== '';
+            break;
+        case 'content':
+            isValid = this.content && this.content.trim() !== '';
+            break;
+        case 'sellPrice':
+            isValid = this.tabIndex === 1 || (this.money && this.money.trim() !== '');
+            break;
+        case 'orginalPrice':
+            isValid = this.tabIndex === 1 || (this.newMoney && this.newMoney.trim() !== '');
+            break;
+        case 'status':
+            isValid = true; // 这些通常有默认值
+            break;
+        default:
+            isValid = Boolean(this[field]);
+    }
+    
+    // 如果验证失败，使用uni-app的震动API而非DOM操作
+    if (!isValid) {
+        // 使用uni-app的震动API
+        uni.vibrateShort({
+            success: function () {
+                console.log('震动成功');
+            }
+        });
+        
+        // 突出显示错误字段（通过临时设置相关变量）
+        switch(field) {
+            case 'title':
+                this.titleError = true;
+                setTimeout(() => { this.titleError = false; }, 500);
+                break;
+            case 'content':
+                this.contentError = true;
+                setTimeout(() => { this.contentError = false; }, 500);
+                break;
+            case 'sellPrice':
+                this.sellPriceError = true;
+                setTimeout(() => { this.sellPriceError = false; }, 500);
+                break;
+            case 'orginalPrice':
+                this.orginalPriceError = true; 
+                setTimeout(() => { this.orginalPriceError = false; }, 500);
+                break;
+        }
+    }
+    
+    return isValid;
+},
 		// 选择地址
 		MultiChange(e) {
 			this.multiIndex = e.detail.value
@@ -486,5 +578,147 @@ export default {
 
 .margin-top-xl-170 {
 	margin-top: 170rpx;
+}
+
+.nav-bar {
+	border-radius: 12rpx;
+	margin: 20rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.tab-container {
+	width: 100%;
+	padding: 10rpx;
+}
+
+.tab-item {
+	padding: 20rpx 0;
+	border-radius: 8rpx;
+	transition: all 0.3s ease;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	font-weight: bold;
+}
+
+.tab-icon {
+	margin-bottom: 8rpx;
+	font-size: 40rpx;
+}
+
+.active-tab {
+	background-color: #ecf6ff;
+	color: #0081ff;
+	transform: translateY(-2rpx);
+	box-shadow: 0 2rpx 10rpx rgba(0, 128, 255, 0.2);
+}
+
+/* 表单项样式 */
+.form-item {
+	border-radius: 8rpx;
+	margin: 20rpx;
+	box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.form-icon {
+	margin-right: 10rpx;
+	color: #666;
+}
+
+.form-input {
+	padding: 10rpx;
+}
+
+.section-title {
+	font-weight: bold;
+	font-size: 28rpx;
+	margin-left: 10rpx;
+}
+
+/* 提交按钮 */
+.submit-btn {
+	background: linear-gradient(45deg, #0081ff, #1cbbb4);
+	box-shadow: 0 10rpx 20rpx rgba(0, 129, 255, 0.2);
+	border-radius: 50rpx;
+	font-size: 32rpx;
+	font-weight: bold;
+	letter-spacing: 2rpx;
+	transition: all 0.3s ease;
+	color: white;
+}
+
+.submit-btn:active {
+	transform: translateY(4rpx);
+	box-shadow: 0 4rpx 10rpx rgba(0, 129, 255, 0.2);
+}
+
+.submit-icon {
+	margin-right: 10rpx;
+}
+
+/* 图片上传区域样式 */
+.grid-square {
+	border-radius: 8rpx;
+	overflow: hidden;
+	background-color: #f8f8f8;
+	padding: 10rpx;
+}
+
+.solids {
+	border: 2rpx dashed #ddd;
+	transition: all 0.3s ease;
+}
+
+.solids:active {
+	background-color: #f0f0f0;
+}
+
+.bg-img {
+	overflow: hidden;
+	border-radius: 8rpx;
+	box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 验证动画 */
+@keyframes shake {
+
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+
+	10%,
+	30%,
+	50%,
+	70%,
+	90% {
+		transform: translateX(-5rpx);
+	}
+
+	20%,
+	40%,
+	60%,
+	80% {
+		transform: translateX(5rpx);
+	}
+}
+
+.shake-animation {
+	animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+	background-color: rgba(255, 73, 73, 0.05);
+}
+@keyframes flash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: rgba(255, 73, 73, 0.2); }
+}
+
+.error-field {
+    animation: flash 0.5s ease;
+    border: 1rpx solid rgba(255, 73, 73, 0.5) !important;
+}
+
+.error-input {
+    animation: flash 0.5s ease;
+    background-color: rgba(255, 73, 73, 0.1);
 }
 </style>
