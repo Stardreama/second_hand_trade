@@ -92,7 +92,7 @@
         </view>
         点赞
       </view>
-      <view class="bg-red submit margin-rigth-20" @tap="buy">立即购买</view>
+      <view class="bg-red submit margin-rigth-20" @tap="buy">立即结算</view>
     </view>
     <!-- end -->
   </view>
