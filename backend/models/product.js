@@ -52,9 +52,42 @@ const Product = {
   findBySellerId: (sellerId) => {
     return new Promise((resolve, reject) => {
       const sql = `SELECT * FROM products WHERE seller_id = ?`;
-      db.query(sql, [sellerId], (err, results) => {
-        if (err) reject(err);
-        else resolve(results);
+      db.query(sql, [sellerId], async (err, results) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        try {
+          // 遍历每个产品，查询其对应的图片URL
+          const processedResults = await Promise.all(
+            results.map(async (product) => {
+              // 查询该产品的所有图片URL
+              const images = await new Promise((resolve, reject) => {
+                const imageQuery =
+                  "SELECT image_url FROM product_images WHERE product_id = ?";
+                db.query(
+                  imageQuery,
+                  [product.product_id],
+                  (err, imageResults) => {
+                    if (err) reject(err);
+                    else resolve(imageResults.map((img) => img.image_url));
+                  }
+                );
+              });
+
+              // 替换image字段为数组
+              return {
+                ...product,
+                image: images,
+              };
+            })
+          );
+
+          resolve(processedResults);
+        } catch (error) {
+          reject(error);
+        }
       });
     });
   },
