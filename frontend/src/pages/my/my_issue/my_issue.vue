@@ -4,12 +4,12 @@
     <view class="pa">
       <view
         class="contianer shadow-warp bg-white padding-sm"
-        v-for="(item, index) in 5"
-        :key="index"
+        v-for="(item, index) in productList"
+        :key="item.product_id"
       >
         <view class="contianer-title">
           <view class="contianer-title_1 text-cut"
-            ><text class="text-cut">Amibition</text></view
+            ><text class="text-cut">{{ item.product_title }}</text></view
           >
           <view class="contianer-title_2 text-cut"
             ><text class="text-cut">1小时前来过</text></view
@@ -24,12 +24,12 @@
           style="white-space: nowrap; display: flex"
           class="top-20"
         >
-          <block v-for="(item, index) in 10" :key="item">
+          <block v-for="(img, imgIndex) in item.images" :key="imgIndex">
             <view class="item-inlines">
               <navigator url="" hover-class="none">
                 <view
                   class="item-inline bg-img padding-top-xl flex align-end"
-                  :style="'background-image: url(' + url + ');'"
+                  :style="'background-image: url(' + img + ');'"
                 >
                 </view>
               </navigator>
@@ -40,7 +40,7 @@
         <view class="container-price_desc">
           <view class="cu-capsule round view-width">
             <view class="cu-tag bg-red"> 价钱 </view>
-            <view class="cu-tag line-red"> 123 </view>
+            <view class="cu-tag line-red"> {{ item.price }} </view>
           </view>
 
           <view class="cu-capsule radius">
@@ -114,7 +114,7 @@
             :data-id="index"
           >
             <view class="modle-select-1">
-              <text class="text-price text-red">{{ item.price }}</text>
+              <view class="cu-tag bg-red">{{ item.price }}元</view>
             </view>
             <view class="modle-select-2">
               <text>{{ item.desc }}</text>
@@ -133,6 +133,8 @@
 export default {
   data() {
     return {
+      baseUrl: "http://localhost:3000/", // 后端基础地址
+      productList: [], // 商品列表数据
       url: "https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg",
       //降价Model状态
       show_model_state: false,
@@ -147,6 +149,31 @@ export default {
     };
   },
   methods: {
+    async loadSalesData() {
+      try {
+        const token = uni.getStorageSync("token");
+        const { data: res } = await uni.request({
+          url: "http://localhost:3000/api/my/sale",
+          method: "GET",
+          header: {
+            Authorization: "Bearer " + token,
+          },
+        });
+        console.log(res);
+        if (res.code === 200) {
+          this.productList = res.data.map((item) => ({
+            ...item,
+            images: [this.baseUrl + item.image.replace(/\\/g, "/")],
+          }));
+        }
+      } catch (error) {
+        console.error("数据加载失败:", error);
+        uni.showToast({
+          title: "数据加载失败",
+          icon: "none",
+        });
+      }
+    },
     // 跳转到编辑页面
     toIssue: function () {
       console.log(123);
@@ -221,6 +248,7 @@ export default {
     },
   },
   onLoad(optins) {
+    this.loadSalesData();
     var that = this;
     //降价选择第一个
     that.re_price[0].checked = true;
