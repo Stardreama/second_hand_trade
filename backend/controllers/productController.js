@@ -3,8 +3,6 @@ const { db } = require("../config/config");
 const jwtService = require("../services/jwtService");
 // 发布商品
 const createProduct = (req, res) => {
-  // console.log("Request Body:", req.body);
-  // console.log("Request File:", req.files);
   console.log("Request Body:", req.body);
   
   const {
@@ -17,78 +15,95 @@ const createProduct = (req, res) => {
     product_class,
     product_type,
   } = req.body;
-  const seller_id = req.seller_id; // 从 token 中获取的 seller_id
-  const files = req.files; // 数组，最多包含5张图片
-  const coverImage = files[0].path;
+  
+  const seller_id = req.seller_id;
+  const files = req.files || []; // 可能没有文件
+  
+  // 根据产品类型设置默认图片
+  let coverImage;
+  if (files.length > 0) {
+    // 如果上传了图片，使用第一张作为封面
+    coverImage = files[0].path;
+  } else {
+    // 没有上传图片，使用默认图片
+    coverImage = product_type === "buy" 
+      ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"  // 求购默认图片
+      : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png"; // 出售默认图片
+  }
+  
   // 处理求购商品的默认值
   const finalProductStatus = product_type === "buy" ? "求购" : product_status;
-  const finalPrice = product_type === "buy" ? 0 : price; // 求购商品可以设置预期价格或0
-  if (product_type === "sell") {
-    if (
-      !price ||
-      !description ||
-      !seller_id ||
-      !title ||
-      !product_status ||
-      !product_class
-    ) {
-      return res.status(400).json({ message: "缺少必要的商品信息" });
-    }
-    if (!files || files.length < 1) {
-      return res.status(400).json({ message: "缺少必要的商品图片" });
-    }
-  } else if (product_type === "buy") {
-    if (!description || !seller_id || !title || !product_class) {
-      return res.status(400).json({ message: "缺少必要的求购信息" });
-    }
+  
+  // 基础字段验证
+  if (!description || !seller_id || !title || !product_class) {
+    return res.status(400).json({ message: "缺少必要的商品信息" });
+  }
+  
+  if (product_type === "sell" && !price) {
+    return res.status(400).json({ message: "出售商品需要设置价格" });
   }
 
-  // 插入产品记录（只保存封面图片）
+  // 插入产品记录
   Product.create(
     seller_id,
-    price,
-    original_price,
+    price || 0,
+    original_price || 0,
     description,
     coverImage,     
     title,
-    product_status,
+    finalProductStatus,
     product_class,
-    status,
-    product_type || "sell", // 默认为出售
+    status || "",
+    product_type || "sell",
     (err, result) => {
       if (err) {
-        return res
-          .status(500)
-          .json({ message: "数据库错误", error: err.message });
+        return res.status(500).json({ 
+          message: "数据库错误", 
+          error: err.message 
+        });
       }
 
-      const productId = result.insertId; // 获取插入的 product_id
-      console.log("产品插入成功，product_id:", productId); // 打印插入的产品 ID
+      const productId = result.insertId;
+      console.log("产品插入成功，product_id:", productId);
 
-      // 使用 Promise.all 确保所有图片都成功插入
-      const insertPromises = files.map((file) => {
-        return new Promise((resolve, reject) => {
-          Product.addImage(productId, file.path, (err, result) => {
-            if (err) {
-              console.error("图片插入失败", err);
-              return reject(err);
-            }
-            resolve(result);
+      // 如果有额外的图片，上传它们
+      if (files.length > 1) {
+        // 从第2张图片开始上传（第1张已作为封面）
+        const insertPromises = files.slice(1).map((file) => {
+          return new Promise((resolve, reject) => {
+            Product.addImage(productId, file.path, (err, result) => {
+              if (err) {
+                console.error("图片插入失败", err);
+                return reject(err);
+              }
+              resolve(result);
+            });
           });
         });
-      });
 
-      // 等待所有图片插入完成
-      Promise.all(insertPromises)
-        .then(() => {
-          res.status(201).json({
-            message: "商品发布成功",
-            product_id: productId, // 返回 product_id
+        // 等待所有额外图片插入完成
+        Promise.all(insertPromises)
+          .then(() => {
+            res.status(201).json({
+              message: product_type === "buy" ? "求购信息发布成功" : "商品发布成功",
+              product_id: productId,
+            });
+          })
+          .catch((err) => {
+            // 即使额外图片上传失败，商品仍然创建成功
+            res.status(201).json({
+              message: product_type === "buy" ? "求购信息发布成功，但部分图片上传失败" : "商品发布成功，但部分图片上传失败",
+              product_id: productId,
+              warning: "部分图片上传失败"
+            });
           });
-        })
-        .catch((err) => {
-          res.status(500).json({ message: "图片上传失败", error: err.message });
+      } else {
+        // 没有额外图片
+        res.status(201).json({
+          message: product_type === "buy" ? "求购信息发布成功" : "商品发布成功",
+          product_id: productId,
         });
+      }
     }
   );
 };
@@ -153,57 +168,57 @@ const getAllProducts = async (req, res) => {
   }
 };
 // 创建无图片的求购信息
-const createProductNoImage = (req, res) => {
-  const {
-    title,
-    description,
-    price,
-    product_status,
-    product_class,
-    product_type,
-  } = req.body;
-  const seller_id = req.seller_id;
+// const createProductNoImage = (req, res) => {
+//   const {
+//     title,
+//     description,
+//     price,
+//     product_status,
+//     product_class,
+//     product_type,
+//   } = req.body;
+//   const seller_id = req.seller_id;
 
-  // 验证是否为求购类型
-  if (product_type !== "buy") {
-    return res.status(400).json({ message: "非求购类型必须上传图片" });
-  }
+//   // 验证是否为求购类型
+//   // if (product_type !== "buy") {
+//   //   return res.status(400).json({ message: "非求购类型必须上传图片" });
+//   // }
 
-  // 验证必要字段
-  if (!description || !seller_id || !title || !product_class) {
-    return res.status(400).json({ message: "缺少必要的求购信息" });
-  }
+//   // 验证必要字段
+//   if (!description || !seller_id || !title || !product_class) {
+//     return res.status(400).json({ message: "缺少必要的求购信息" });
+//   }
 
-  // 使用默认图片路径或null
-  const defaultImage = null; // 或者设置一个默认的"求购"图片
+//   // 使用默认图片路径或null
+//   const defaultImage = null; // 或者设置一个默认的"求购"图片
 
-  // 插入求购记录
-  Product.create(
-    seller_id,
-    price || 0,
-    description,
-    defaultImage,
-    title,
-    "求购", // 固定状态为"求购"
-    product_class,
-    "buy",
-    (err, result) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: "数据库错误", error: err.message });
-      }
+//   // 插入求购记录
+//   Product.create(
+//     seller_id,
+//     price || 0,
+//     description,
+//     defaultImage,
+//     title,
+//     "求购", // 固定状态为"求购"
+//     product_class,
+//     "buy",
+//     (err, result) => {
+//       if (err) {
+//         return res
+//           .status(500)
+//           .json({ message: "数据库错误", error: err.message });
+//       }
 
-      const productId = result.insertId;
-      console.log("求购信息插入成功，product_id:", productId);
+//       const productId = result.insertId;
+//       console.log("求购信息插入成功，product_id:", productId);
 
-      res.status(201).json({
-        message: "求购信息发布成功",
-        product_id: productId,
-      });
-    }
-  );
-};
+//       res.status(201).json({
+//         message: "求购信息发布成功",
+//         product_id: productId,
+//       });
+//     }
+//   );
+// };
 
 const getProductById = (req, res) => {
   const { product_id } = req.params;
@@ -289,7 +304,6 @@ module.exports = {
   searchProduct,
   addImage,
   getAllProducts,
-  createProductNoImage,
   getProductById,
   getMySaleProducts,
 };

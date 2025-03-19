@@ -103,7 +103,8 @@
 		<view class="card-menu container" v-for="item in products" :key="item.product_id">
 			<!-- 商品详情页导航 -->
 			<!-- <navigator url="/pages/home/home_detail/home_detail" hover-class="none"> -->
-			<navigator :url="'/pages/home/home_detail/home_detail?product_id=' + item.product_id" hover-class="none">
+			<navigator :url="'/pages/home/home_detail/home_detail?product_id=' + item.product_id
+				" hover-class="none">
 				<!-- 商品图片容器 -->
 				<view class="container_img">
 					<!-- 动态绑定图片路径，调用方法处理图片地址 -->
@@ -256,40 +257,45 @@ export default {
 		if (!token) return;
 
 		// 每次页面显示时从服务器获取最新用户信息
-  // 每次页面显示时从服务器获取最新用户信息
-  uni.request({
-    url: "http://localhost:3000/api/user/profile",
-    header: {
-      Authorization: `Bearer ${token}`,
-    },
-    success: (res) => {
-      if (res.statusCode === 200) {
-        const userInfo = res.data.user;
-        // 更新本地存储
-        uni.setStorageSync("userInfo", userInfo);
+		// 每次页面显示时从服务器获取最新用户信息
+		uni.request({
+			url: "http://localhost:3000/api/user/profile",
+			header: {
+				Authorization: `Bearer ${token}`,
+			},
+			success: (res) => {
+				if (res.statusCode === 200) {
+					const userInfo = res.data.user;
+					// 更新本地存储
+					uni.setStorageSync("userInfo", userInfo);
 
-        // 设置头像(确保使用完整URL)
-        if (userInfo.avatar) {
-          // 检查是否已经是完整URL
-          if (userInfo.avatar.startsWith("http")) {
-            this.userAvatar = userInfo.avatar; 
-          } else {
-            // 拼接完整URL
-            this.userAvatar = `http://localhost:3000/${userInfo.avatar.replace(/\\/g, "/")}`;
-          }
-        }
-      }
-    },
-    fail: () => {
-      console.log("获取用户信息失败");
-    },
-  });
-		// 每次显示页面时重新获取最新商品数据
-		this.fetchProducts().then(() => {
-			console.log("首页商品数据已更新");
-		}).catch(err => {
-			console.error("获取商品数据失败:", err);
+					// 设置头像(确保使用完整URL)
+					if (userInfo.avatar) {
+						// 检查是否已经是完整URL
+						if (userInfo.avatar.startsWith("http")) {
+							this.userAvatar = userInfo.avatar;
+						} else {
+							// 拼接完整URL
+							this.userAvatar = `http://localhost:3000/${userInfo.avatar.replace(
+								/\\/g,
+								"/"
+							)}`;
+						}
+					}
+				}
+			},
+			fail: () => {
+				console.log("获取用户信息失败");
+			},
 		});
+		// 每次显示页面时重新获取最新商品数据
+		this.fetchProducts()
+			.then(() => {
+				console.log("首页商品数据已更新");
+			})
+			.catch((err) => {
+				console.error("获取商品数据失败:", err);
+			});
 	},
 	//下拉刷新
 	onPullDownRefresh: function () {
@@ -334,6 +340,10 @@ export default {
 		 */
 		getImageUrl(path) {
 			// 将Windows路径分隔符转换为URL标准分隔符
+			// 如果已经是完整 URL，直接返回
+			if (/^https?:\/\//.test(path)) {
+				return path;
+			}
 			const formattedPath = path.replace(/\\/g, "/");
 			// 拼接完整的图片访问地址（假设服务器运行在3000端口）
 			return `http://localhost:3000/${formattedPath}`;

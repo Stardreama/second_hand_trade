@@ -15,20 +15,20 @@
 		</view>
 		<form @submit="formSubmit" @reset="">
 			<!-- 标题 -->
-			<view class="cu-form-group margin-top form-item" :class="{'error-field': titleError}">
-    <view class="title">
-        <font-awesome-icon :icon="['fas', 'list']" class="form-icon" />
-        <text>标题</text>
-    </view>
-    <input type="text" v-model="title" name="title" 
-        placeholder="品类品牌型号都是买家喜欢搜索的" class="form-input"></input>
-</view>
+			<view class="cu-form-group margin-top form-item" :class="{ 'error-field': titleError }">
+				<view class="title">
+					<font-awesome-icon :icon="['fas', 'list']" class="form-icon" />
+					<text>标题</text>
+				</view>
+				<input type="text" v-model="title" name="title" placeholder="品类品牌型号都是买家喜欢搜索的"
+					class="form-input"></input>
+			</view>
 			<!-- end -->
 
 			<!-- 内容 -->
-			<view class="cu-form-group margin-top" :class="{'error-field': contentError}">
-    <textarea v-model="content" maxlength="1000" placeholder="描述宝贝的转手原因,入手渠道和使用感受"></textarea>
-</view>
+			<view class="cu-form-group margin-top" :class="{ 'error-field': contentError }">
+				<textarea v-model="content" maxlength="1000" placeholder="描述宝贝的转手原因,入手渠道和使用感受"></textarea>
+			</view>
 			<!-- end -->
 
 			<!-- 图片 -->
@@ -75,14 +75,14 @@
 
 			<!-- 价钱 -->
 			<view class="cu-form-group margin-top" v-if="tabIndex === 0">
-    <view class="title">出售价:</view>
-    <input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7'
-        name="newPrice" :class="{'error-input': sellPriceError}"></input>
+				<view class="title">出售价:</view>
+				<input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7' name="newPrice"
+					:class="{ 'error-input': sellPriceError }"></input>
 
-    <view class="title">原价:</view>
-    <input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价"
-        maxlength='7' name="oriPrice" :class="{'error-input': orginalPriceError}"></input>
-</view>
+				<view class="title">原价:</view>
+				<input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价" maxlength='7'
+					name="oriPrice" :class="{ 'error-input': orginalPriceError }"></input>
+			</view>
 			<!-- end -->
 
 			<!-- 选择分类  -->
@@ -180,11 +180,11 @@ export default {
 				{ value: "同城面交", checked: false },
 				{ value: "邮寄", checked: false },
 			],
-		// 错误状态变量
-        titleError: false,
-        contentError: false,
-        sellPriceError: false,
-        orginalPriceError: false,
+			// 错误状态变量
+			titleError: false,
+			contentError: false,
+			sellPriceError: false,
+			orginalPriceError: false,
 		}
 	},
 	methods: {
@@ -222,24 +222,24 @@ export default {
 			}
 			// 仅在出售模式下验证价格和图片
 			if (this.tabIndex === 0) {
-				// 验证分类
+				// 验证售价
 				if (!this.validateField('sellPrice')) {
 					isValid = false;
 				}
-				// 验证分类
+				// 验证原价
 				if (!this.validateField('orginalPrice')) {
 					isValid = false;
 				}
 
-				// 验证图片
-				if (this.imgList.length === 0) {
-					uni.showToast({
-						title: '出售商品请上传至少一张图片',
-						icon: 'none',
-						duration: 2000,
-					});
-					isValid = false;
-				}
+				// // 验证图片
+				// if (this.imgList.length === 0) {
+				// 	uni.showToast({
+				// 		title: '出售商品请上传至少一张图片',
+				// 		icon: 'none',
+				// 		duration: 2000,
+				// 	});
+				// 	isValid = false;
+				// }
 			}
 			// 验证分类
 			if (!this.validateField('status')) {
@@ -254,28 +254,24 @@ export default {
 				return;
 			}
 
-			const selectedMethods = this.checkboxs.filter(i=>i.checked).map(i=>i.value).join('|');
-			console.log(selectedMethods);
-			
-
+			const selectedMethods = this.checkboxs.filter(i => i.checked).map(i => i.value).join('|');
 
 			// 处理发布请求
 			const formData = {
 				title: this.title,
 				description: this.content,
 				price: this.tabIndex === 0 ? this.money : '0', // 求购时价格可为0
-				original_price: this.tabIndex === 0 ?this.newMoney :'0',               // 
+				original_price: this.tabIndex === 0 ? this.newMoney : '0',
 				product_status: this.tabIndex === 0 ? this.itemLists[this.itemListsIndex] : '求购',
 				product_class: this.classify,
 				product_type: this.tabIndex === 0 ? 'sell' : 'buy', // 区分出售与求购
 				token: token,
 				status: selectedMethods,
 			};
-			// console.log("🔔 发布 payload →", formData.status);
 
-			// 区分有图和无图的情况
+			// 统一使用一个接口，但区分有无图片的处理方式
 			if (this.imgList.length > 0) {
-				// 有图片的情况
+				// 有图片，使用uploadFile
 				uni.uploadFile({
 					url: 'http://localhost:3000/api/products/create',
 					filePath: this.imgList[0],
@@ -285,16 +281,14 @@ export default {
 						'Authorization': `Bearer ${token}`
 					},
 					success: (res) => {
-						console.log(formData.status);
-						
 						this.handleUploadSuccess(res, token);
 					},
 					fail: this.handleUploadFail
 				});
 			} else {
-				// 无图片的情况（仅适用于求购）
+				// 无图片，使用普通请求
 				uni.request({
-					url: 'http://localhost:3000/api/products/create-no-image',
+					url: 'http://localhost:3000/api/products/create',
 					method: 'POST',
 					data: formData,
 					header: {
@@ -303,7 +297,7 @@ export default {
 					success: (res) => {
 						if (res.statusCode === 201) {
 							uni.showToast({
-								title: '求购信息发布成功',
+								title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
 								icon: 'success',
 								duration: 2000,
 							});
@@ -385,61 +379,61 @@ export default {
 			});
 		},
 		validateField(field) {
-    let isValid = true;
-    
-    // 根据不同字段类型进行处理
-    switch(field) {
-        case 'title':
-            isValid = this.title && this.title.trim() !== '';
-            break;
-        case 'content':
-            isValid = this.content && this.content.trim() !== '';
-            break;
-        case 'sellPrice':
-            isValid = this.tabIndex === 1 || (this.money && this.money.trim() !== '');
-            break;
-        case 'orginalPrice':
-            isValid = this.tabIndex === 1 || (this.newMoney && this.newMoney.trim() !== '');
-            break;
-        case 'status':
-            isValid = true; // 这些通常有默认值
-            break;
-        default:
-            isValid = Boolean(this[field]);
-    }
-    
-    // 如果验证失败，使用uni-app的震动API而非DOM操作
-    if (!isValid) {
-        // 使用uni-app的震动API
-        uni.vibrateShort({
-            success: function () {
-                console.log('震动成功');
-            }
-        });
-        
-        // 突出显示错误字段（通过临时设置相关变量）
-        switch(field) {
-            case 'title':
-                this.titleError = true;
-                setTimeout(() => { this.titleError = false; }, 500);
-                break;
-            case 'content':
-                this.contentError = true;
-                setTimeout(() => { this.contentError = false; }, 500);
-                break;
-            case 'sellPrice':
-                this.sellPriceError = true;
-                setTimeout(() => { this.sellPriceError = false; }, 500);
-                break;
-            case 'orginalPrice':
-                this.orginalPriceError = true; 
-                setTimeout(() => { this.orginalPriceError = false; }, 500);
-                break;
-        }
-    }
-    
-    return isValid;
-},
+			let isValid = true;
+
+			// 根据不同字段类型进行处理
+			switch (field) {
+				case 'title':
+					isValid = this.title && this.title.trim() !== '';
+					break;
+				case 'content':
+					isValid = this.content && this.content.trim() !== '';
+					break;
+				case 'sellPrice':
+					isValid = this.tabIndex === 1 || (this.money && this.money.trim() !== '');
+					break;
+				case 'orginalPrice':
+					isValid = this.tabIndex === 1 || (this.newMoney && this.newMoney.trim() !== '');
+					break;
+				case 'status':
+					isValid = true; // 这些通常有默认值
+					break;
+				default:
+					isValid = Boolean(this[field]);
+			}
+
+			// 如果验证失败，使用uni-app的震动API而非DOM操作
+			if (!isValid) {
+				// 使用uni-app的震动API
+				uni.vibrateShort({
+					success: function () {
+						console.log('震动成功');
+					}
+				});
+
+				// 突出显示错误字段（通过临时设置相关变量）
+				switch (field) {
+					case 'title':
+						this.titleError = true;
+						setTimeout(() => { this.titleError = false; }, 500);
+						break;
+					case 'content':
+						this.contentError = true;
+						setTimeout(() => { this.contentError = false; }, 500);
+						break;
+					case 'sellPrice':
+						this.sellPriceError = true;
+						setTimeout(() => { this.sellPriceError = false; }, 500);
+						break;
+					case 'orginalPrice':
+						this.orginalPriceError = true;
+						setTimeout(() => { this.orginalPriceError = false; }, 500);
+						break;
+				}
+			}
+
+			return isValid;
+		},
 		// 选择地址
 		MultiChange(e) {
 			this.multiIndex = e.detail.value
@@ -717,18 +711,26 @@ export default {
 	animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
 	background-color: rgba(255, 73, 73, 0.05);
 }
+
 @keyframes flash {
-    0%, 100% { background-color: transparent; }
-    50% { background-color: rgba(255, 73, 73, 0.2); }
+
+	0%,
+	100% {
+		background-color: transparent;
+	}
+
+	50% {
+		background-color: rgba(255, 73, 73, 0.2);
+	}
 }
 
 .error-field {
-    animation: flash 0.5s ease;
-    border: 1rpx solid rgba(255, 73, 73, 0.5) !important;
+	animation: flash 0.5s ease;
+	border: 1rpx solid rgba(255, 73, 73, 0.5) !important;
 }
 
 .error-input {
-    animation: flash 0.5s ease;
-    background-color: rgba(255, 73, 73, 0.1);
+	animation: flash 0.5s ease;
+	background-color: rgba(255, 73, 73, 0.1);
 }
 </style>

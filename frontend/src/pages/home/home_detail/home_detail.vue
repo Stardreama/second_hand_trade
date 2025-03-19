@@ -14,11 +14,6 @@
             <view>{{ productDetail.seller_name }}</view>
           </view>
         </view>
-        <!-- 对时间现在没有要求 -->
-        <view class="fr padding-time">
-          <!-- <text>35分钟前来过</text> -->
-          <text>{{ productDetail.time || '暂无时间' }}</text>
-        </view>
       </view>
     </view>
 
@@ -27,13 +22,12 @@
     <!-- 商品内容 -->
     <view class="contanier bg-white padding-sm top-20">
       <view class="price">
-        <text class="price-symbol">￥</text>
         <!-- <text class="price-size">2500</text> -->
         <!-- <text class="price-ori">￥1221</text> -->
         <!-- <view class="cu-tag">不讲价</view> -->
         <!-- 不太懂这里的不讲价是什么鬼 -->
-        <text class="price-size">{{ productDetail.price }}</text>
-        <text class="price-ori">￥{{ productDetail.original_price }}</text>
+        <text class="price-size" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.price }}</text>
+        <text class="price-ori" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.original_price }}</text>
         <view class="cu-tag">{{ productDetail.product_status }}</view>
         <view class="cu-tag">{{ productDetail.status }}</view>
       </view>

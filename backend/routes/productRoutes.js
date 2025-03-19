@@ -59,12 +59,20 @@ const authenticateToken = (req, res, next) => {
 router.post(
   "/create",
   authenticateToken,
-  upload.array("image", 5),
   (req, res, next) => {
-    if (req.fileValidationError) {
-      return res.status(400).json({ message: req.fileValidationError });
+    // 检查请求体是否包含image属性，决定是否需要上传文件
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      // 有文件上传，应用multer中间件
+      upload.array("image", 5)(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ message: err.message });
+        }
+        next();
+      });
+    } else {
+      // 无文件上传，直接进入下一个中间件
+      next();
     }
-    next();
   },
   productController.createProduct
 );
@@ -82,12 +90,12 @@ router.post(
   },
   productController.addImage
 );
-// 不需要图片的求购路由
-router.post(
-  "/create-no-image",
-  authenticateToken,
-  productController.createProductNoImage
-);
+// // 不需要图片的求购路由
+// router.post(
+//   "/create-no-image",
+//   authenticateToken,
+//   productController.createProductNoImage
+// );
 // 搜索商品
 router.get("/search", productController.searchProduct);
 // 获取单个商品详细信息
