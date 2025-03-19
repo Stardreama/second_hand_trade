@@ -5,12 +5,14 @@ const jwtService = require("../services/jwtService");
 const createProduct = (req, res) => {
   // console.log("Request Body:", req.body);
   // console.log("Request File:", req.files);
-
+  console.log("Request Body:", req.body);
+  
   const {
     title,
     description,
     price,
     product_status,
+    status,
     product_class,
     product_type,
   } = req.body;
@@ -45,10 +47,11 @@ const createProduct = (req, res) => {
     seller_id,
     price,
     description,
-    coverImage,
+    coverImage,     
     title,
     product_status,
     product_class,
+    status,
     product_type || "sell", // 默认为出售
     (err, result) => {
       if (err) {
@@ -230,7 +233,7 @@ const getProductById = (req, res) => {
 
       // 为商品添加 seller_name 和 avatar（头像）
       product.seller_name = seller.username;
-      product.seller_avatar = seller.avatar || "../../../static/img/default-avatar.jpg"; // 默认头像
+      product.seller_avatar = seller.avatar || "../../../static/img/default-avatar.jpg"; // 默认头像好像没必要，先不动他
       console.log(product.seller_avatar);
       console.log(product.seller_name);
 
@@ -244,6 +247,10 @@ const getProductById = (req, res) => {
         product.images = imageResult.map((img) => img.image_url);
         console.log(product.images);
         // 返回完整的商品信息
+        // ✅ status 已经在 product 对象里
+        // console.log("Returning product with status:", product.status);
+
+
         res.json(product);
       });
     });
