@@ -264,6 +264,7 @@ export default {
 				title: this.title,
 				description: this.content,
 				price: this.tabIndex === 0 ? this.money : '0', // 求购时价格可为0
+				original_price: this.tabIndex === 0 ?this.newMoney :'0',               // 
 				product_status: this.tabIndex === 0 ? this.itemLists[this.itemListsIndex] : '求购',
 				product_class: this.classify,
 				product_type: this.tabIndex === 0 ? 'sell' : 'buy', // 区分出售与求购

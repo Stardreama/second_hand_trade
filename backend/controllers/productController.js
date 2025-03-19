@@ -11,6 +11,7 @@ const createProduct = (req, res) => {
     title,
     description,
     price,
+    original_price,
     product_status,
     status,
     product_class,
@@ -46,6 +47,7 @@ const createProduct = (req, res) => {
   Product.create(
     seller_id,
     price,
+    original_price,
     description,
     coverImage,     
     title,
@@ -245,10 +247,11 @@ const getProductById = (req, res) => {
         }
 
         product.images = imageResult.map((img) => img.image_url);
-        console.log(product.images);
+        //console.log(product.images);
         // 返回完整的商品信息
         // ✅ status 已经在 product 对象里
         // console.log("Returning product with status:", product.status);
+        console.log("Returning product with op:", product.original_price);
 
 
         res.json(product);

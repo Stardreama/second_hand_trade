@@ -52,21 +52,24 @@ CREATE TABLE `product_images`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 DROP TABLE IF EXISTS `products`;
-CREATE TABLE `products`  (
+CREATE TABLE `products` (
   `product_id` int NOT NULL AUTO_INCREMENT,
-  `seller_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `price` decimal(10, 2) NOT NULL,
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
-  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  `product_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `product_status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `product_class` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `product_type` enum('sell', 'buy') NOT NULL DEFAULT 'sell',
-  PRIMARY KEY (`product_id`) USING BTREE,
-  INDEX `seller_id`(`seller_id` ASC) USING BTREE,
-  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users` (`student_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+  `seller_id` varchar(20) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `original_price` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '原价',
+  `description` text NOT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `product_title` varchar(255) NOT NULL,
+  `product_status` varchar(255) NOT NULL,
+  `status` varchar(255) DEFAULT NULL COMMENT '交易方式，如 自提|邮寄',
+  `product_class` varchar(255) NOT NULL,
+  `product_type` enum('sell','buy') NOT NULL DEFAULT 'sell',
+  PRIMARY KEY (`product_id`),
+  INDEX `seller_id`(`seller_id`),
+  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users`(`student_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`  (

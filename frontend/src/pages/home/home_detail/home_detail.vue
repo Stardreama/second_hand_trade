@@ -33,7 +33,7 @@
         <!-- <view class="cu-tag">不讲价</view> -->
         <!-- 不太懂这里的不讲价是什么鬼 -->
         <text class="price-size">{{ productDetail.price }}</text>
-        <!-- <text class="price-ori">￥{{ productDetail.original_price }}</text> -->
+        <text class="price-ori">￥{{ productDetail.original_price }}</text>
         <view class="cu-tag">{{ productDetail.product_status }}</view>
         <view class="cu-tag">{{ productDetail.status }}</view>
       </view>
@@ -123,7 +123,7 @@ export default {
       try {
         const response = await axios.get(`http://localhost:3000/api/products/${productId}`);
         this.productDetail = response.data;
-        console.log("交易方式nmd status:", this.productDetail.status);
+        console.log("original_price:", this.productDetail.original_price);
         this.images = this.productDetail.images || []; // 商品的图片数据
         console.log(this.images);
       } catch (error) {
