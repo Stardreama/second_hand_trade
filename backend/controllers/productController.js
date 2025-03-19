@@ -200,8 +200,58 @@ const createProductNoImage = (req, res) => {
   );
 };
 
+const getProductById = (req, res) => {
+  const { product_id } = req.params;
+
+  // 查询商品表，获取seller_id
+  const query = "SELECT * FROM products WHERE product_id = ?";
+  db.query(query, [product_id], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "服务器错误" });
+    }
+    if (result.length === 0) {
+      return res.status(404).json({ message: "商品未找到" });
+    }
+
+    const product = result[0];
+
+    // 根据 seller_id 查询 users 表中的 username 和 avatar
+    const userQuery = "SELECT username, avatar FROM users WHERE student_id = ?";
+    db.query(userQuery, [product.seller_id], (err, userResult) => {
+      if (err) {
+        return res.status(500).json({ message: "服务器错误" });
+      }
+
+      if (userResult.length === 0) {
+        return res.status(404).json({ message: "卖家信息未找到" });
+      }
+
+      const seller = userResult[0];
+
+      // 为商品添加 seller_name 和 avatar（头像）
+      product.seller_name = seller.username;
+      product.seller_avatar = seller.avatar || "../../../static/img/default-avatar.jpg"; // 默认头像
+      console.log(product.seller_avatar);
+      console.log(product.seller_name);
+
+      // 获取商品的所有图片
+      const imageQuery = "SELECT image_url FROM product_images WHERE product_id = ?";
+      db.query(imageQuery, [product_id], (err, imageResult) => {
+        if (err) {
+          return res.status(500).json({ message: "服务器错误" });
+        }
+
+        product.images = imageResult.map((img) => img.image_url);
+        console.log(product.images);
+        // 返回完整的商品信息
+        res.json(product);
+      });
+    });
+  });
+};
+
 // 获取我的出售商品
-getMySaleProducts = async (req, res) => {
+const getMySaleProducts = async (req, res) => {
   try {
     const authHeader = req.header("Authorization");
     if (!authHeader) {
@@ -230,5 +280,6 @@ module.exports = {
   addImage,
   getAllProducts,
   createProductNoImage,
+  getProductById,
   getMySaleProducts,
 };
