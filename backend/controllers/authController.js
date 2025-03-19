@@ -1,7 +1,6 @@
 const jwtService = require("../services/jwtService");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-
 // 注册
 const register = (req, res) => {
   // 从 req.body 获取文本数据

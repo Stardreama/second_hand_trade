@@ -1,18 +1,26 @@
 const Product = require("../models/product"); // 引入 Product 模型
 const { db } = require("../config/config");
+const jwtService = require("../services/jwtService");
 // 发布商品
 const createProduct = (req, res) => {
   // console.log("Request Body:", req.body);
   // console.log("Request File:", req.files);
 
-  const { title, description, price, product_status, product_class, product_type } = req.body;
+  const {
+    title,
+    description,
+    price,
+    product_status,
+    product_class,
+    product_type,
+  } = req.body;
   const seller_id = req.seller_id; // 从 token 中获取的 seller_id
   const files = req.files; // 数组，最多包含5张图片
   const coverImage = files[0].path;
-    // 处理求购商品的默认值
-    const finalProductStatus = product_type === 'buy' ? '求购' : product_status;
-    const finalPrice = product_type === 'buy' ? 0 : price; // 求购商品可以设置预期价格或0
-  if(product_type === 'sell'){
+  // 处理求购商品的默认值
+  const finalProductStatus = product_type === "buy" ? "求购" : product_status;
+  const finalPrice = product_type === "buy" ? 0 : price; // 求购商品可以设置预期价格或0
+  if (product_type === "sell") {
     if (
       !price ||
       !description ||
@@ -26,18 +34,11 @@ const createProduct = (req, res) => {
     if (!files || files.length < 1) {
       return res.status(400).json({ message: "缺少必要的商品图片" });
     }
-  }
-  else if(product_type === 'buy'){
-    if (
-      !description ||
-      !seller_id ||
-      !title ||
-      !product_class
-    ) {
+  } else if (product_type === "buy") {
+    if (!description || !seller_id || !title || !product_class) {
       return res.status(400).json({ message: "缺少必要的求购信息" });
     }
   }
-
 
   // 插入产品记录（只保存封面图片）
   Product.create(
@@ -48,7 +49,7 @@ const createProduct = (req, res) => {
     title,
     product_status,
     product_class,
-    product_type || 'sell', // 默认为出售
+    product_type || "sell", // 默认为出售
     (err, result) => {
       if (err) {
         return res
@@ -148,14 +149,21 @@ const getAllProducts = async (req, res) => {
 };
 // 创建无图片的求购信息
 const createProductNoImage = (req, res) => {
-  const { title, description, price, product_status, product_class, product_type } = req.body;
+  const {
+    title,
+    description,
+    price,
+    product_status,
+    product_class,
+    product_type,
+  } = req.body;
   const seller_id = req.seller_id;
-  
+
   // 验证是否为求购类型
-  if (product_type !== 'buy') {
+  if (product_type !== "buy") {
     return res.status(400).json({ message: "非求购类型必须上传图片" });
   }
-  
+
   // 验证必要字段
   if (!description || !seller_id || !title || !product_class) {
     return res.status(400).json({ message: "缺少必要的求购信息" });
@@ -171,17 +179,19 @@ const createProductNoImage = (req, res) => {
     description,
     defaultImage,
     title,
-    '求购', // 固定状态为"求购"
+    "求购", // 固定状态为"求购"
     product_class,
-    'buy',
+    "buy",
     (err, result) => {
       if (err) {
-        return res.status(500).json({ message: "数据库错误", error: err.message });
+        return res
+          .status(500)
+          .json({ message: "数据库错误", error: err.message });
       }
 
       const productId = result.insertId;
       console.log("求购信息插入成功，product_id:", productId);
-      
+
       res.status(201).json({
         message: "求购信息发布成功",
         product_id: productId,
@@ -189,4 +199,36 @@ const createProductNoImage = (req, res) => {
     }
   );
 };
-module.exports = { createProduct, searchProduct, addImage, getAllProducts,createProductNoImage };
+
+// 获取我的出售商品
+getMySaleProducts = async (req, res) => {
+  try {
+    const authHeader = req.header("Authorization");
+    if (!authHeader) {
+      return res.status(401).json({ code: 401, message: "未提供认证令牌" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwtService.verifyToken(token);
+    if (!decoded) {
+      return res.status(401).json({ code: 401, message: "无效的令牌" });
+    }
+    const studentId = decoded.student_id;
+    // 使用 await 等待 Promise 解决
+    const products = await Product.findBySellerId(studentId);
+    res.json({ code: 200, data: products, message: "获取成功" });
+  } catch (error) {
+    console.error("获取我的出售商品失败:", error);
+    res.status(500).json({
+      code: 500,
+      message: "服务器错误，获取出售商品失败",
+    });
+  }
+};
+module.exports = {
+  createProduct,
+  searchProduct,
+  addImage,
+  getAllProducts,
+  createProductNoImage,
+  getMySaleProducts,
+};
