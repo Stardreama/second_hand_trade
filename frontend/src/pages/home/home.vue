@@ -102,7 +102,8 @@
 		<!-- 使用v-for循环渲染products数组中的每个商品 -->
 		<view class="card-menu container" v-for="item in products" :key="item.product_id">
 			<!-- 商品详情页导航 -->
-			<navigator url="/pages/home/home_detail/home_detail" hover-class="none">
+			<!-- <navigator url="/pages/home/home_detail/home_detail" hover-class="none"> -->
+			<navigator :url="'/pages/home/home_detail/home_detail?product_id=' + item.product_id" hover-class="none">
 				<!-- 商品图片容器 -->
 				<view class="container_img">
 					<!-- 动态绑定图片路径，调用方法处理图片地址 -->

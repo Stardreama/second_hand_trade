@@ -90,6 +90,8 @@ router.post(
 );
 // 搜索商品
 router.get("/search", productController.searchProduct);
+// 获取单个商品详细信息
+router.get("/:product_id", productController.getProductById);
 
 //渲染数据库中的所有商品
 router.get("/", productController.getAllProducts);
