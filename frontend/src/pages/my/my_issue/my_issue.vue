@@ -24,7 +24,10 @@
           style="white-space: nowrap; display: flex"
           class="top-20"
         >
-          <block v-for="(img, imgIndex) in item.images" :key="imgIndex">
+          <block
+            v-for="(img, imgIndex) in item.images.slice(0, 3)"
+            :key="imgIndex"
+          >
             <view class="item-inlines">
               <navigator url="" hover-class="none">
                 <view
@@ -155,23 +158,24 @@ export default {
         const { data: res } = await uni.request({
           url: "http://localhost:3000/api/my/sale",
           method: "GET",
-          header: {
-            Authorization: "Bearer " + token,
-          },
+          header: { Authorization: "Bearer " + token },
         });
-        console.log(res);
+
         if (res.code === 200) {
           this.productList = res.data.map((item) => ({
             ...item,
-            images: [this.baseUrl + item.image.replace(/\\/g, "/")],
+            images: item.image // 直接使用后端返回的数组
+              .slice(0, 3) // 最多取3张
+              .map(
+                (
+                  img // 转换图片路径
+                ) => `${this.baseUrl}${img.replace(/\\/g, "/")}`
+              ),
           }));
         }
       } catch (error) {
         console.error("数据加载失败:", error);
-        uni.showToast({
-          title: "数据加载失败",
-          icon: "none",
-        });
+        uni.showToast({ title: "数据加载失败", icon: "none" });
       }
     },
     // 跳转到编辑页面
