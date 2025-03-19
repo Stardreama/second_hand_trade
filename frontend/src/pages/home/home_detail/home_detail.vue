@@ -1,6 +1,6 @@
 <template>
   <!-- <view> -->
-  <view v-if="productDetail"> <!-- 仅在数据加载后渲染 -->
+  <view v-if="productDetail" class="page-wrapper"> <!-- 仅在数据加载后渲染 -->
     <!-- 商家信息 -->
 
     <view class="bg-white">
@@ -35,6 +35,7 @@
         <text class="price-size">{{ productDetail.price }}</text>
         <text class="price-ori">￥{{ productDetail.original_price }}</text>
         <view class="cu-tag">{{ productDetail.product_status }}</view>
+        <view class="cu-tag">{{ productDetail.status }}</view>
       </view>
 
       <view class="bg-white top-20 font-size">
@@ -48,7 +49,7 @@
       <!-- 交易方式 -->
       <view class="hint">
         <!-- <text>本交易仅支持自提、当面交易、邮寄</text> -->
-        <text>{{ productDetail.transaction_method || '本交易仅支持自提、当面交易、邮寄' }}</text>
+        <!-- <text>{{ productDetail.status || '本交易仅支持自提、当面交易、邮寄' }}</text> -->
       </view>
       <!-- end -->
 
@@ -76,77 +77,7 @@
     </view>
     <!-- 商品内容end -->
 
-    商家信息
-    <view class="bg-white top-20 padding-sm">
-      <view class="in_regard_to">
-        <view>
-          <text class="in_regard_to_text">关于卖家</text>
-        </view>
-      </view>
 
-      <view @tap="toUserDetail">
-        <view class="cu-list menu-avatar">
-          <view class="cu-item arrow">
-            <!-- <view class="cu-avatar round lg" style="
-                background-image: url(https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg);
-              "></view> -->
-            <view class="cu-avatar round lg" :style="'background-image: url(' + productDetail.seller_avatar + ');'">
-            </view>
-            <view class="content">
-              <!-- <view class="text-grey">Amibition</view> -->
-              <view class="text-grey">{{ productDetail.seller_name }}</view>
-              <view class="text-gray text-sm flex">
-                <text class="text-cut">
-                  <text class="cuIcon-infofill text-red margin-right-xs"></text>
-                  {{ productDetail.seller_description || "我已天理为凭，踏入这片荒芜，不再受凡人的枷锁遏制。我已天理为凭，踏入这片荒芜，不再受凡人的枷锁遏制。" }}
-                </text>
-              </view>
-            </view>
-            <view class="action arrow">
-              <view class="cuIcon-right"></view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <view class="bg-gray top-30 information">
-        <view class="Business_information">
-          <view>5</view>
-          <view>
-            <text>在售宝贝</text>
-          </view>
-        </view>
-
-        <view class="Business_information">
-          <view>5</view>
-          <view>
-            <text>累计交易</text>
-          </view>
-        </view>
-
-        <view class="Business_information">
-          <view>5</view>
-          <view>
-            <text>在线宝贝</text>
-          </view>
-        </view>
-      </view>
-
-      <scroll-view scroll-x="true" style="white-space: nowrap; display: flex" class="top-20">
-        <block v-for="(item, index) in 10" :key="index">
-          <view class="item-inline">
-            <navigator url="" hover-class="none">
-              <view class="item-inline bg-img padding-top-xl flex align-end"
-                :style="'background-image: url(' + url + ');'">
-                <view class="bg-shadeBottom padding-top-xl flex-sub">
-                  ￥200
-                </view>
-              </view>
-            </navigator>
-          </view>
-        </block>
-      </scroll-view>
-    </view>
 
     <!-- 相识商品 -->
     <view class="bg-white top-20">
@@ -192,6 +123,7 @@ export default {
       try {
         const response = await axios.get(`http://localhost:3000/api/products/${productId}`);
         this.productDetail = response.data;
+        console.log("original_price:", this.productDetail.original_price);
         this.images = this.productDetail.images || []; // 商品的图片数据
         console.log(this.images);
       } catch (error) {
@@ -200,9 +132,18 @@ export default {
     },
     // 获取商品图片和头像的完整 URL
     getImageUrl(imagePath) {
-      const formattedPath = imagePath.replace(/\\/g, "/");
-      return `http://localhost:3000/${formattedPath}`; // 拼接完整的 URL
+      if (!imagePath) return ''; // 防空
+
+      // 如果已经是完整 URL，直接返回
+      if (/^https?:\/\//.test(imagePath)) {
+        return imagePath;
+      }
+
+      // 否则把反斜杠替换成斜杠并拼接服务器地址
+      const formattedPath = imagePath.replace(/\\/g, '/');
+      return `http://localhost:3000/${formattedPath}`;
     },
+
     // 点击跳转订单确认页面
     buy() {
       uni.navigateTo({
@@ -216,16 +157,22 @@ export default {
       });
     },
     // 跳转到用户详情页面
-    toUserDetail() {
-      uni.navigateTo({
-        url: "/pages/my/my_detail/my_detail?user_id=" + this.productDetail.seller_id,
-      });
-    }
+    // toUserDetail() {
+    //   uni.navigateTo({
+    //     url: "/pages/my/my_detail/my_detail?user_id=" + this.productDetail.seller_id,
+    //   });
+    // }
   },
 };
 </script>
 
 <style>
+.page-wrapper {
+  padding-bottom: 90rpx;
+}
+
+
+
 /* 商家信息 */
 
 .padding-name {

@@ -254,16 +254,24 @@ export default {
 				return;
 			}
 
+			const selectedMethods = this.checkboxs.filter(i=>i.checked).map(i=>i.value).join('|');
+			console.log(selectedMethods);
+			
+
+
 			// 处理发布请求
 			const formData = {
 				title: this.title,
 				description: this.content,
 				price: this.tabIndex === 0 ? this.money : '0', // 求购时价格可为0
+				original_price: this.tabIndex === 0 ?this.newMoney :'0',               // 
 				product_status: this.tabIndex === 0 ? this.itemLists[this.itemListsIndex] : '求购',
 				product_class: this.classify,
 				product_type: this.tabIndex === 0 ? 'sell' : 'buy', // 区分出售与求购
 				token: token,
+				status: selectedMethods,
 			};
+			// console.log("🔔 发布 payload →", formData.status);
 
 			// 区分有图和无图的情况
 			if (this.imgList.length > 0) {
@@ -277,6 +285,8 @@ export default {
 						'Authorization': `Bearer ${token}`
 					},
 					success: (res) => {
+						console.log(formData.status);
+						
 						this.handleUploadSuccess(res, token);
 					},
 					fail: this.handleUploadFail
