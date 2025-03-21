@@ -18,7 +18,7 @@
       
       <!-- 搜索结果列表，复用首页的商品卡片样式 -->
       <view class="card-menu container" v-for="item in searchResults" :key="item.product_id">
-        <navigator :url="`/pages/home/home_detail/home_detail?id=${item.product_id}`" hover-class="none">
+        <navigator :url="`/pages/home/home_detail/home_detail?product_id=${item.product_id}`" hover-class="none">
           <view class="container_img">
             <image :src="getImageUrl(item.image)"></image>
           </view>

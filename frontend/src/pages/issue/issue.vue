@@ -631,6 +631,7 @@ export default {
 
 .form-input {
 	padding: 10rpx;
+	height: 50rpx;
 }
 
 .section-title {
