@@ -161,59 +161,6 @@ const getAllProducts = async (req, res) => {
     res.status(500).json({ message: "服务器错误" });
   }
 };
-// 创建无图片的求购信息
-// const createProductNoImage = (req, res) => {
-//   const {
-//     title,
-//     description,
-//     price,
-//     product_status,
-//     product_class,
-//     product_type,
-//   } = req.body;
-//   const seller_id = req.seller_id;
-
-//   // 验证是否为求购类型
-//   // if (product_type !== "buy") {
-//   //   return res.status(400).json({ message: "非求购类型必须上传图片" });
-//   // }
-
-//   // 验证必要字段
-//   if (!description || !seller_id || !title || !product_class) {
-//     return res.status(400).json({ message: "缺少必要的求购信息" });
-//   }
-
-//   // 使用默认图片路径或null
-//   const defaultImage = null; // 或者设置一个默认的"求购"图片
-
-//   // 插入求购记录
-//   Product.create(
-//     seller_id,
-//     price || 0,
-//     description,
-//     defaultImage,
-//     title,
-//     "求购", // 固定状态为"求购"
-//     product_class,
-//     "buy",
-//     (err, result) => {
-//       if (err) {
-//         return res
-//           .status(500)
-//           .json({ message: "数据库错误", error: err.message });
-//       }
-
-//       const productId = result.insertId;
-//       console.log("求购信息插入成功，product_id:", productId);
-
-//       res.status(201).json({
-//         message: "求购信息发布成功",
-//         product_id: productId,
-//       });
-//     }
-//   );
-// };
-
 const getProductById = (req, res) => {
   const { product_id } = req.params;
 
@@ -294,6 +241,137 @@ const getMySaleProducts = async (req, res) => {
     });
   }
 };
+
+const updateProduct = async (req, res) => {
+  try {
+    const {
+      product_id,
+      title,
+      description,
+      price,
+      original_price,
+      product_status,
+      product_class,
+      status,
+      product_type,
+      deleted_images
+    } = req.body;
+    
+    const seller_id = req.seller_id;
+    const files = req.files || [];
+    
+    // 基础字段验证
+    if (!product_id || !description || !seller_id || !title || !product_class) {
+      return res.status(400).json({ message: "缺少必要的商品信息" });
+    }
+    
+    // 检查商品是否存在且属于当前用户
+    const checkQuery = "SELECT * FROM products WHERE product_id = ? AND seller_id = ?";
+    db.query(checkQuery, [product_id, seller_id], async (err, results) => {
+      if (err) {
+        return res.status(500).json({ message: "数据库错误", error: err.message });
+      }
+      
+      if (results.length === 0) {
+        return res.status(404).json({ message: "商品不存在或您无权编辑" });
+      }
+      
+      // 开始事务
+      db.beginTransaction(async (err) => {
+        if (err) {
+          return res.status(500).json({ message: "事务开始失败", error: err.message });
+        }
+        
+        try {
+          // 1. 更新商品基本信息
+          let coverImage = results[0].image; // 默认保持原来的封面图片
+          
+          // 如果有新上传的图片，使用第一张作为新的封面
+          if (files.length > 0) {
+            coverImage = files[0].path;
+          }
+          
+          const updateQuery = `
+            UPDATE products 
+            SET product_title = ?, description = ?, price = ?, original_price = ?,
+                product_status = ?, product_class = ?, status = ?, product_type = ?, image = ?
+            WHERE product_id = ? AND seller_id = ?
+          `;
+          
+          await new Promise((resolve, reject) => {
+            db.query(
+              updateQuery,
+              [
+                title,
+                description,
+                price || 0,
+                original_price || 0,
+                product_status,
+                product_class,
+                status || "",
+                product_type,
+                coverImage,
+                product_id,
+                seller_id
+              ],
+              (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+              }
+            );
+          });
+          
+          // 2. 处理删除的图片
+          if (deleted_images) {
+            const imagesToDelete = JSON.parse(deleted_images);
+            if (imagesToDelete.length > 0) {
+              const deleteImageQuery = "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?)";
+              await new Promise((resolve, reject) => {
+                db.query(deleteImageQuery, [product_id, imagesToDelete], (err, result) => {
+                  if (err) reject(err);
+                  else resolve(result);
+                });
+              });
+            }
+          }
+          
+          // 3. 添加新图片
+          if (files.length > 0) {
+            const insertImagePromises = files.map(file => {
+              return new Promise((resolve, reject) => {
+                Product.addImage(product_id, file.path, (err, result) => {
+                  if (err) reject(err);
+                  else resolve(result);
+                });
+              });
+            });
+            
+            await Promise.all(insertImagePromises);
+          }
+          
+          // 提交事务
+          db.commit(err => {
+            if (err) {
+              return db.rollback(() => {
+                res.status(500).json({ message: "提交事务失败", error: err.message });
+              });
+            }
+            
+            res.status(200).json({ message: "商品更新成功", product_id });
+          });
+        } catch (error) {
+          // 回滚事务
+          db.rollback(() => {
+            res.status(500).json({ message: "更新商品失败", error: error.message });
+          });
+        }
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ message: "服务器错误", error: error.message });
+  }
+};
+
 module.exports = {
   createProduct,
   searchProduct,
@@ -301,4 +379,5 @@ module.exports = {
   getAllProducts,
   getProductById,
   getMySaleProducts,
+  updateProduct,
 };

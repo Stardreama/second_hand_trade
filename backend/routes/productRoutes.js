@@ -97,6 +97,25 @@ router.post(
 //   productController.createProductNoImage
 // );
 // 搜索商品
+// 更新商品
+router.post(
+  "/update",
+  authenticateToken,
+  (req, res, next) => {
+    // 检查请求体是否包含image属性
+    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+      upload.array("image", 5)(req, res, (err) => {
+        if (err) {
+          return res.status(400).json({ message: err.message });
+        }
+        next();
+      });
+    } else {
+      next();
+    }
+  },
+  productController.updateProduct
+);
 router.get("/search", productController.searchProduct);
 // 获取单个商品详细信息
 router.get("/:product_id", productController.getProductById);

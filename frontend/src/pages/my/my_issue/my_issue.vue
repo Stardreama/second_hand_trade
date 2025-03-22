@@ -2,38 +2,20 @@
   <view>
     <!-- 内容 -->
     <view class="pa">
-      <view
-        class="contianer shadow-warp bg-white padding-sm"
-        v-for="(item, index) in productList"
-        :key="item.product_id"
-      >
+      <view class="contianer shadow-warp bg-white padding-sm" v-for="(item, index) in productList"
+        :key="item.product_id">
         <view class="contianer-title">
-          <view class="contianer-title_1 text-cut"
-            ><text class="text-cut">{{ item.product_title }}</text></view
-          >
-          <view class="contianer-title_2 text-cut"
-            ><text class="text-cut">1小时前来过</text></view
-          >
+          <view class="contianer-title_1 text-cut"><text class="text-cut">{{ item.product_title }}</text></view>
+          <view class="contianer-title_2 text-cut"><text class="text-cut">1小时前来过</text></view>
         </view>
 
-        <view class="item-inline-1_1"
-          ><text decode="true">&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;</text></view
-        >
-        <scroll-view
-          scroll-x="true"
-          style="white-space: nowrap; display: flex"
-          class="top-20"
-        >
-          <block
-            v-for="(img, imgIndex) in item.images.slice(0, 3)"
-            :key="imgIndex"
-          >
+        <view class="item-inline-1_1"><text decode="true">&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;</text></view>
+        <scroll-view scroll-x="true" style="white-space: nowrap; display: flex" class="top-20">
+          <block v-for="(img, imgIndex) in item.images.slice(0, 3)" :key="imgIndex">
             <view class="item-inlines">
               <navigator url="" hover-class="none">
-                <view
-                  class="item-inline bg-img padding-top-xl flex align-end"
-                  :style="'background-image: url(' + img + ');'"
-                >
+                <view class="item-inline bg-img padding-top-xl flex align-end"
+                  :style="'background-image: url(' + img + ');'">
                 </view>
               </navigator>
             </view>
@@ -63,7 +45,7 @@
 
         <view class="container-compile">
           <view class="cu-tag line-yellow" @tap="show_model">降价</view>
-          <view class="cu-tag line-yellow" @tap="toIssue">编辑</view>
+          <view class="cu-tag line-yellow" @tap="toIssue(item)">编辑</view>
           <view class="cu-tag line-yellow" @tap="actionSheetTap">分享</view>
         </view>
 
@@ -74,48 +56,29 @@
     <!-- end -->
 
     <!-- 自定义弹窗 -->
-    <view
-      class="showModel bg-white"
-      @touchmove.stop="pageModel"
-      v-if="show_model_state"
-    >
+    <view class="showModel bg-white" @touchmove.stop="pageModel" v-if="show_model_state">
       <view class="model" @touchmove.stop="model_page">
         <view class="model-close" @tap="close_Model">
           <text class="cuIcon-roundclose text-df text-gray"></text>
         </view>
 
         <view class="model-title_desc">
-          <view class="model-title_desc-1"
-            ><image
-              src="https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg"
-            ></image
-          ></view>
+          <view class="model-title_desc-1">
+            <image src="https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg"></image>
+          </view>
           <view class="model-title_desc-2">
-            <view class="model-title_desc-2_1"
-              ><text class="model-title_desc-2_1_text">现价</text
-              ><text class="text-price text-red" style="font-weight: 600"
-                >2000</text
-              ></view
-            >
-            <view class="model-title_desc-2_2"
-              ><text class="model-title_desc-2_2_1_text">降价至</text
-              ><text class="text-price model-title_desc-2_2_text">{{
-                dep_price
-              }}</text></view
-            >
+            <view class="model-title_desc-2_1"><text class="model-title_desc-2_1_text">现价</text><text
+                class="text-price text-red" style="font-weight: 600">2000</text></view>
+            <view class="model-title_desc-2_2"><text class="model-title_desc-2_2_1_text">降价至</text><text
+                class="text-price model-title_desc-2_2_text">{{
+                  dep_price
+                }}</text></view>
           </view>
         </view>
 
         <view class="slect_model">
-          <view
-            class="modle-select"
-            :class="item.checked ? 'select_state' : ''"
-            v-for="(item, index) in re_price"
-            :key="index"
-            @tap="select_price"
-            :data-price="item.price"
-            :data-id="index"
-          >
+          <view class="modle-select" :class="item.checked ? 'select_state' : ''" v-for="(item, index) in re_price"
+            :key="index" @tap="select_price" :data-price="item.price" :data-id="index">
             <view class="modle-select-1">
               <view class="cu-tag bg-red">{{ item.price }}元</view>
             </view>
@@ -179,20 +142,17 @@ export default {
       }
     },
     // 跳转到编辑页面
-    toIssue: function () {
-      console.log(123);
+    toIssue: function (item) {
+      console.log("编辑商品:", item.product_id);
       uni.navigateTo({
-        url: "/pages/issue/issue_edit/issue_edit",
-        success: function (res) {},
-        fail: function (res) {},
-        complete: function (res) {},
+        url: `/pages/issue/issue_edit/issue_edit?product_id=${item.product_id}`,
       });
     },
 
     // 拦截弹窗 滚动
-    pageModel: function (e) {},
+    pageModel: function (e) { },
     // 拦截弹窗 滚动
-    model_page: function (e) {},
+    model_page: function (e) { },
 
     // end
 
@@ -271,50 +231,62 @@ export default {
   height: 400rpx;
   margin-bottom: 20rpx;
 }
+
 .contianer-title {
   display: flex;
 }
+
 .contianer-title_2 {
   margin-right: 20rpx;
 }
+
 .contianer-title_2 text {
   font-size: 25rpx;
   color: gray;
 }
+
 .contianer-title_1 {
   font-size: 32rpx;
   color: black;
   width: 75%;
   margin-left: 20rpx;
 }
+
 .item-inline-1_1 {
   width: 300rpx;
 }
+
 .item-inlines {
   display: inline-block;
 }
+
 .item-inline {
   display: inline-block;
   margin-right: 10rpx;
   height: 150rpx;
   width: 230rpx;
 }
+
 .container-price_desc {
   display: flex;
   margin-top: 20rpx;
   align-items: center;
 }
+
 .view-width {
   width: 70%;
 }
+
 .margin-left {
   margin-left: 20rpx;
 }
+
 .container-compile {
   display: flex;
   margin-top: 20rpx;
   justify-content: flex-end;
 }
+
 /* .container-line{
   margin-top: 20rpx;
   width: 93%;
@@ -335,6 +307,7 @@ export default {
   z-index: 10;
   /* display: none; */
 }
+
 .model {
   padding: 30rpx;
   position: fixed;
@@ -345,23 +318,28 @@ export default {
   width: 650rpx;
   background: white;
 }
+
 .model-close {
   margin-top: 20rpx;
   display: flex;
   justify-content: flex-end;
   margin-right: 30rpx;
 }
+
 .model-title_desc {
   display: flex;
   align-items: center;
 }
+
 .model-title_desc-1 image {
   height: 130rpx;
   width: 130rpx;
 }
+
 .model-title_desc-2 {
   margin-left: 30rpx;
 }
+
 .model-title_desc-2_1 {
   margin-bottom: 40rpx;
   color: black;
@@ -372,22 +350,27 @@ export default {
 .model-title_desc-2_2 {
   color: black;
 }
+
 .model-title_desc-2_1_text {
   width: 100rpx;
 }
+
 .model-title_desc-2_2 {
   display: flex;
   align-items: center;
 }
+
 .model-title_desc-2_2_text {
   color: black;
   padding: 20rpx;
   background: gainsboro;
   border-radius: 10rpx;
 }
+
 .model-title_desc-2_2_1_text {
   width: 100rpx;
 }
+
 .modle-select {
   margin-top: 20rpx;
   height: 130rpx;
@@ -400,20 +383,25 @@ export default {
   border-radius: 10rpx;
   margin: 20rpx;
 }
+
 .modle-select-1 text {
   font-size: 32rpx;
   font-weight: 600;
 }
+
 .modle-select-2 text {
   font-size: 20rpx;
 }
+
 .modle-select-1 {
   margin-bottom: 20rpx;
 }
+
 .slect_model {
   display: flex;
   flex-wrap: wrap;
 }
+
 .button-confirm {
   width: 98%;
 }
@@ -424,5 +412,6 @@ export default {
 .select_state {
   background: #fef2ce;
 }
+
 /* end */
 </style>

@@ -185,6 +185,10 @@ export default {
 			contentError: false,
 			sellPriceError: false,
 			orginalPriceError: false,
+			product_id: null, // 当前编辑的商品ID
+			isEdit: false, // 是否为编辑模式
+			originalImageUrls: [], // 原始图片URLs
+			deletedImages: [], // 要删除的图片
 		}
 	},
 	methods: {
@@ -256,56 +260,63 @@ export default {
 
 			const selectedMethods = this.checkboxs.filter(i => i.checked).map(i => i.value).join('|');
 
-			// 处理发布请求
 			const formData = {
 				title: this.title,
 				description: this.content,
-				price: this.tabIndex === 0 ? this.money : '0', // 求购时价格可为0
+				price: this.tabIndex === 0 ? this.money : '0',
 				original_price: this.tabIndex === 0 ? this.newMoney : '0',
 				product_status: this.tabIndex === 0 ? this.itemLists[this.itemListsIndex] : '求购',
 				product_class: this.classify,
-				product_type: this.tabIndex === 0 ? 'sell' : 'buy', // 区分出售与求购
-				token: token,
-				status: selectedMethods,
+				product_type: this.tabIndex === 0 ? 'sell' : 'buy',
+				status: this.checkboxs.filter(i => i.checked).map(i => i.value).join('|'),
 			};
 
-			// 统一使用一个接口，但区分有无图片的处理方式
-			if (this.imgList.length > 0) {
-				// 有图片，使用uploadFile
+			// 如果是编辑模式，添加商品ID
+			if (this.isEdit) {
+				formData.product_id = this.product_id;
+				formData.deleted_images = JSON.stringify(this.deletedImages);
+			}
+
+			// 根据是否有新图片决定使用哪种提交方式
+			if (this.imgList.length > 0 && (this.isEdit ? this.imgList.some(img => !img.startsWith('http')) : true)) {
+				// 有新上传的图片，使用uploadFile
+				const newImagePath = this.imgList.find(img => !img.startsWith('http')) || this.imgList[0];
+
 				uni.uploadFile({
-					url: 'http://localhost:3000/api/products/create',
-					filePath: this.imgList[0],
+					url: this.isEdit ? 'http://localhost:3000/api/products/update' : 'http://localhost:3000/api/products/create',
+					filePath: newImagePath,
 					name: 'image',
 					formData: formData,
-					header: {
-						'Authorization': `Bearer ${token}`
-					},
+					header: { 'Authorization': `Bearer ${token}` },
 					success: (res) => {
 						this.handleUploadSuccess(res, token);
 					},
 					fail: this.handleUploadFail
 				});
 			} else {
-				// 无图片，使用普通请求
+				// 无新图片，使用普通请求
 				uni.request({
-					url: 'http://localhost:3000/api/products/create',
+					url: this.isEdit ? 'http://localhost:3000/api/products/update' : 'http://localhost:3000/api/products/create',
 					method: 'POST',
 					data: formData,
-					header: {
-						'Authorization': `Bearer ${token}`
-					},
+					header: { 'Authorization': `Bearer ${token}` },
 					success: (res) => {
-						if (res.statusCode === 201) {
+						if (res.statusCode === 200 || res.statusCode === 201) {
 							uni.showToast({
-								title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
+								title: this.isEdit ? '商品更新成功' : (this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功'),
 								icon: 'success',
 								duration: 2000,
+								success: () => {
+									setTimeout(() => {
+										uni.switchTab({
+											url: '/pages/my/my'
+										});
+									}, 1500);
+								}
 							});
-							// 重置表单
-							this.resetForm();
 						} else {
 							uni.showToast({
-								title: res.data.message || '发布失败，请重试',
+								title: res.data.message || '操作失败，请重试',
 								icon: 'none',
 								duration: 2000,
 							});
@@ -360,6 +371,11 @@ export default {
 					icon: 'success',
 					duration: 2000,
 				});
+				setTimeout(() => {
+					uni.switchTab({
+						url: '/pages/my/my'
+					});
+				}, 1500);
 			} else {
 				uni.showToast({
 					title: data.message || '发布失败，请重试',
@@ -402,7 +418,7 @@ export default {
 					isValid = Boolean(this[field]);
 			}
 
-			// 如果验证失败，使用uni-app的震动API而非DOM操作
+			// 如果验证失败，使用uni-app的震动API
 			if (!isValid) {
 				// 使用uni-app的震动API
 				uni.vibrateShort({
@@ -476,11 +492,17 @@ export default {
 				confirmText: '删除',
 				success: res => {
 					if (res.confirm) {
-						this.imgList.splice(e.currentTarget.dataset.index, 1);
-						this.imgList = this.imgList
+						const index = e.currentTarget.dataset.index;
+
+						// 如果是编辑模式且删除的是原始图片，记录要删除的图片URL
+						if (this.isEdit && index < this.originalImageUrls.length) {
+							this.deletedImages.push(this.originalImageUrls[index]);
+						}
+
+						this.imgList.splice(index, 1);
 					}
 				}
-			})
+			});
 		},
 
 		//限制只能到小数点2位
@@ -554,10 +576,88 @@ export default {
 				this.classify_id = e.currentTarget.dataset.value
 			this.hideModal();
 		},
+		// 加载商品详情
+		async loadProductDetails(productId) {
+			try {
+				console.log('加载商品详情:', productId);
+
+				uni.showLoading({ title: '加载中...' });
+
+				const token = uni.getStorageSync('token');
+				const response = await uni.request({
+					url: `http://localhost:3000/api/products/${productId}`,
+					method: 'GET',
+					header: {
+						'Authorization': `Bearer ${token}`
+					}
+				});
+
+				if (response.statusCode === 200) {
+					const product = response.data;
+
+					// 设置表单数据
+					this.title = product.product_title;
+					this.content = product.description;
+					this.money = product.price.toString();
+					this.newMoney = product.original_price ? product.original_price.toString() : '0';
+					this.classify = product.product_class;
+
+					// 设置标签页索引
+					this.tabIndex = product.product_type === 'buy' ? 1 : 0;
+
+					// 设置新旧程度
+					const statusIndex = this.itemLists.findIndex(item => item === product.product_status);
+					this.itemListsIndex = statusIndex >= 0 ? statusIndex : 0;
+
+					// 设置交易方式
+					if (product.status) {
+						const methods = product.status.split('|');
+						this.checkboxs.forEach(item => {
+							item.checked = methods.includes(item.value);
+						});
+					}
+
+					// 加载图片
+					if (product.images && product.images.length > 0) {
+						// 原始图片URLs，用于跟踪哪些是已有图片
+						this.originalImageUrls = [...product.images];
+
+						// 转换图片URLs为可显示格式
+						this.imgList = product.images.map(url => {
+							if (url.startsWith('http')) {
+								return url;
+							} else {
+								return `http://localhost:3000/${url.replace(/\\/g, '/')}`;
+							}
+						});
+					}
+				} else {
+					uni.showToast({
+						title: '获取商品信息失败',
+						icon: 'none'
+					});
+				}
+
+				uni.hideLoading();
+			} catch (error) {
+				console.error('加载商品详情失败:', error);
+				uni.hideLoading();
+				uni.showToast({
+					title: '网络错误，请重试',
+					icon: 'none'
+				});
+			}
+		},
 	},
 	onLoad(options) {
-
+		// 获取传递过来的商品ID
+		if (options.product_id) {
+			this.product_id = options.product_id;
+			this.isEdit = true; // 标记为编辑模式
+			this.loadProductDetails(options.product_id);
+		}
 	},
+
 	onShow() {
 
 	},
@@ -571,6 +671,7 @@ export default {
 			uni.stopPullDownRefresh();
 		}, 2000);
 	},
+
 }
 </script>
 
