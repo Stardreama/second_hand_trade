@@ -68,15 +68,34 @@ export default {
       const token = uni.getStorageSync("token");
       if (!token) return;
 
+      console.log("开始加载会话列表");
+      uni.showLoading({ title: "加载中..." });
+
       uni.request({
         url: "http://localhost:3000/api/conversations",
         header: {
           Authorization: `Bearer ${token}`,
         },
         success: (res) => {
+          console.log("会话列表结果:", res);
           if (res.statusCode === 200) {
             this.conversations = res.data;
+          } else {
+            uni.showToast({
+              title: "获取会话失败",
+              icon: "none",
+            });
           }
+        },
+        fail: (err) => {
+          console.error("获取会话失败:", err);
+          uni.showToast({
+            title: "网络错误",
+            icon: "none",
+          });
+        },
+        complete: () => {
+          uni.hideLoading();
         },
       });
     },

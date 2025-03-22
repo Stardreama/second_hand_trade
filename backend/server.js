@@ -7,8 +7,8 @@ const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const myRoutes = require("./routes/myRoutes");
-const Conversation = require('./models/conversation');
-const Message = require('./models/message');
+const Conversation = require("./models/conversation");
+const Message = require("./models/message");
 const cors = require("cors");
 const WebSocket = require("ws");
 const http = require("http");
@@ -47,9 +47,10 @@ wss.on("connection", (ws, req) => {
     // 监听消息
     ws.on("message", async (message) => {
       try {
-        const data = JSON.parse(message);
+        const messageStr = message.toString(); // WebSocket 接收到的是 Buffer 或字符串，需要转换
+        const data = JSON.parse(messageStr); // 使用转换后的字符串
         const { type, conversationId, to, content, image_url } = data;
-
+        console.log("收到消息:", data); // 添加调试日志
         if (type === "message") {
           // 获取会话
           const conversation = await Conversation.findById(conversationId);

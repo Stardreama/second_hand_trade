@@ -145,22 +145,40 @@ export default {
     
     // 加载历史消息
     loadMessages() {
-      this.isLoading = true;
+      const token = uni.getStorageSync('token');
+      if (!token) return;
+      
+      console.log("加载会话消息:", this.conversationId);
+      
+      uni.showLoading({ title: '加载中...' });
       uni.request({
         url: `http://localhost:3000/api/conversations/${this.conversationId}/messages`,
         header: {
-          'Authorization': `Bearer ${uni.getStorageSync('token')}`
+          'Authorization': `Bearer ${token}`
         },
         success: (res) => {
+          console.log("获取消息结果:", res);
           if (res.statusCode === 200) {
             this.messages = res.data;
             this.$nextTick(() => {
               this.scrollToBottom();
             });
+          } else {
+            uni.showToast({
+              title: '获取消息失败',
+              icon: 'none'
+            });
           }
         },
+        fail: (err) => {
+          console.error("获取消息失败:", err);
+          uni.showToast({
+            title: '网络错误',
+            icon: 'none'
+          });
+        },
         complete: () => {
-          this.isLoading = false;
+          uni.hideLoading();
         }
       });
     },
@@ -194,8 +212,8 @@ export default {
     
     // 发送消息
     sendMessage() {
-      if (!this.messageText.trim() && !this.selectedImage) {
-        return;
+      if (!this.messageText.trim()) {
+        return; // 不发送空消息
       }
       
       const token = uni.getStorageSync('token');
@@ -207,83 +225,45 @@ export default {
         return;
       }
       
-      // 添加消息到本地显示（乐观UI更新）
-      const tempId = Date.now().toString();
-      const tempMessage = {
-        message_id: tempId,
-        conversation_id: this.conversationId,
-        sender_id: this.userInfo.student_id,
-        content: this.messageText,
-        created_at: new Date().toISOString(),
-        is_read: false,
-        temp: true // 标记为临时消息
-      };
+      // 添加日志
+      console.log("准备发送消息:", this.messageText);
       
-      this.messages.push(tempMessage);
-      
-      // 清空输入框
-      const messageContent = this.messageText;
-      this.messageText = '';
-      
-      // 滚动到底部
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
-      
-      // 发送消息到服务器
-      if (this.webSocket && this.webSocket.readyState === WebSocket.OPEN) {
-        // 通过WebSocket发送
-        this.webSocket.send(JSON.stringify({
-          type: 'message',
-          conversationId: this.conversationId,
-          content: messageContent,
-          to: this.otherUserId
-        }));
-      } else {
-        // 通过HTTP API发送
-        uni.request({
-          url: `http://localhost:3000/api/conversations/${this.conversationId}/messages`,
-          method: 'POST',
-          data: {
-            content: messageContent
-          },
-          header: {
-            'Authorization': `Bearer ${token}`
-          },
-          success: (res) => {
-            if (res.statusCode === 201) {
-              // 替换临时消息为实际消息
-              const messageIndex = this.messages.findIndex(m => m.message_id === tempId);
-              if (messageIndex !== -1) {
-                this.messages.splice(messageIndex, 1, res.data);
-              }
-            } else {
-              // 消息发送失败，标记错误
-              const messageIndex = this.messages.findIndex(m => m.message_id === tempId);
-              if (messageIndex !== -1) {
-                this.messages[messageIndex].failed = true;
-              }
-              
-              uni.showToast({
-                title: '消息发送失败',
-                icon: 'none'
-              });
-            }
-          },
-          fail: () => {
-            // 标记消息发送失败
-            const messageIndex = this.messages.findIndex(m => m.message_id === tempId);
-            if (messageIndex !== -1) {
-              this.messages[messageIndex].failed = true;
-            }
-            
+      // 先通过 HTTP API 发送，保证可靠性
+      uni.request({
+        url: `http://localhost:3000/api/conversations/${this.conversationId}/messages`,
+        method: 'POST',
+        data: {
+          content: this.messageText
+        },
+        header: {
+          'Authorization': `Bearer ${token}`
+        },
+        success: (res) => {
+          console.log("发送消息响应:", res.data);
+          if (res.statusCode === 201) {
+            // 消息发送成功，添加到本地显示
+            this.messages.push(res.data);
+            // 清空输入框
+            this.messageText = '';
+            // 滚动到底部
+            this.$nextTick(() => {
+              this.scrollToBottom();
+            });
+          } else {
             uni.showToast({
-              title: '网络错误',
+              title: '消息发送失败',
               icon: 'none'
             });
           }
-        });
-      }
+        },
+        fail: (err) => {
+          console.error("发送消息失败:", err);
+          uni.showToast({
+            title: '网络错误',
+            icon: 'none'
+          });
+        }
+      });
     },
     
     // 选择图片
