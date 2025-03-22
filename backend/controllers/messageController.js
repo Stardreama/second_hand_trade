@@ -6,20 +6,45 @@ const User = require("../models/user");
 const getUserConversations = async (req, res) => {
   try {
     const userId = req.user.student_id || req.user.id;
+    console.log("获取用户会话列表，用户ID:", userId);
     const conversations = await Conversation.getUserConversations(userId);
 
     // 查询对话对象的用户信息
     for (let conv of conversations) {
       const otherUserId =
         conv.buyer_id === userId ? conv.seller_id : conv.buyer_id;
-      const userInfo = await User.findById(otherUserId);
 
-      // 填充用户信息
-      conv.otherUser = {
-        id: userInfo.student_id,
-        name: userInfo.username,
-        avatar: userInfo.avatar,
-      };
+      // 使用 findByStudentId 替代 findById
+      await new Promise((resolve, reject) => {
+        User.findByStudentId(otherUserId, (err, result) => {
+          if (err) {
+            console.error("查询用户信息出错:", err);
+            conv.otherUser = {
+              id: otherUserId,
+              name: "未知用户",
+              avatar: null,
+            };
+            return resolve();
+          }
+
+          if (result && result.length > 0) {
+            const userInfo = result[0];
+            // 填充用户信息
+            conv.otherUser = {
+              id: userInfo.student_id,
+              name: userInfo.username,
+              avatar: userInfo.avatar,
+            };
+          } else {
+            conv.otherUser = {
+              id: otherUserId,
+              name: "未知用户",
+              avatar: null,
+            };
+          }
+          resolve();
+        });
+      });
 
       // 设置未读消息计数
       conv.unreadCount =
@@ -28,6 +53,7 @@ const getUserConversations = async (req, res) => {
 
     res.status(200).json(conversations);
   } catch (error) {
+    console.error("获取会话列表失败:", error);
     res.status(500).json({ message: "获取会话列表失败", error: error.message });
   }
 };

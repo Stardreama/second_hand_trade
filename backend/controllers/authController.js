@@ -170,6 +170,7 @@ const getUserProfile = (req, res) => {
 //获取指定用户信息
 const getUserInfo = (req, res) => {
   const targetUserId = req.params.userId;
+  console.log("获取用户信息，目标用户ID:", targetUserId);
 
   User.getUserProfile(targetUserId, (err, result) => {
     if (err) {
@@ -178,9 +179,11 @@ const getUserInfo = (req, res) => {
     }
 
     if (!result || result.length === 0) {
+      console.log("用户不存在:", targetUserId);
       return res.status(404).json({ message: "用户不存在" });
     }
 
+    console.log("获取到用户信息:", result[0]);
     // 只返回必要的用户信息，保护隐私
     const userData = {
       student_id: result[0].student_id,
