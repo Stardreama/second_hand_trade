@@ -75,12 +75,12 @@
           <text class="text-grey">意见反馈</text>
         </view>
       </view>
-      <view class="cu-item arrow content">
+      <!-- <view class="cu-item arrow content">
         <button class="cu-btn content" @click="clearAllStore">
           <text class="cuIcon-creativefill text-orange"></text>
           <text class="text-grey">清除缓存</text>
         </button>
-      </view>
+      </view> -->
     </view>
 
     <!-- 红色的退出按钮 -->

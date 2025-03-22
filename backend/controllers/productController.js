@@ -66,10 +66,6 @@ const createProduct = (req, res) => {
 
       const productId = result.insertId;
       console.log("产品插入成功，product_id:", productId);
-
-      // 如果有额外的图片，上传它们
-      // if (1) {
-      // 从第2张图片开始上传（第1张已作为封面）
       const insertPromises = files.map((file) => {
         return new Promise((resolve, reject) => {
           Product.addImage(productId, file.path, (err, result) => {
@@ -102,14 +98,6 @@ const createProduct = (req, res) => {
             warning: "部分图片上传失败",
           });
         });
-      // }
-      // else {
-      //   // 没有额外图片
-      //   res.status(201).json({
-      //     message: product_type === "buy" ? "求购信息发布成功" : "商品发布成功",
-      //     product_id: productId,
-      //   });
-      // }
     }
   );
 };
