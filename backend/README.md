@@ -82,6 +82,7 @@ CREATE TABLE `users`  (
   PRIMARY KEY (`student_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
+DROP TABLE IF EXISTS `feedback`;
 CREATE TABLE `feedback` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` varchar(20) DEFAULT NULL,
@@ -92,6 +93,33 @@ CREATE TABLE `feedback` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `conversations`;
+CREATE TABLE conversations (
+  conversation_id INT PRIMARY KEY AUTO_INCREMENT,
+  buyer_id VARCHAR(50) NOT NULL,
+  seller_id VARCHAR(50) NOT NULL,
+  product_id INT,
+  latest_message TEXT,
+  latest_message_time DATETIME,
+  unread_buyer INT DEFAULT 0,
+  unread_seller INT DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_conversation (buyer_id, seller_id, product_id)
+);
+
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE messages (
+  message_id INT PRIMARY KEY AUTO_INCREMENT,
+  conversation_id INT NOT NULL,
+  sender_id VARCHAR(50) NOT NULL,
+  receiver_id VARCHAR(50) NOT NULL,
+  content TEXT,
+  image_url VARCHAR(255),
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id)
+);
 
 SET FOREIGN_KEY_CHECKS = 1;
 ```
