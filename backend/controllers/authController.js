@@ -167,10 +167,36 @@ const getUserProfile = (req, res) => {
   });
 };
 
+//获取指定用户信息
+const getUserInfo = (req, res) => {
+  const targetUserId = req.params.userId;
+
+  User.getUserProfile(targetUserId, (err, result) => {
+    if (err) {
+      console.error("获取用户信息失败：", err);
+      return res.status(500).json({ message: "数据库错误" });
+    }
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ message: "用户不存在" });
+    }
+
+    // 只返回必要的用户信息，保护隐私
+    const userData = {
+      student_id: result[0].student_id,
+      username: result[0].username,
+      avatar: result[0].avatar
+    };
+
+    res.status(200).json(userData);
+  });
+};
+
 module.exports = {
   register,
   login,
   authenticateJWT,
   updateAvatar,
   getUserProfile,
+  getUserInfo,
 };

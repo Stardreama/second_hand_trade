@@ -38,11 +38,17 @@ router.post(
   authController.updateAvatar
 );
 
-// 添加获取用户信息的路由
+// 获取当前用户信息的路由
 router.get(
   "/user/profile",
   authController.authenticateJWT,
   authController.getUserProfile
+);
+// 获取指定用户信息路由
+router.get(
+  "/user/:userId/info",
+  authController.authenticateJWT,
+  authController.getUserInfo
 );
 // 其他路由
 router.post(

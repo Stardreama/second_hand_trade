@@ -81,12 +81,13 @@
 
     <!-- 操作选项卡 -->
     <view class="cu-bar bg-white tabbar border shop fixation">
-      <button class="action" @tap="toChat">
-        <view class="cuIcon-service text-green">
-          <view class="cu-tag badge"></view>
-        </view>
-        聊一聊
-      </button>
+      <view class="action-buttons padding-sm">
+        <!-- 仅当商品不是自己发布的时候显示聊一聊按钮 -->
+        <button class="cu-btn bg-blue lg shadow" @tap="chatWithSeller"
+          v-if="productDetail.seller_id !== userInfo.student_id">
+          <text class="cuIcon-message"></text> 聊一聊
+        </button>
+      </view>
       <view class="action">
         <view class="cuIcon-appreciatefill text-orange">
         </view>
@@ -111,6 +112,10 @@ export default {
   onLoad(query) {
     const productId = query.product_id;  // 从URL中获取product_id
     this.fetchProductDetail(productId);  // 获取商品详情
+    const userInfo = uni.getStorageSync('userInfo');
+    if (userInfo) {
+      this.userInfo = userInfo;
+    }
   },
   methods: {
     async fetchProductDetail(productId) {
@@ -150,13 +155,54 @@ export default {
         url: "/pages/msg/msg_chat/msg_chat",
       });
     },
-    // 跳转到用户详情页面
-    // toUserDetail() {
-    //   uni.navigateTo({
-    //     url: "/pages/my/my_detail/my_detail?user_id=" + this.productDetail.seller_id,
-    //   });
-    // }
-  },
+    chatWithSeller() {
+      const token = uni.getStorageSync('token');
+      if (!token) {
+        uni.showToast({
+          title: '请先登录',
+          icon: 'none'
+        });
+        setTimeout(() => {
+          uni.navigateTo({
+            url: '/pages/auth/login'
+          });
+        }, 1500);
+        return;
+      }
+
+      // 创建会话
+      uni.request({
+        url: 'http://localhost:3000/api/conversations/create',
+        method: 'POST',
+        data: {
+          sellerId: this.productDetail.seller_id,
+          productId: this.productDetail.product_id
+        },
+        header: {
+          'Authorization': `Bearer ${token}`
+        },
+        success: (res) => {
+          if (res.statusCode === 201) {
+            // 跳转到聊天页面
+            uni.navigateTo({
+              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${this.productDetail.seller_id}&product_id=${this.productDetail.product_id}`
+            });
+          } else {
+            uni.showToast({
+              title: '创建会话失败',
+              icon: 'none'
+            });
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: '网络错误',
+            icon: 'none'
+          });
+        }
+      });
+    },
+  }
 };
 </script>
 
@@ -165,7 +211,11 @@ export default {
   padding-bottom: 90rpx;
 }
 
-
+.action-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20rpx;
+}
 
 /* 商家信息 */
 

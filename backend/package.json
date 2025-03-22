@@ -43,6 +43,7 @@
     "gopd": "^1.2.0",
     "has-symbols": "^1.1.0",
     "hasown": "^2.0.2",
+    "http": "^0.0.1-security",
     "http-errors": "^2.0.0",
     "iconv-lite": "^0.4.24",
     "inherits": "^2.0.4",
@@ -92,6 +93,8 @@
     "utf8": "^3.0.0",
     "utils-merge": "^1.0.1",
     "vary": "^1.1.2",
+    "websocket": "^1.0.35",
+    "ws": "^8.18.1",
     "wxpay": "^0.0.2"
   },
   "scripts": {
