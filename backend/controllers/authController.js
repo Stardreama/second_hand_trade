@@ -149,23 +149,23 @@ const updateAvatar = (req, res) => {
   });
 };
 
-// 获取用户资料
-const getUserProfile = (req, res) => {
-  const student_id = req.user.student_id;
+// // 获取用户资料
+// const getUserProfile = (req, res) => {
+//   const student_id = req.user.student_id;
 
-  User.getUserProfile(student_id, (err, result) => {
-    if (err) {
-      console.error("获取用户信息失败：", err);
-      return res.status(500).json({ message: "数据库错误" });
-    }
+//   User.getUserProfile(student_id, (err, result) => {
+//     if (err) {
+//       console.error("获取用户信息失败：", err);
+//       return res.status(500).json({ message: "数据库错误" });
+//     }
 
-    if (!result || result.length === 0) {
-      return res.status(404).json({ message: "用户不存在" });
-    }
+//     if (!result || result.length === 0) {
+//       return res.status(404).json({ message: "用户不存在" });
+//     }
 
-    res.status(200).json({ user: result[0] });
-  });
-};
+//     res.status(200).json({ user: result[0] });
+//   });
+// };
 
 //获取指定用户信息
 const getUserInfo = (req, res) => {
@@ -194,6 +194,44 @@ const getUserInfo = (req, res) => {
     res.status(200).json(userData);
   });
 };
+// 更新用户昵称
+const updateNickname = (req, res) => {
+  const student_id = req.user.student_id; // 从JWT中获取用户ID
+  const { nickname } = req.body;  // 从请求体中获取新的昵称
+
+  if (!nickname || nickname.trim() === '') {
+    return res.status(400).json({ message: "昵称不能为空" });
+  }
+
+  // 更新数据库中的昵称
+  User.updateNickname(student_id, nickname, (err, result) => {
+    if (err) {
+      console.error("更新昵称失败：", err);
+      return res.status(500).json({ message: "数据库错误" });
+    }
+
+    res.status(200).json({ message: "昵称更新成功" });
+  });
+};
+
+// 获取用户信息
+const getUserProfile = (req, res) => {
+  const student_id = req.user.student_id;  // 从JWT获取学生ID
+
+  User.getUserProfile(student_id, (err, result) => {
+    if (err) {
+      console.error("获取用户信息失败：", err);
+      return res.status(500).json({ message: "数据库错误" });
+    }
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ message: "用户不存在" });
+    }
+
+    res.status(200).json({ user: result[0] });
+  });
+};
+
 
 module.exports = {
   register,
@@ -202,4 +240,5 @@ module.exports = {
   updateAvatar,
   getUserProfile,
   getUserInfo,
+  updateNickname
 };

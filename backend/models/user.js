@@ -38,6 +38,11 @@ const User = {
     const query = "UPDATE users SET avatar = ? WHERE student_id = ?";
     db.query(query, [avatarPath, student_id], callback);
   },
+  // 更新昵称
+  updateNickname: (student_id, nickname, callback) => {
+    const query = "UPDATE users SET username = ? WHERE student_id = ?";
+    db.query(query, [nickname, student_id], callback);
+  },
 };
 
 module.exports = User;
