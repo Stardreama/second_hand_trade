@@ -440,6 +440,28 @@ getProductLike = async (req, res) => {
     res.status(500).json({ message: "服务器错误" });
   }
 };
+// 获取用户点赞总数
+const getUserLikeAmount = async (req, res) => {
+  try {
+    const seller_id = req.user?.student_id; // 从 token 中获取 seller_id
+
+    if (!seller_id) {
+      return res.status(401).json({ code: 401, message: "无效的用户身份" });
+    }
+
+    // 查询该用户发布的所有商品的 like_amount 总和
+    const [rows] = await query(
+      "SELECT COALESCE(SUM(like_amount), 0) AS total_likes FROM products WHERE seller_id = ?",
+      [seller_id]
+    );
+    // 确保 rows 有值并且 total_likes 不为 undefined
+    const totalLikes = rows.total_likes || 0;
+    res.json({ code: 200, total_likes: totalLikes });
+  } catch (error) {
+    console.error("获取点赞总数失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
+  }
+};
 
 module.exports = {
   createProduct,
@@ -451,4 +473,5 @@ module.exports = {
   updateProduct,
   toggleLike,
   getProductLike,
+  getUserLikeAmount,
 };
