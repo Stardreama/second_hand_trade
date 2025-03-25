@@ -4,7 +4,7 @@ const multer = require("multer");
 const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const productController = require("../controllers/productController");
-
+const jwtService = require("../services/jwtService");
 // 确保上传目录存在
 const uploadDir = "uploads/productImages/";
 if (!fs.existsSync(uploadDir)) {
@@ -61,7 +61,10 @@ router.post(
   authenticateToken,
   (req, res, next) => {
     // 检查请求体是否包含image属性，决定是否需要上传文件
-    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+    if (
+      req.headers["content-type"] &&
+      req.headers["content-type"].includes("multipart/form-data")
+    ) {
       // 有文件上传，应用multer中间件
       upload.array("image", 5)(req, res, (err) => {
         if (err) {
@@ -103,7 +106,10 @@ router.post(
   authenticateToken,
   (req, res, next) => {
     // 检查请求体是否包含image属性
-    if (req.headers['content-type'] && req.headers['content-type'].includes('multipart/form-data')) {
+    if (
+      req.headers["content-type"] &&
+      req.headers["content-type"].includes("multipart/form-data")
+    ) {
       upload.array("image", 5)(req, res, (err) => {
         if (err) {
           return res.status(400).json({ message: err.message });
@@ -119,7 +125,12 @@ router.post(
 router.get("/search", productController.searchProduct);
 // 获取单个商品详细信息
 router.get("/:product_id", productController.getProductById);
-
+router.post("/like", jwtService.authMiddleware, productController.toggleLike); // 点赞或取消点赞
+router.get(
+  "/like/:productId",
+  jwtService.authMiddleware,
+  productController.getProductLike
+);
 //渲染数据库中的所有商品
 router.get("/", productController.getAllProducts);
 module.exports = router;

@@ -1,6 +1,14 @@
 const Product = require("../models/product"); // 引入 Product 模型
 const { db } = require("../config/config");
 const jwtService = require("../services/jwtService");
+const query = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
 // 发布商品
 const createProduct = (req, res) => {
   console.log("Request Body:", req.body);
@@ -254,50 +262,55 @@ const updateProduct = async (req, res) => {
       product_class,
       status,
       product_type,
-      deleted_images
+      deleted_images,
     } = req.body;
-    
+
     const seller_id = req.seller_id;
     const files = req.files || [];
-    
+
     // 基础字段验证
     if (!product_id || !description || !seller_id || !title || !product_class) {
       return res.status(400).json({ message: "缺少必要的商品信息" });
     }
-    
+
     // 检查商品是否存在且属于当前用户
-    const checkQuery = "SELECT * FROM products WHERE product_id = ? AND seller_id = ?";
+    const checkQuery =
+      "SELECT * FROM products WHERE product_id = ? AND seller_id = ?";
     db.query(checkQuery, [product_id, seller_id], async (err, results) => {
       if (err) {
-        return res.status(500).json({ message: "数据库错误", error: err.message });
+        return res
+          .status(500)
+          .json({ message: "数据库错误", error: err.message });
       }
-      
+
       if (results.length === 0) {
         return res.status(404).json({ message: "商品不存在或您无权编辑" });
       }
-      
+
       // 开始事务
       db.beginTransaction(async (err) => {
         if (err) {
-          return res.status(500).json({ message: "事务开始失败", error: err.message });
+          return res
+            .status(500)
+            .json({ message: "事务开始失败", error: err.message });
         }
-        
+
         try {
           // 1. 更新商品基本信息
           let coverImage = results[0].image; // 默认保持原来的封面图片
-          
+
           // 如果有新上传的图片，使用第一张作为新的封面
           if (files.length > 0) {
             coverImage = files[0].path;
           }
-          
+
           const updateQuery = `
             UPDATE products 
             SET product_title = ?, description = ?, price = ?, original_price = ?,
                 product_status = ?, product_class = ?, status = ?, product_type = ?, image = ?
             WHERE product_id = ? AND seller_id = ?
           `;
-          
+
           await new Promise((resolve, reject) => {
             db.query(
               updateQuery,
@@ -312,7 +325,7 @@ const updateProduct = async (req, res) => {
                 product_type,
                 coverImage,
                 product_id,
-                seller_id
+                seller_id,
               ],
               (err, result) => {
                 if (err) reject(err);
@@ -320,24 +333,29 @@ const updateProduct = async (req, res) => {
               }
             );
           });
-          
+
           // 2. 处理删除的图片
           if (deleted_images) {
             const imagesToDelete = JSON.parse(deleted_images);
             if (imagesToDelete.length > 0) {
-              const deleteImageQuery = "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?)";
+              const deleteImageQuery =
+                "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?)";
               await new Promise((resolve, reject) => {
-                db.query(deleteImageQuery, [product_id, imagesToDelete], (err, result) => {
-                  if (err) reject(err);
-                  else resolve(result);
-                });
+                db.query(
+                  deleteImageQuery,
+                  [product_id, imagesToDelete],
+                  (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result);
+                  }
+                );
               });
             }
           }
-          
+
           // 3. 添加新图片
           if (files.length > 0) {
-            const insertImagePromises = files.map(file => {
+            const insertImagePromises = files.map((file) => {
               return new Promise((resolve, reject) => {
                 Product.addImage(product_id, file.path, (err, result) => {
                   if (err) reject(err);
@@ -345,30 +363,103 @@ const updateProduct = async (req, res) => {
                 });
               });
             });
-            
+
             await Promise.all(insertImagePromises);
           }
-          
+
           // 提交事务
-          db.commit(err => {
+          db.commit((err) => {
             if (err) {
               return db.rollback(() => {
-                res.status(500).json({ message: "提交事务失败", error: err.message });
+                res
+                  .status(500)
+                  .json({ message: "提交事务失败", error: err.message });
               });
             }
-            
+
             res.status(200).json({ message: "商品更新成功", product_id });
           });
         } catch (error) {
           // 回滚事务
           db.rollback(() => {
-            res.status(500).json({ message: "更新商品失败", error: error.message });
+            res
+              .status(500)
+              .json({ message: "更新商品失败", error: error.message });
           });
         }
       });
     });
   } catch (error) {
     res.status(500).json({ message: "服务器错误", error: error.message });
+  }
+};
+toggleLike = async (req, res) => {
+  const { productId } = req.body;
+  const userId = req.user.student_id; // 从 JWT 解析出的用户 ID
+  if (!productId || !userId) {
+    return res.status(400).json({ message: "参数错误" });
+  }
+
+  try {
+    const liked = await Product.isLiked(userId, productId);
+
+    if (liked) {
+      await Product.removeLike(userId, productId);
+      res.json({ liked: false, message: "取消点赞成功" });
+    } else {
+      await Product.addLike(userId, productId);
+      res.json({ liked: true, message: "点赞成功" });
+    }
+  } catch (error) {
+    console.error("点赞操作失败:", error);
+    res.status(500).json({ message: "服务器错误" });
+  }
+};
+// 获取商品详情，并返回是否点过赞
+getProductLike = async (req, res) => {
+  const { productId } = req.params;
+  const userId = req.user ? req.user.student_id : null; // 可能未登录
+
+  try {
+    const [product] = await query(
+      "SELECT * FROM products WHERE product_id = ?",
+      [productId]
+    );
+    if (product.length === 0) {
+      return res.status(404).json({ message: "商品不存在" });
+    }
+
+    let liked = false;
+    if (userId) {
+      liked = await Product.isLiked(userId, productId);
+    }
+
+    res.json({ ...product[0], liked });
+  } catch (error) {
+    console.error("获取商品详情失败:", error);
+    res.status(500).json({ message: "服务器错误" });
+  }
+};
+// 获取用户点赞总数
+const getUserLikeAmount = async (req, res) => {
+  try {
+    const seller_id = req.user?.student_id; // 从 token 中获取 seller_id
+
+    if (!seller_id) {
+      return res.status(401).json({ code: 401, message: "无效的用户身份" });
+    }
+
+    // 查询该用户发布的所有商品的 like_amount 总和
+    const [rows] = await query(
+      "SELECT COALESCE(SUM(like_amount), 0) AS total_likes FROM products WHERE seller_id = ?",
+      [seller_id]
+    );
+    // 确保 rows 有值并且 total_likes 不为 undefined
+    const totalLikes = rows.total_likes || 0;
+    res.json({ code: 200, total_likes: totalLikes });
+  } catch (error) {
+    console.error("获取点赞总数失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
   }
 };
 
@@ -380,4 +471,7 @@ module.exports = {
   getProductById,
   getMySaleProducts,
   updateProduct,
+  toggleLike,
+  getProductLike,
+  getUserLikeAmount,
 };

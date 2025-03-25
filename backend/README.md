@@ -65,6 +65,7 @@ CREATE TABLE `products` (
   `status` varchar(255) DEFAULT NULL COMMENT '交易方式，如 自提|邮寄',
   `product_class` varchar(255) NOT NULL,
   `product_type` enum('sell','buy') NOT NULL DEFAULT 'sell',
+  `like_amount` int NULL DEFAULT 0,
   PRIMARY KEY (`product_id`),
   INDEX `seller_id`(`seller_id`),
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users`(`student_id`)
@@ -107,6 +108,19 @@ CREATE TABLE conversations (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY unique_conversation (buyer_id, seller_id, product_id)
 );
+
+DROP TABLE IF EXISTS `likes`;
+CREATE TABLE `likes`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `product_id` int NOT NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_like`(`user_id` ASC, `product_id` ASC) USING BTREE,
+  INDEX `product_id`(`product_id` ASC) USING BTREE,
+  CONSTRAINT `likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`student_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `likes_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 DROP TABLE IF EXISTS `messages`;
 CREATE TABLE messages (

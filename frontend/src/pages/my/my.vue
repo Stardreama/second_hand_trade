@@ -5,103 +5,104 @@
       <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
       <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
       <view class="margin-top-sm">
-        <text @tap="editNickname">{{ nickname || 'Amibition' }}</text> <!-- 昵称动态显示 -->
+        <text @tap="editNickname">{{ nickname || "Amibition" }}</text>
+        <!-- 昵称动态显示 -->
       </view>
       <image src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif" mode="scaleToFill"
         class="gif-wave"></image>
     </view>
     <!-- 修改昵称弹框 -->
     <view v-show="isNicknameModalVisible" class="nickname-modal">
-    <view class="modal-content">
-      <text>现在您可以修改自己的昵称啦~</text>
-      <input v-model="newNickname" placeholder="请输入新的昵称" class="nickname-input" />
-      <view class="modal-actions">
-        <button @tap="updateNickname" class="btn-confirm">确认</button>
-        <button @tap="cancelNicknameUpdate" class="btn-cancel">取消</button>
+      <view class="modal-content">
+        <text>现在您可以修改自己的昵称啦~</text>
+        <input v-model="newNickname" placeholder="请输入新的昵称" class="nickname-input" />
+        <view class="modal-actions">
+          <button @tap="updateNickname" class="btn-confirm">确认</button>
+          <button @tap="cancelNicknameUpdate" class="btn-cancel">取消</button>
+        </view>
       </view>
     </view>
-  </view>
-  <!-- 用户信息end -->
+    <!-- 用户信息end -->
 
-  <view class="padding flex text-center text-grey bg-white shadow-warp">
-    <view class="flex flex-sub flex-direction solid-right" bindtap="toPraise">
-      <view class="text-xxl text-orange">0</view>
-      <view class="margin-top-sm">
-        <text class="cuIcon-attentionfill"></text> 超赞
+    <view class="padding flex text-center text-grey bg-white shadow-warp">
+      <view class="flex flex-sub flex-direction solid-right" bindtap="toPraise">
+        <view class="text-xxl text-orange">{{ totalLikes }}</view>
+        <view class="margin-top-sm">
+          <text class="cuIcon-attentionfill"></text> 超赞
+        </view>
+      </view>
+      <view class="flex flex-sub flex-direction solid-right" bindtap="toAttention">
+        <view class="text-xxl text-blue">5</view>
+        <view class="margin-top-sm">
+          <text class="cuIcon-favorfill"></text>关注数
+        </view>
+      </view>
+      <view class="flex flex-sub flex-direction" bindtap="toFans">
+        <view class="text-xxl text-green">0</view>
+        <view class="margin-top-sm">
+          <text class="cuIcon-fork"></text>粉丝数
+        </view>
       </view>
     </view>
-    <view class="flex flex-sub flex-direction solid-right" bindtap="toAttention">
-      <view class="text-xxl text-blue">5</view>
-      <view class="margin-top-sm">
-        <text class="cuIcon-favorfill"></text>关注数
-      </view>
-    </view>
-    <view class="flex flex-sub flex-direction" bindtap="toFans">
-      <view class="text-xxl text-green">0</view>
-      <view class="margin-top-sm">
-        <text class="cuIcon-fork"></text>粉丝数
-      </view>
-    </view>
-  </view>
 
-  <!-- 设置详细 -->
-  <view class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius">
-    <view class="cu-item arrow">
-      <view class="content" @tap="toIssue_page">
-        <text class="cuIcon-moneybagfill text-red"></text>
-        <text class="text-grey">我的发布</text>
-        <text class="num">19</text>
+    <!-- 设置详细 -->
+    <view class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius">
+      <view class="cu-item arrow">
+        <view class="content" @tap="toIssue_page">
+          <text class="cuIcon-moneybagfill text-red"></text>
+          <text class="text-grey">我的发布</text>
+          <text class="num">19</text>
+        </view>
       </view>
-    </view>
-    <view class="cu-item arrow">
-      <navigator class="content" hover-class="none" url="/pages/my/my_sale/my_sale">
-        <text class="cuIcon-titles text-green"></text>
-        <text class="text-grey">我的卖出</text>
-        <text class="num">99</text>
-      </navigator>
-    </view>
-    <view class="cu-item arrow">
-      <navigator class="content" hover-class="none" url="/pages/my/my_buy/my_buy">
-        <text class="cuIcon-formfill text-green"></text>
-        <text class="text-grey">我买到的</text>
-        <text class="num">1</text>
-      </navigator>
-    </view>
-    <view class="cu-item arrow">
-      <view class="content" @tap="toAddress">
-        <text class="cuIcon-locationfill text-grey"></text>
-        <text class="text-grey">收货地址</text>
+      <view class="cu-item arrow">
+        <navigator class="content" hover-class="none" url="/pages/my/my_sale/my_sale">
+          <text class="cuIcon-titles text-green"></text>
+          <text class="text-grey">我的卖出</text>
+          <text class="num">99</text>
+        </navigator>
       </view>
-    </view>
-    <view class="cu-item arrow">
-      <view class="content" @tap="toCollect">
-        <text class="cuIcon-appreciatefill text-red"></text>
-        <text class="text-grey">我的收藏</text>
-        <text class="num">39</text>
+      <view class="cu-item arrow">
+        <navigator class="content" hover-class="none" url="/pages/my/my_buy/my_buy">
+          <text class="cuIcon-formfill text-green"></text>
+          <text class="text-grey">我买到的</text>
+          <text class="num">1</text>
+        </navigator>
       </view>
-    </view>
-    <view class="cu-item arrow">
-      <view class="content" @tap="toFeedback">
-        <text class="cuIcon-writefill text-cyan"></text>
-        <text class="text-grey">意见反馈</text>
+      <view class="cu-item arrow">
+        <view class="content" @tap="toAddress">
+          <text class="cuIcon-locationfill text-grey"></text>
+          <text class="text-grey">收货地址</text>
+        </view>
       </view>
-    </view>
-    <!-- <view class="cu-item arrow content">
+      <view class="cu-item arrow">
+        <view class="content" @tap="toCollect">
+          <text class="cuIcon-appreciatefill text-red"></text>
+          <text class="text-grey">我的收藏</text>
+          <text class="num">39</text>
+        </view>
+      </view>
+      <view class="cu-item arrow">
+        <view class="content" @tap="toFeedback">
+          <text class="cuIcon-writefill text-cyan"></text>
+          <text class="text-grey">意见反馈</text>
+        </view>
+      </view>
+      <!-- <view class="cu-item arrow content">
         <button class="cu-btn content" @click="clearAllStore">
           <text class="cuIcon-creativefill text-orange"></text>
           <text class="text-grey">清除缓存</text>
         </button>
       </view> -->
-  </view>
+    </view>
 
-  <!-- 红色的退出按钮 -->
-  <view class="logout-btn" @tap="logout">
-    <text>退出</text>
-  </view>
+    <!-- 红色的退出按钮 -->
+    <view class="logout-btn" @tap="logout">
+      <text>退出</text>
+    </view>
 
-  <!-- tabbar 预留高度 -->
-  <view class="cu-tabbar-height"></view>
-  <!-- 设置详细end -->
+    <!-- tabbar 预留高度 -->
+    <view class="cu-tabbar-height"></view>
+    <!-- 设置详细end -->
   </view>
 </template>
 
@@ -110,9 +111,10 @@ export default {
   data() {
     return {
       avatar: "https://s21.ax1x.com/2025/03/18/pEdfnjP.jpg",
-      nickname: '',  // 用户昵称
-      isNicknameModalVisible: false,  // 控制弹框显示
-      newNickname: '',  // 新昵称的临时存储
+      nickname: "", // 用户昵称
+      isNicknameModalVisible: false, // 控制弹框显示
+      newNickname: "", // 新昵称的临时存储
+      totalLikes: 0,
     };
   },
   methods: {
@@ -173,7 +175,23 @@ export default {
         success: (res) => {
           if (res.statusCode === 200) {
             const userInfo = res.data.user;
-            this.nickname = userInfo.username;  // 获取并显示昵称
+            this.nickname = userInfo.username; // 获取并显示昵称
+            // 更新本地存储
+            uni.setStorageSync("userInfo", userInfo);
+
+            // 设置头像(确保使用完整URL)
+            if (userInfo.avatar) {
+              // 检查是否已经是完整URL
+              if (userInfo.avatar.startsWith("http")) {
+                this.avatar = userInfo.avatar;
+              } else {
+                // 拼接完整URL
+                this.avatar = `http://localhost:3000/${userInfo.avatar.replace(
+                  /\\/g,
+                  "/"
+                )}`;
+              }
+            }
           }
         },
         fail: () => {
@@ -188,12 +206,12 @@ export default {
     // 修改昵称弹框
     editNickname() {
       this.isNicknameModalVisible = true;
-      this.newNickname = this.nickname;  // 默认显示当前昵称
+      this.newNickname = this.nickname; // 默认显示当前昵称
     },
 
     // 确认修改昵称
     updateNickname() {
-      if (this.newNickname.trim() === '') {
+      if (this.newNickname.trim() === "") {
         uni.showToast({
           title: "昵称不能为空",
           icon: "none",
@@ -206,7 +224,7 @@ export default {
 
       uni.request({
         url: "http://localhost:3000/api/user/update-nickname",
-        method: 'POST',
+        method: "POST",
         data: {
           nickname: this.newNickname,
         },
@@ -215,8 +233,8 @@ export default {
         },
         success: (res) => {
           if (res.statusCode === 200) {
-            this.nickname = this.newNickname;  // 更新前端显示的昵称
-            this.isNicknameModalVisible = false;  // 关闭弹框
+            this.nickname = this.newNickname; // 更新前端显示的昵称
+            this.isNicknameModalVisible = false; // 关闭弹框
             uni.showToast({
               title: "昵称更新成功",
               icon: "success",
@@ -239,8 +257,8 @@ export default {
 
     // 取消修改
     cancelNicknameUpdate() {
-      this.isNicknameModalVisible = false;  // 关闭弹框
-      this.newNickname = '';  // 清空输入框
+      this.isNicknameModalVisible = false; // 关闭弹框
+      this.newNickname = ""; // 清空输入框
     },
 
     // 我的发布跳转
@@ -370,9 +388,33 @@ export default {
         url: "/pages/my/my_detail/my_detail",
       });
     },
+    // 获取点赞总数
+    fetchUserLikes() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+
+      uni.request({
+        url: "http://localhost:3000/api/my/like",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.totalLikes = res.data.total_likes; // 更新 totalLikes
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: "获取点赞数失败",
+            icon: "none",
+          });
+        },
+      });
+    },
   },
   onShow() {
-    this.fetchUserProfile();  // 页面显示时获取用户信息
+    this.fetchUserProfile(); // 页面显示时获取用户信息
+    this.fetchUserLikes(); // 页面显示时获取点赞总数
   },
 };
 </script>
@@ -457,6 +499,7 @@ map,
   border-radius: 8rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
+
 /* 修改昵称的弹框样式 */
 .nickname-modal {
   position: fixed;
