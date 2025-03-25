@@ -4,10 +4,10 @@
     <view class="UCenter-bg" catchtap="toMy_detail">
       <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
       <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
-      <view class="margin-top-sm">
-        <text @tap="editNickname">{{ nickname || "Amibition" }}</text>
-        <!-- 昵称动态显示 -->
+      <view class="nickname-container" @tap="editNickname">
+        <text>{{ nickname || "Amibition" }}</text>
       </view>
+
       <image src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif" mode="scaleToFill"
         class="gif-wave"></image>
     </view>
@@ -207,6 +207,8 @@ export default {
     editNickname() {
       this.isNicknameModalVisible = true;
       this.newNickname = this.nickname; // 默认显示当前昵称
+      console.log('editNickname triggered');  // 确保事件被触发
+
     },
 
     // 确认修改昵称
@@ -550,4 +552,9 @@ map,
 .btn-cancel {
   background-color: #d9534f;
 }
+
+.nickname-container {
+  text-align: center; /* 确保昵称居中对齐 */
+}
+
 </style>

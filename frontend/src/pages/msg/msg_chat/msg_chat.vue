@@ -6,8 +6,8 @@
     </cu-custom>
 
     <scroll-view scroll-y="true" class="chat-container" :scroll-top="scrollTop"
-      :style="{ height: `calc(100vh - ${inputBottom + 100}rpx)` }" @scrolltoupper="loadMoreMessages" upper-threshold="50"
-      ref="chatScrollView">
+      :style="{ height: `calc(100vh - ${inputBottom + 100}rpx)` }" @scrolltoupper="loadMoreMessages"
+      upper-threshold="50" ref="chatScrollView">
       <!-- 加载更多指示器 -->
       <view class="loading-more" v-if="isLoading">
         <text class="cuIcon-loading2 iconfont-spin"></text>
@@ -16,10 +16,8 @@
 
       <!-- 消息列表 -->
       <view class="cu-chat">
-        <view v-for="(msg, index) in messages" :key="msg.message_id" :class="[
-          'cu-item',
-          msg.sender_id === userInfo.student_id ? 'self' : ''
-        ]">
+        <view v-for="(msg, index) in messages" :key="msg.message_id"
+          :class="['cu-item', msg.sender_id === userInfo.student_id ? 'self' : '']">
           <!-- 左侧用户头像 -->
           <view class="cu-avatar radius"
             :style="{ 'background-image': `url(${msg.sender_id === userInfo.student_id ? userAvatar : otherUserAvatar})` }"
@@ -28,11 +26,14 @@
           <!-- 消息内容 -->
           <view class="main">
             <!-- 图片消息 -->
-            <view class="content bg-img" v-if="msg.image_url" @tap="previewImage(msg.image_url)">
+            <view class="content bg-img" v-if="msg.image_url" @tap="previewImage(msg.image_url)"
+              :class="{ 'self-image': msg.sender_id === userInfo.student_id }">
               <image :src="getFullImageUrl(msg.image_url)" mode="widthFix"></image>
             </view>
+
             <!-- 文本消息 -->
-            <view class="content" v-else>
+            <view class="content" v-else
+              :style="{ 'background-color': msg.sender_id === userInfo.student_id ? '#0081ff' : '' }">
               <text>{{ msg.content }}</text>
             </view>
           </view>
@@ -42,6 +43,7 @@
             v-if="msg.sender_id === userInfo.student_id"></view>
         </view>
       </view>
+
     </scroll-view>
 
     <!-- 输入框区域 -->
@@ -84,7 +86,7 @@ export default {
     this.conversationId = options.conversation_id;
     this.otherUserId = options.user_id;
     this.productId = options.product_id || '';
-    this.otherUserName = options.otherUserName||"未知用户";
+    this.otherUserName = options.otherUserName || "未知用户";
     // 设置导航栏标题为对方的用户名
     if (this.otherUserName) {
       uni.setNavigationBarTitle({
@@ -233,7 +235,6 @@ export default {
         return;
       }
 
-      // 添加日志
       console.log("准备发送消息:", this.messageText);
 
       // 先通过 HTTP API 发送，保证可靠性
@@ -253,7 +254,7 @@ export default {
             this.messages.push(res.data);
             // 清空输入框
             this.messageText = '';
-            // 滚动到底部
+            // 确保 DOM 更新后滚动到底部
             this.$nextTick(() => {
               this.scrollToBottom();
             });
@@ -273,6 +274,7 @@ export default {
         }
       });
     },
+
 
     // 选择图片
     chooseImage() {
@@ -468,12 +470,14 @@ page {
 }
 
 .cu-chat .cu-item {
-  margin-bottom: 20rpx;
+  margin-bottom: 10rpx;  /* 减小上下间距 */
+  padding: 5rpx 10rpx;  /* 缩小内边距 */
 }
 
-.cu-chat .cu-item.self .main .content {
-  background-color: #0081ff;
-  color: #fff;
+
+.cu-chat .cu-item .main .content {
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
 }
 
 .cu-chat .cu-item .main .content.bg-img {
@@ -485,5 +489,11 @@ page {
 .cu-chat .cu-item .main .content.bg-img image {
   max-width: 100%;
   border-radius: 10rpx;
+}
+
+.cu-chat .cu-item .main .content.bg-img.self-image {
+  max-width: 70%;
+  margin-left: auto;
+  margin-right: 10rpx;
 }
 </style>
