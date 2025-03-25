@@ -1,6 +1,7 @@
 <template>
   <!-- <view> -->
-  <view v-if="productDetail" class="page-wrapper"> <!-- 仅在数据加载后渲染 -->
+  <view v-if="productDetail" class="page-wrapper">
+    <!-- 仅在数据加载后渲染 -->
     <!-- 商家信息 -->
 
     <view class="bg-white">
@@ -8,7 +9,12 @@
         <view class="radius fl padding-sm">
           <!-- <image src="../../../static/img/avatar.jpg"></image> -->
           <!-- <image :src="productDetail.seller_avatar || '../../../static/img/avatar.jpg'"></image> -->
-          <image :src="getImageUrl(productDetail.seller_avatar) || '../../../static/img/avatar.jpg'"></image>
+          <image
+            :src="
+              getImageUrl(productDetail.seller_avatar) ||
+              '../../../static/img/avatar.jpg'
+            "
+          ></image>
           <view class="fr padding-name">
             <!-- <view>Amibition</view> -->
             <view>{{ productDetail.seller_name }}</view>
@@ -26,8 +32,12 @@
         <!-- <text class="price-ori">￥1221</text> -->
         <!-- <view class="cu-tag">不讲价</view> -->
         <!-- 不太懂这里的不讲价是什么鬼 -->
-        <text class="price-size" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.price }}</text>
-        <text class="price-ori" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.original_price }}</text>
+        <text class="price-size" v-if="productDetail.product_type !== 'buy'"
+          >￥{{ productDetail.price }}</text
+        >
+        <text class="price-ori" v-if="productDetail.product_type !== 'buy'"
+          >￥{{ productDetail.original_price }}</text
+        >
         <view class="cu-tag">{{ productDetail.product_status }}</view>
         <view class="cu-tag">{{ productDetail.status }}</view>
       </view>
@@ -63,19 +73,19 @@
           <text></text>
         </view>
         <view class="text-gray text-sm text-right padding-browse">
-          <text class="cuIcon-attentionfill margin-lr-xs"></text> {{ productDetail.attention_count || 0 }}
-          <text class="cuIcon-appreciatefill margin-lr-xs"></text> {{ productDetail.appreciation_count || 0 }}
-          <text class="cuIcon-messagefill margin-lr-xs"></text> {{ productDetail.message_count || 0 }}
+          <text class="cuIcon-attentionfill margin-lr-xs"></text>
+          {{ productDetail.attention_count || 0 }}
+          <text class="cuIcon-appreciatefill margin-lr-xs"></text>
+          {{ productDetail.appreciation_count || 0 }}
+          <text class="cuIcon-messagefill margin-lr-xs"></text>
+          {{ productDetail.message_count || 0 }}
         </view>
       </view>
     </view>
     <!-- 商品内容end -->
 
-
-
     <!-- 相识商品 -->
-    <view class="bg-white top-20">
-    </view>
+    <view class="bg-white top-20"> </view>
 
     <!-- end -->
 
@@ -83,14 +93,21 @@
     <view class="cu-bar bg-white tabbar border shop fixation">
       <view class="action-buttons padding-sm">
         <!-- 仅当商品不是自己发布的时候显示聊一聊按钮 -->
-        <button class="cu-btn bg-blue lg shadow" @tap="chatWithSeller"
-          v-if="productDetail.seller_id !== userInfo.student_id">
+        <button
+          class="cu-btn bg-blue lg shadow"
+          @tap="chatWithSeller"
+          v-if="productDetail.seller_id !== userInfo.student_id"
+        >
           <text class="cuIcon-message"></text> 聊一聊
         </button>
       </view>
-      <view class="action">
-        <view class="cuIcon-appreciatefill text-orange">
-        </view>
+      <view class="action" @tap="toggleLike">
+        <view
+          :class="[
+            'cuIcon-appreciatefill',
+            liked ? 'text-orange' : 'text-gray',
+          ]"
+        ></view>
         点赞
       </view>
       <view class="bg-red submit margin-rigth-20" @tap="buy">立即结算</view>
@@ -100,19 +117,21 @@
 </template>
 
 <script>
-import axios from 'axios'; // 确保导入 axios
+import axios from "axios"; // 确保导入 axios
 
 export default {
   data() {
     return {
       productDetail: null, // 商品详情数据
       images: [], // 商品的所有图片
+      liked: false, // 是否点赞
     };
   },
   onLoad(query) {
-    const productId = query.product_id;  // 从URL中获取product_id
-    this.fetchProductDetail(productId);  // 获取商品详情
-    const userInfo = uni.getStorageSync('userInfo');
+    const productId = query.product_id; // 从URL中获取product_id
+    this.fetchProductDetail(productId); // 获取商品详情
+    this.fetchProductLike(productId); // 获取商品点赞状态
+    const userInfo = uni.getStorageSync("userInfo");
     if (userInfo) {
       this.userInfo = userInfo;
     }
@@ -120,7 +139,9 @@ export default {
   methods: {
     async fetchProductDetail(productId) {
       try {
-        const response = await axios.get(`http://localhost:3000/api/products/${productId}`);
+        const response = await axios.get(
+          `http://localhost:3000/api/products/${productId}`
+        );
         this.productDetail = response.data;
         console.log("original_price:", this.productDetail.original_price);
         this.images = this.productDetail.images || []; // 商品的图片数据
@@ -129,9 +150,41 @@ export default {
         console.error("获取商品详情失败:", error);
       }
     },
+    async fetchProductLike(productId) {
+      try {
+        const token = uni.getStorageSync("token");
+        const response = await axios.get(
+          `http://localhost:3000/api/products/like/${productId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        this.liked = response.data.liked; // 赋值点赞状态
+      } catch (error) {
+        console.error("获取商品详情失败:", error);
+      }
+    },
+    async toggleLike() {
+      try {
+        const token = uni.getStorageSync("token");
+        const response = await axios.post(
+          "http://localhost:3000/api/products/like",
+          {
+            productId: this.productDetail.product_id,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        this.liked = response.data.liked; // 更新点赞状态
+      } catch (error) {
+        console.error("点赞失败:", error);
+      }
+    },
     // 获取商品图片和头像的完整 URL
     getImageUrl(imagePath) {
-      if (!imagePath) return ''; // 防空
+      if (!imagePath) return ""; // 防空
 
       // 如果已经是完整 URL，直接返回
       if (/^https?:\/\//.test(imagePath)) {
@@ -139,14 +192,16 @@ export default {
       }
 
       // 否则把反斜杠替换成斜杠并拼接服务器地址
-      const formattedPath = imagePath.replace(/\\/g, '/');
+      const formattedPath = imagePath.replace(/\\/g, "/");
       return `http://localhost:3000/${formattedPath}`;
     },
 
     // 点击跳转订单确认页面
     buy() {
       uni.navigateTo({
-        url: "/pages/home/confirm_order/confirm_order?product_id=" + this.productDetail.product_id,
+        url:
+          "/pages/home/confirm_order/confirm_order?product_id=" +
+          this.productDetail.product_id,
       });
     },
     // 跳转到聊天页面
@@ -156,15 +211,15 @@ export default {
       });
     },
     chatWithSeller() {
-      const token = uni.getStorageSync('token');
+      const token = uni.getStorageSync("token");
       if (!token) {
         uni.showToast({
-          title: '请先登录',
-          icon: 'none'
+          title: "请先登录",
+          icon: "none",
         });
         setTimeout(() => {
           uni.navigateTo({
-            url: '/pages/auth/login'
+            url: "/pages/auth/login",
           });
         }, 1500);
         return;
@@ -172,37 +227,37 @@ export default {
 
       // 创建会话
       uni.request({
-        url: 'http://localhost:3000/api/conversations/create',
-        method: 'POST',
+        url: "http://localhost:3000/api/conversations/create",
+        method: "POST",
         data: {
           sellerId: this.productDetail.seller_id,
-          productId: this.productDetail.product_id
+          productId: this.productDetail.product_id,
         },
         header: {
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         success: (res) => {
           if (res.statusCode === 201) {
             // 跳转到聊天页面
             uni.navigateTo({
-              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${this.productDetail.seller_id}&product_id=${this.productDetail.product_id}`
+              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${this.productDetail.seller_id}&product_id=${this.productDetail.product_id}`,
             });
           } else {
             uni.showToast({
-              title: '创建会话失败',
-              icon: 'none'
+              title: "创建会话失败",
+              icon: "none",
             });
           }
         },
         fail: () => {
           uni.showToast({
-            title: '网络错误',
-            icon: 'none'
+            title: "网络错误",
+            icon: "none",
           });
-        }
+        },
       });
     },
-  }
+  },
 };
 </script>
 

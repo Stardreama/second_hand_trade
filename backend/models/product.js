@@ -1,5 +1,12 @@
 const { db } = require("../config/config");
-
+const query = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
 const Product = {
   // 创建商品
 
@@ -12,7 +19,7 @@ const Product = {
     product_title,
     product_status,
     product_class,
-    status,   
+    status,
     product_type,
     callback
   ) => {
@@ -28,9 +35,9 @@ const Product = {
         description,
         image, // 这里可能为null
         product_title,
-        product_status,   
+        product_status,
         product_class,
-        status,   
+        status,
         product_type,
       ],
       callback
@@ -90,6 +97,36 @@ const Product = {
         }
       });
     });
+  },
+  isLiked: async (userId, productId) => {
+    const rows = await query(
+      "SELECT 1 FROM likes WHERE user_id = ? AND product_id = ? LIMIT 1",
+      [userId, productId]
+    );
+    return rows.length > 0; // 避免 rows 为 undefined
+  },
+  // 点赞（增加 like 记录，并增加商品 like_amount）
+  addLike: async (userId, productId) => {
+    await query("INSERT INTO likes (user_id, product_id) VALUES (?, ?)", [
+      userId,
+      productId,
+    ]);
+    await query(
+      "UPDATE products SET like_amount = like_amount + 1 WHERE product_id = ?",
+      [productId]
+    );
+  },
+
+  // 取消点赞（删除 like 记录，并减少商品 like_amount）
+  removeLike: async (userId, productId) => {
+    await query("DELETE FROM likes WHERE user_id = ? AND product_id = ?", [
+      userId,
+      productId,
+    ]);
+    await query(
+      "UPDATE products SET like_amount = like_amount - 1 WHERE product_id = ?",
+      [productId]
+    );
   },
 };
 
