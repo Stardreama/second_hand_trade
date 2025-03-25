@@ -482,7 +482,7 @@ page {
 
 .cu-chat .cu-item .main .content.bg-img {
   padding: 0;
-  max-width: 60%;
+  max-width: 50%;
   overflow: hidden;
 }
 
@@ -492,7 +492,7 @@ page {
 }
 
 .cu-chat .cu-item .main .content.bg-img.self-image {
-  max-width: 70%;
+  max-width: 50%;
   margin-left: auto;
   margin-right: 10rpx;
 }
