@@ -457,10 +457,19 @@ export default {
   /* margin-bottom: 20rpx; */
 }
 
-.container_img image {
-  height: 300rpx;
-  width: 100%;
+.container_img {
+  display: flex;
+  justify-content: center;  /* 水平方向居中 */
+  align-items: center;      /* 垂直方向居中 */
 }
+
+.container_img image {
+  height: 280rpx;  /* 设置图片的高度为150rpx */
+  width: 280rpx;   /* 设置图片的宽度为150rpx，使其成为正方形 */
+  object-fit: cover;  /* 确保图片在容器内保持比例且不被拉伸 */
+}
+
+
 
 .container_text {
   color: black;
@@ -654,5 +663,4 @@ export default {
   width: 100%;
 }
 
-/* end */
 </style>
