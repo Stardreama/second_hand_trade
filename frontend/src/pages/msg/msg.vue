@@ -8,40 +8,20 @@
     <!-- end -->
 
     <!-- 添加下拉刷新 -->
-    <scroll-view
-      scroll-y="true"
-      style="height: calc(100vh - 100rpx)"
-      :refresher-enabled="true"
-      :refresher-triggered="refreshing"
-      @refresherpulling="onPulling"
-      @refresherrefresh="onRefresh"
-      @refresherrestore="onRestore"
-    >
+    <scroll-view scroll-y="true" style="height: calc(100vh - 100rpx)" :refresher-enabled="true"
+      :refresher-triggered="refreshing" @refresherpulling="onPulling" @refresherrefresh="onRefresh"
+      @refresherrestore="onRestore">
       <!-- 聊天消息列表 -->
-      <view
-        class="cu-list menu-avatar card-menu martop"
-        v-if="conversations.length > 0"
-      >
-        <view
-          class="cu-item"
-          v-for="(item, index) in conversations"
-          :key="index"
-          @tap="toMsgChat(item)"
-        >
-          <view
-            class="cu-avatar round lg"
-            :style="{
-              'background-image': `url(${getAvatarUrl(item.otherUser.avatar)})`,
-            }"
-          ></view>
+      <view class="cu-list menu-avatar card-menu martop" v-if="conversations.length > 0">
+        <view class="cu-item" v-for="(item, index) in conversations" :key="index" @tap="toMsgChat(item)">
+          <view class="cu-avatar round lg" :style="{
+            'background-image': `url(${getAvatarUrl(item.otherUser.avatar)})`,
+          }"></view>
           <view class="content">
             <view class="text-grey">{{ item.otherUser.name }}</view>
             <view class="text-gray text-sm flex">
               <text class="text-cut">
-                <text
-                  v-if="item.unreadCount > 0"
-                  class="cuIcon-infofill text-red margin-right-xs"
-                ></text>
+                <text v-if="item.unreadCount > 0" class="cuIcon-infofill text-red margin-right-xs"></text>
                 {{ item.latest_message || "暂无消息" }}
               </text>
             </view>
@@ -145,10 +125,10 @@ export default {
       });
     },
     toMsgChat(item) {
+      console.log("item", item);
       uni.navigateTo({
-        url: `/pages/msg/msg_chat/msg_chat?conversation_id=${
-          item.conversation_id
-        }&user_id=${item.otherUser.id}&product_id=${item.product_id || ""}`,
+        url: `/pages/msg/msg_chat/msg_chat?conversation_id=${item.conversation_id
+          }&user_id=${item.otherUser.id}&product_id=${item.product_id || ""}&otherUserName=${item.otherUser.name}`,
       });
     },
     getAvatarUrl(avatar) {

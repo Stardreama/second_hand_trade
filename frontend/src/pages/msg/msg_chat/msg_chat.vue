@@ -72,7 +72,7 @@ export default {
       userInfo: {},
       userAvatar: '../../static/img/default-avatar.png',
       otherUserAvatar: '../../static/img/default-avatar.png',
-      otherUserName: '对方',
+      otherUserName: '',
       webSocket: null,
       isLoading: false,
       page: 1,
@@ -84,7 +84,13 @@ export default {
     this.conversationId = options.conversation_id;
     this.otherUserId = options.user_id;
     this.productId = options.product_id || '';
-
+    this.otherUserName = options.otherUserName||"未知用户";
+    // 设置导航栏标题为对方的用户名
+    if (this.otherUserName) {
+      uni.setNavigationBarTitle({
+        title: this.otherUserName
+      });
+    }
     // 获取用户信息
     const userInfo = uni.getStorageSync('userInfo');
     if (userInfo) {
@@ -101,6 +107,16 @@ export default {
     // 连接WebSocket
     this.connectWebSocket();
   },
+
+  onShow() {
+    if (this.otherUserName) {
+      // 动态设置导航栏标题
+      uni.setNavigationBarTitle({
+        title: this.otherUserName
+      });
+    }
+  },
+
 
   onUnload() {
     // 断开WebSocket连接
