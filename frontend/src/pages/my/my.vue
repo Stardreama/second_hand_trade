@@ -8,21 +8,14 @@
         <text @tap="editNickname">{{ nickname || "Amibition" }}</text>
         <!-- 昵称动态显示 -->
       </view>
-      <image
-        src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif"
-        mode="scaleToFill"
-        class="gif-wave"
-      ></image>
+      <image src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif" mode="scaleToFill"
+        class="gif-wave"></image>
     </view>
     <!-- 修改昵称弹框 -->
     <view v-show="isNicknameModalVisible" class="nickname-modal">
       <view class="modal-content">
         <text>现在您可以修改自己的昵称啦~</text>
-        <input
-          v-model="newNickname"
-          placeholder="请输入新的昵称"
-          class="nickname-input"
-        />
+        <input v-model="newNickname" placeholder="请输入新的昵称" class="nickname-input" />
         <view class="modal-actions">
           <button @tap="updateNickname" class="btn-confirm">确认</button>
           <button @tap="cancelNicknameUpdate" class="btn-cancel">取消</button>
@@ -38,10 +31,7 @@
           <text class="cuIcon-attentionfill"></text> 超赞
         </view>
       </view>
-      <view
-        class="flex flex-sub flex-direction solid-right"
-        bindtap="toAttention"
-      >
+      <view class="flex flex-sub flex-direction solid-right" bindtap="toAttention">
         <view class="text-xxl text-blue">5</view>
         <view class="margin-top-sm">
           <text class="cuIcon-favorfill"></text>关注数
@@ -56,9 +46,7 @@
     </view>
 
     <!-- 设置详细 -->
-    <view
-      class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius"
-    >
+    <view class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius">
       <view class="cu-item arrow">
         <view class="content" @tap="toIssue_page">
           <text class="cuIcon-moneybagfill text-red"></text>
@@ -67,22 +55,14 @@
         </view>
       </view>
       <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_sale/my_sale"
-        >
+        <navigator class="content" hover-class="none" url="/pages/my/my_sale/my_sale">
           <text class="cuIcon-titles text-green"></text>
           <text class="text-grey">我的卖出</text>
           <text class="num">99</text>
         </navigator>
       </view>
       <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_buy/my_buy"
-        >
+        <navigator class="content" hover-class="none" url="/pages/my/my_buy/my_buy">
           <text class="cuIcon-formfill text-green"></text>
           <text class="text-grey">我买到的</text>
           <text class="num">1</text>
@@ -196,6 +176,22 @@ export default {
           if (res.statusCode === 200) {
             const userInfo = res.data.user;
             this.nickname = userInfo.username; // 获取并显示昵称
+            // 更新本地存储
+            uni.setStorageSync("userInfo", userInfo);
+
+            // 设置头像(确保使用完整URL)
+            if (userInfo.avatar) {
+              // 检查是否已经是完整URL
+              if (userInfo.avatar.startsWith("http")) {
+                this.avatar = userInfo.avatar;
+              } else {
+                // 拼接完整URL
+                this.avatar = `http://localhost:3000/${userInfo.avatar.replace(
+                  /\\/g,
+                  "/"
+                )}`;
+              }
+            }
           }
         },
         fail: () => {
@@ -503,6 +499,7 @@ map,
   border-radius: 8rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
 }
+
 /* 修改昵称的弹框样式 */
 .nickname-modal {
   position: fixed;
