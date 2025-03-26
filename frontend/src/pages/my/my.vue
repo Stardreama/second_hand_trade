@@ -4,7 +4,7 @@
     <view class="UCenter-bg" catchtap="toMy_detail">
       <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
       <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
-      <view class="nickname-container" @tap="editNickname">
+      <view class="nickname-container" @tap.stop="editNickname">
         <text>{{ nickname || "Amibition" }}</text>
       </view>
 
@@ -12,11 +12,11 @@
         class="gif-wave"></image>
     </view>
     <!-- 修改昵称弹框 -->
-    <view v-show="isNicknameModalVisible" class="nickname-modal">
+    <view v-if="isNicknameModalVisible" class="nickname-modal">
       <view class="modal-content">
         <text>现在您可以修改自己的昵称啦~</text>
         <input v-model="newNickname" placeholder="请输入新的昵称" class="nickname-input" />
-        <view class="modal-actions">
+        <view class="modal-actions" @tap.stop>
           <button @tap="updateNickname" class="btn-confirm">确认</button>
           <button @tap="cancelNicknameUpdate" class="btn-cancel">取消</button>
         </view>
@@ -208,11 +208,11 @@ export default {
       this.isNicknameModalVisible = true;
       this.newNickname = this.nickname; // 默认显示当前昵称
       console.log('editNickname triggered');  // 确保事件被触发
-
     },
 
     // 确认修改昵称
     updateNickname() {
+      console.log(this.newNickname);
       if (this.newNickname.trim() === "") {
         uni.showToast({
           title: "昵称不能为空",
@@ -259,6 +259,7 @@ export default {
 
     // 取消修改
     cancelNicknameUpdate() {
+      console.log("取消修改");
       this.isNicknameModalVisible = false; // 关闭弹框
       this.newNickname = ""; // 清空输入框
     },
@@ -415,6 +416,7 @@ export default {
     },
   },
   onShow() {
+    this.isNicknameModalVisible = false;
     this.fetchUserProfile(); // 页面显示时获取用户信息
     this.fetchUserLikes(); // 页面显示时获取点赞总数
   },
@@ -531,7 +533,6 @@ map,
   padding: 5rpx;
   border: 1px solid #ccc;
   border-radius: 5rpx;
-  /* z-index: 10001; */
 }
 
 .modal-actions {
@@ -554,7 +555,6 @@ map,
 }
 
 .nickname-container {
-  text-align: center; /* 确保昵称居中对齐 */
+  text-align: center;
 }
-
 </style>
