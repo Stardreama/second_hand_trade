@@ -53,7 +53,7 @@
       </view>
 
       <input class="solid-bottom" :adjust-position="false" :focus="false" maxlength="300" cursor-spacing="10"
-        v-model="messageText" @focus="InputFocus" @blur="InputBlur"></input>
+        v-model="messageText" @focus="InputFocus" @blur="InputBlur" @confirm="sendMessage" confirm-type="send" ></input>
 
       <button class="cu-btn bg-blue shadow" @tap="sendMessage">发送</button>
     </view>
