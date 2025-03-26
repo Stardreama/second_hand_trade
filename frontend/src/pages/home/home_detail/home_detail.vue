@@ -137,50 +137,69 @@ export default {
     }
   },
   methods: {
-    async fetchProductDetail(productId) {
-      try {
-        const response = await axios.get(
-          `http://localhost:3000/api/products/${productId}`
-        );
-        this.productDetail = response.data;
-        console.log("original_price:", this.productDetail.original_price);
-        this.images = this.productDetail.images || []; // 商品的图片数据
-        console.log(this.images);
-      } catch (error) {
-        console.error("获取商品详情失败:", error);
-      }
-    },
-    async fetchProductLike(productId) {
-      try {
-        const token = uni.getStorageSync("token");
-        const response = await axios.get(
-          `http://localhost:3000/api/products/like/${productId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
+    fetchProductDetail(productId) {
+      uni.request({
+        url: `http://localhost:3000/api/products/${productId}`, // API endpoint
+        method: "GET",
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.productDetail = res.data;
+            console.log("original_price:", this.productDetail.original_price);
+            this.images = this.productDetail.images || []; // 商品的图片数据
+            console.log(this.images);
+          } else {
+            console.error("获取商品详情失败:", res);
           }
-        );
-        this.liked = response.data.liked; // 赋值点赞状态
-      } catch (error) {
-        console.error("获取商品详情失败:", error);
-      }
+        },
+        fail: (err) => {
+          console.error("获取商品详情失败:", err);
+        },
+      });
     },
-    async toggleLike() {
-      try {
-        const token = uni.getStorageSync("token");
-        const response = await axios.post(
-          "http://localhost:3000/api/products/like",
-          {
-            productId: this.productDetail.product_id,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
+    // 获取商品点赞状态
+    fetchProductLike(productId) {
+      const token = uni.getStorageSync("token");
+      uni.request({
+        url: `http://localhost:3000/api/products/like/${productId}`,
+        method: "GET",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.liked = res.data.liked; // 赋值点赞状态
+          } else {
+            console.error("获取商品点赞状态失败:", res);
           }
-        );
-
-        this.liked = response.data.liked; // 更新点赞状态
-      } catch (error) {
-        console.error("点赞失败:", error);
-      }
+        },
+        fail: (err) => {
+          console.error("获取商品点赞状态失败:", err);
+        },
+      });
+    },
+    // 点赞操作
+    toggleLike() {
+      const token = uni.getStorageSync("token");
+      uni.request({
+        url: "http://localhost:3000/api/products/like",
+        method: "POST",
+        data: {
+          productId: this.productDetail.product_id,
+        },
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.liked = res.data.liked; // 更新点赞状态
+          } else {
+            console.error("点赞失败:", res);
+          }
+        },
+        fail: (err) => {
+          console.error("点赞失败:", err);
+        },
+      });
     },
     // 获取商品图片和头像的完整 URL
     getImageUrl(imagePath) {

@@ -7,14 +7,16 @@ console.log('环境变量 DB_DATABASE:', process.env.DB_DATABASE);
 
 const mysql = require("mysql2");
 
-const db = mysql.createConnection({
+// 使用连接池而不是单一连接
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
 });
 
-db.connect((err) => {
+// 测试连接
+db.query('SELECT 1', (err) => {
   if (err) {
     console.error("数据库连接失败:", err);
     process.exit(1);

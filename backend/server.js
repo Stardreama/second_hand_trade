@@ -9,6 +9,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const myRoutes = require("./routes/myRoutes");
 const Conversation = require("./models/conversation");
 const Message = require("./models/message");
+const addressRoutes = require('./routes/addressRoutes');
 const cors = require("cors");
 const WebSocket = require("ws");
 const http = require("http");
@@ -145,6 +146,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/my", myRoutes);
 app.use("/api", feedbackRoutes);
 app.use("/api", messageRoutes);
+app.use("/api/address", addressRoutes);
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

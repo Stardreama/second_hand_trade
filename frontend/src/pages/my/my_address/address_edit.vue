@@ -22,24 +22,27 @@
         />
       </view>
 
-      <!-- 所在地区 -->
-      <view class="form-item">
-        <text class="label">所在地区</text>
-        <picker
-          mode="region"
-          @change="regionChange"
-          :value="[
-            addressForm.province,
-            addressForm.city,
-            addressForm.district,
-          ]"
-        >
-          <view class="picker">
-            {{ addressForm.province || "" }} {{ addressForm.city || "" }}
-            {{ addressForm.district || "" }}
-          </view>
-        </picker>
-      </view>
+     <!-- 所在地区 -->
+<view class="form-item">
+  <text class="label">所在地区</text>
+  <view class="region-picker">
+    <picker
+  mode="region"
+  fields="region"
+  @change="regionChange"
+  :value="[ addressForm.province, addressForm.city, addressForm.district ]"
+>
+  <view class="picker-content" :class="{'has-value': addressForm.province}">
+    <text class="picker-text" v-if="!addressForm.province">请选择省/市/区</text>
+    <text class="picker-text" v-else>
+      {{ addressForm.province }} {{ addressForm.city }} {{ addressForm.district }}
+    </text>
+    <text class="cuIcon-right picker-arrow"></text>
+  </view>
+</picker>
+
+  </view>
+</view>
 
       <!-- 详细地址 -->
       <view class="form-item">
@@ -74,6 +77,7 @@ export default {
   data() {
     return {
       isEdit: false,
+      pickerVisible: false, 
       addressForm: {
         name: "",
         phone: "",
@@ -87,9 +91,9 @@ export default {
   },
   onLoad(options) {
     // 判断是否为编辑模式
-    this.isEdit = options.type === "edit";
-    if (this.isEdit) {
-      // TODO: 获取要编辑的地址信息
+    if (options.id) {
+      this.addressId = options.id;
+      this.isEdit = true;
       this.getAddressDetail();
     }
   },
@@ -107,19 +111,46 @@ export default {
       this.addressForm.isDefault = e.detail.value;
     },
 
-    // 获取编辑地址详情
     getAddressDetail() {
-      // TODO: 从服务器获取地址详情
-      // 这里模拟数据
-      this.addressForm = {
-        name: "张三",
-        phone: "13812345678",
-        province: "广东省",
-        city: "深圳市",
-        district: "南山区",
-        address: "科技园科技路123号",
-        isDefault: false,
-      };
+      uni.showLoading({
+        title: '加载中...'
+      });
+      
+      uni.request({
+        url: `http://localhost:3000/api/address/${this.addressId}`,
+        method: 'GET',
+        header: {
+          'Authorization': `Bearer ${uni.getStorageSync('token')}`
+        },
+        success: (res) => {
+          if (res.data.success) {
+            const address = res.data.data;
+            this.addressForm = {
+              name: address.name,
+              phone: address.phone,
+              province: address.province,
+              city: address.city,
+              district: address.district,
+              address: address.address,
+              isDefault: address.is_default === 1
+            };
+          } else {
+            uni.showToast({
+              title: res.data.message || '获取地址失败',
+              icon: 'none'
+            });
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: '网络错误，请重试',
+            icon: 'none'
+          });
+        },
+        complete: () => {
+          uni.hideLoading();
+        }
+      });
     },
 
     // 表单验证
@@ -155,27 +186,79 @@ export default {
       return true;
     },
 
-    // 保存地址
-    saveAddress() {
-      if (!this.validate()) return;
+// 保存地址
+saveAddress() {
+  if (!this.validate()) return;
 
-      // TODO: 调用保存地址接口
-      uni.showLoading({
-        title: "保存中...",
-      });
+  uni.showLoading({
+    title: "保存中...",
+  });
 
-      setTimeout(() => {
-        uni.hideLoading();
+  const url = this.isEdit 
+    ? `http://localhost:3000/api/address/${this.addressId}`
+    : 'http://localhost:3000/api/address';
+  
+  const method = this.isEdit ? 'PUT' : 'POST';
+  // 获取用户ID
+  const userInfo = uni.getStorageSync('userInfo');
+  const userId = userInfo ? userInfo.student_id : null;
+   
+  // 如果没有用户ID，显示提示
+  if (!userId) {
+    uni.hideLoading();
+    uni.showToast({
+      title: '请先登录',
+      icon: 'none'
+    });
+    return;
+  }
+  // 删除对未定义变量userId的引用
+  uni.request({
+    url: url,
+    method: method,
+    header: {
+      'Authorization': `Bearer ${uni.getStorageSync('token')}`,
+      'Content-Type': 'application/json'
+    },
+    data: {
+      user_id: userId,
+      name: this.addressForm.name,
+      phone: this.addressForm.phone,
+      province: this.addressForm.province,
+      city: this.addressForm.city,
+      district: this.addressForm.district,
+      address: this.addressForm.address,
+      is_default: this.addressForm.isDefault
+    },
+    success: (res) => {
+      if (res.data.success) {
         uni.showToast({
-          title: "保存成功",
+          title: '保存成功',
           success: () => {
             setTimeout(() => {
               uni.navigateBack();
             }, 1500);
-          },
+          }
         });
-      }, 1000);
+      } else {
+        uni.showToast({
+          title: res.data.message || '保存失败',
+          icon: 'none'
+        });
+      }
     },
+    fail: (err) => {
+      console.error('请求失败:', err);
+      uni.showToast({
+        title: '网络错误，请重试',
+        icon: 'none'
+      });
+    },
+    complete: () => {
+      uni.hideLoading();
+    }
+  });
+},
   },
 };
 </script>
@@ -215,9 +298,27 @@ export default {
   font-size: 28rpx;
   padding: 20rpx 0;
 }
+.picker-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background-color: #f8f8f8;
+  padding: 12rpx 20rpx;
+  border-radius: 8rpx;
+}
+
 .picker {
   flex: 1;
   font-size: 28rpx;
+  color: #333;
+}
+
+.picker text {
+  color: #666;
+}
+
+.picker-arrow {
+  margin-left: 10rpx;
 }
 .switch-item {
   justify-content: space-between;
