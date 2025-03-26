@@ -54,7 +54,13 @@ wss.on("connection", (ws, req) => {
         if (type === "message") {
           // 获取会话
           const conversation = await Conversation.findById(conversationId);
-          if (!conversation) return;
+          if (!conversation) {
+            ws.send(JSON.stringify({
+              type: "error",
+              message: "会话不存在"
+            }));
+            return;
+          }
 
           // 验证发送者权限
           if (
