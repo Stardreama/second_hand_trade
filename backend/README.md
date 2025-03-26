@@ -135,6 +135,20 @@ CREATE TABLE messages (
   FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id)
 );
 
+CREATE TABLE IF NOT EXISTS `addresses` (
+  `address_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `user_id` VARCHAR(20) NOT NULL,
+  `name` VARCHAR(50) NOT NULL,
+  `phone` VARCHAR(15) NOT NULL,
+  `province` VARCHAR(50) NOT NULL,
+  `city` VARCHAR(50) NOT NULL,
+  `district` VARCHAR(50),
+  `address` VARCHAR(255) NOT NULL,
+  `is_default` TINYINT(1) DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`student_id`) ON DELETE CASCADE
+);
 SET FOREIGN_KEY_CHECKS = 1;
 ```
 
