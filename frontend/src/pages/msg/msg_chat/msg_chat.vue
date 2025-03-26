@@ -1,8 +1,8 @@
 <template>
   <view>
     <cu-custom bgColor="bg-gradual-blue" :isBack="true">
-      <block slot="backText">返回</block>
-      <block slot="content">{{ otherUserName }}</block>
+      <!-- <block slot="backText">返回</block> -->
+      <!-- <block slot="content">{{ otherUserName }}</block> -->
     </cu-custom>
 
     <scroll-view scroll-y="true" class="chat-container" :scroll-top="scrollTop"

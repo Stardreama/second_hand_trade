@@ -102,7 +102,7 @@
 <script>
 import bar from "../component/bar.vue";
 import TopBar from "../component/topTab.vue";
-import axios from "axios";
+// import axios from "axios";
 export default {
   data() {
     return {
@@ -291,16 +291,24 @@ export default {
 
   methods: {
     // 获取商品数据的方法
-    async fetchProducts() {
-      try {
-        // 发送GET请求到后端API
-        const response = await axios.get("http://localhost:3000/api/products");
-        // 将响应数据赋值给products数组
-        this.products = response.data;
-      } catch (error) {
-        // 错误处理（建议后续添加用户提示）
-        console.error("获取商品数据失败:", error);
-      }
+    fetchProducts() {
+      // 使用 uni.request 替代 axios 获取商品数据
+      uni.request({
+        url: "http://localhost:3000/api/products", // API endpoint
+        method: "GET", // HTTP method
+        success: (res) => {
+          if (res.statusCode === 200) {
+            // 更新 products 数据
+            this.products = res.data; // Assuming the response data is an array
+            console.log("商品数据已更新", this.products);
+          } else {
+            console.error("请求失败", res);
+          }
+        },
+        fail: (err) => {
+          console.error("获取商品数据失败:", err);
+        }
+      });
     },
 
     /**
