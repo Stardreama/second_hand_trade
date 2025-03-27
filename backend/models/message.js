@@ -71,6 +71,39 @@ const Message = {
       });
     });
   },
+
+  markConversationMessagesAsRead: (conversationId, senderId, readerId) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        UPDATE messages 
+        SET is_read = TRUE 
+        WHERE conversation_id = ? AND sender_id = ? AND receiver_id = ? AND is_read = FALSE
+      `;
+
+      db.query(query, [conversationId, senderId, readerId], (err, result) => {
+        if (err) return reject(err);
+
+        // 获取刚刚标记为已读的消息
+        if (result.affectedRows > 0) {
+          const selectQuery = `
+            SELECT * FROM messages 
+            WHERE conversation_id = ? AND sender_id = ? AND receiver_id = ? AND is_read = TRUE
+          `;
+
+          db.query(
+            selectQuery,
+            [conversationId, senderId, readerId],
+            (err, messages) => {
+              if (err) return reject(err);
+              resolve(messages);
+            }
+          );
+        } else {
+          resolve([]);
+        }
+      });
+    });
+  },
 };
 
 module.exports = Message;

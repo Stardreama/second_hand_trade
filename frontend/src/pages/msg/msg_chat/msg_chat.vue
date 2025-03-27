@@ -35,6 +35,11 @@
             <view class="content" v-else
               :style="{ 'background-color': msg.sender_id === userInfo.student_id ? '#0081ff' : '' }">
               <text>{{ msg.content }}</text>
+              
+              <!-- 添加已读状态图标 - 仅对自己发送的消息显示 -->
+              <view class="message-status" v-if="msg.sender_id === userInfo.student_id">
+                <text v-if="msg.is_read" class="cuIcon-check text-gray"></text>
+              </view>
             </view>
           </view>
 
@@ -84,7 +89,9 @@ export default {
       isLoading: false,
       page: 1,
       hasMoreMessages: true,
-      currentPageId: null
+      currentPageId: null,
+      readCheckTimer: null,
+      lastReadCheckTime: 0
     };
   },
 
@@ -114,6 +121,12 @@ export default {
 
     // 连接Socket.io
     this.connectSocket();
+    
+    // 标记现有消息为已读
+    this.markMessagesAsRead();
+    
+    // 设置自动检查已读状态
+    this.setupReadStatusCheck();
   },
 
   onShow() {
@@ -125,11 +138,33 @@ export default {
     }
     console.log('msg_chat页面显示，当前会话ID:', this.conversationId);
     console.log('当前Socket.io状态:', this.socket ? (this.socket.connected ? '已连接' : '未连接') : '未初始化');
+    
+    // 每次显示页面时标记消息为已读
+    if (this.socket && this.socket.connected) {
+      this.markMessagesAsRead();
+    }
+    
+    // 设置自动检查已读状态
+    this.setupReadStatusCheck();
+    
+    // 通知服务器用户正在查看会话
+    if (this.socket && this.socket.connected) {
+      this.socket.emit('viewing_conversation', {
+        conversationId: this.conversationId
+      });
+    }
   },
 
 
   onUnload() {
     console.log('页面卸载');
+    
+    // 清除计时器
+    if (this.readCheckTimer) {
+      clearInterval(this.readCheckTimer);
+      this.readCheckTimer = null;
+    }
+    
     // 关闭Socket.io连接
     if (this.socket) {
       this.socket.disconnect();
@@ -181,6 +216,8 @@ export default {
             this.messages = res.data;
             this.$nextTick(() => {
               this.scrollToBottom();
+              // 标记消息为已读
+              this.markMessagesAsRead();
             });
           } else {
             uni.showToast({
@@ -283,7 +320,7 @@ export default {
           // 添加临时图片消息
           const tempId = Date.now().toString();
           const tempMessage = {
-            message_id: tempId,
+            message_id: 'temp_' + tempId, // 修改ID格式以匹配后续处理
             conversation_id: this.conversationId,
             sender_id: this.userInfo.student_id,
             image_url: tempFilePath,
@@ -310,37 +347,18 @@ export default {
             success: (uploadRes) => {
               const data = JSON.parse(uploadRes.data);
               if (uploadRes.statusCode === 200) {
-                // 发送图片消息
-                uni.request({
-                  url: `http://localhost:3000/api/conversations/${this.conversationId}/messages`,
-                  method: 'POST',
-                  data: {
-                    image_url: data.imageUrl
-                  },
-                  header: {
-                    'Authorization': `Bearer ${uni.getStorageSync('token')}`
-                  },
-                  success: (res) => {
-                    if (res.statusCode === 201) {
-                      // 替换临时消息
-                      const messageIndex = this.messages.findIndex(m => m.message_id === tempId);
-                      if (messageIndex !== -1) {
-                        this.messages.splice(messageIndex, 1, res.data);
-                      }
-                    } else {
-                      this.markMessageAsFailed(tempId);
-                    }
-                  },
-                  fail: () => {
-                    this.markMessageAsFailed(tempId);
-                  }
+                // 使用Socket.io发送图片消息，而非HTTP请求
+                this.socket.emit('send_message', {
+                  conversationId: this.conversationId,
+                  image_url: data.imageUrl,
+                  tempId: tempId // 添加临时ID用于关联
                 });
               } else {
                 this.markMessageAsFailed(tempId);
               }
             },
             fail: () => {
-              this.markMessageAsFailed(tempId);
+              this.markMessageAsFailed('temp_' + tempId);
             }
           });
         }
@@ -472,8 +490,56 @@ export default {
           this.messages[tempIndex].temp = false;
         }
       });
+      
+      // 添加消息已读事件监听
+      this.socket.on('messages_read', (data) => {
+        console.log('消息已读通知:', data);
+        
+        // 更新消息的已读状态
+        if (data.conversationId === this.conversationId) {
+          data.messageIds.forEach(messageId => {
+            const msgIndex = this.messages.findIndex(msg => msg.message_id === messageId);
+            if (msgIndex !== -1) {
+              // Vue不能直接修改对象属性，需要创建新对象或使用Vue.set
+              this.messages[msgIndex] = { ...this.messages[msgIndex], is_read: true };
+            }
+          });
+        }
+      });
 
-
+    },
+    
+    // 添加标记消息已读的方法
+    markMessagesAsRead() {
+      if (this.socket && this.socket.connected && this.conversationId) {
+        console.log('标记消息为已读');
+        this.socket.emit('mark_messages_read', {
+          conversationId: this.conversationId
+        });
+        
+        // 发送消息查看事件
+        this.socket.emit('viewing_conversation', {
+          conversationId: this.conversationId
+        });
+      }
+    },
+    
+    // 添加自动检查已读状态的方法
+    setupReadStatusCheck() {
+      // 清除现有计时器
+      if (this.readCheckTimer) {
+        clearInterval(this.readCheckTimer);
+      }
+      
+      // 设置新的计时器
+      this.readCheckTimer = setInterval(() => {
+        // 如果有新发送的消息且足够时间已过去，检查是否已读
+        const now = Date.now();
+        if (now - this.lastReadCheckTime > 3000) { // 每3秒最多检查一次
+          this.markMessagesAsRead();
+          this.lastReadCheckTime = now;
+        }
+      }, 3000);
     },
 
     // 滚动到底部
@@ -528,6 +594,8 @@ page {
 .cu-chat .cu-item .main .content {
   padding: 10rpx 20rpx;
   border-radius: 20rpx;
+  position: relative; /* 添加相对定位，让已读图标可以绝对定位 */
+  padding-right: 30rpx; /* 为已读图标留出空间 */
 }
 
 .cu-chat .cu-item .main .content.bg-img {
@@ -545,5 +613,26 @@ page {
   max-width: 50%;
   margin-left: auto;
   margin-right: 10rpx;
+}
+
+/* 添加消息状态样式 */
+.message-status {
+  display: inline-block;
+  font-size: 24rpx;
+  margin-left: 10rpx;
+  position: absolute;
+  right: -30rpx;
+  bottom: 2rpx;
+}
+
+/* 针对不同类型消息的已读状态图标位置调整 */
+.cu-chat .cu-item.self .message-status {
+  right: -30rpx;
+}
+
+/* 消息图标颜色 */
+.message-status .cuIcon-check {
+  color: #8a8a8a;
+  font-size: 24rpx;
 }
 </style>

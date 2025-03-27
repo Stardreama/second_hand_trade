@@ -67,10 +67,10 @@ io.use((socket, next) => {
     }
   });
 
-  // 修改消息发送部分
+  // 修改send_message事件处理
   socket.on("send_message", async (data) => {
     try {
-      const { conversationId, content, image_url } = data;
+      const { conversationId, content, image_url, tempId } = data;
       console.log("收到消息:", data);
 
       // 获取会话
@@ -126,15 +126,182 @@ io.use((socket, next) => {
         message: savedMessage,
       });
 
-      // 通知发送者
+      // 通知发送者消息已发送成功，包含临时ID以便更新UI
       socket.emit("message_sent", {
         messageId: savedMessage.message_id,
+        tempId: tempId,
       });
+
+      // 检查接收者是否在同一会话，如果是则立即标记为已读
+      checkAndMarkMessageAsRead(
+        receiverId,
+        conversationId,
+        savedMessage.message_id
+      );
 
       console.log(`消息已发送到房间 ${roomName} 和用户 ${receiverId}`);
     } catch (error) {
       console.error("处理消息错误:", error);
       socket.emit("error", { message: "消息处理失败" });
+    }
+  });
+
+  // 新增函数：检查并标记消息为已读
+  function checkAndMarkMessageAsRead(receiverId, conversationId, messageId) {
+    const receiverSocket = connectedUsers.get(receiverId);
+    if (receiverSocket && receiverSocket.connected) {
+      // 检查接收者是否在同一会话
+      const rooms = receiverSocket.rooms;
+      if (rooms.has(`conversation_${conversationId}`)) {
+        // 接收者在同一会话中，立即标记为已读
+        Message.markAsRead(messageId)
+          .then(() => {
+            // 通知发送者消息已读
+            io.to(`user_${messageId.sender_id}`).emit("messages_read", {
+              conversationId,
+              messageIds: [messageId],
+              readBy: receiverId,
+            });
+          })
+          .catch((err) => console.error("标记消息已读失败:", err));
+      }
+    }
+  }
+
+  // 在Socket.io连接处理部分添加
+  socket.on("mark_messages_read", async (data) => {
+    try {
+      const { conversationId } = data;
+      const userId = socket.userId;
+
+      // 获取会话
+      const conversation = await Conversation.findById(conversationId);
+      if (
+        !conversation ||
+        (conversation.buyer_id !== userId && conversation.seller_id !== userId)
+      ) {
+        return;
+      }
+
+      // 确定发送者（即要通知消息已读状态的用户）
+      const senderId =
+        conversation.buyer_id === userId
+          ? conversation.seller_id
+          : conversation.buyer_id;
+
+      // 标记来自发送者的消息为已读
+      const messagesMarked = await Message.markConversationMessagesAsRead(
+        conversationId,
+        senderId,
+        userId
+      );
+
+      // 重置会话未读计数
+      if (userId === conversation.buyer_id) {
+        await Conversation.resetUnreadCount(conversationId, "buyer");
+      } else {
+        await Conversation.resetUnreadCount(conversationId, "seller");
+      }
+
+      // 通知发送者其消息已被阅读
+      if (messagesMarked.length > 0) {
+        const senderSocket = connectedUsers.get(senderId);
+        if (senderSocket && senderSocket.connected) {
+          senderSocket.emit("messages_read", {
+            conversationId,
+            messageIds: messagesMarked.map((msg) => msg.message_id),
+            readBy: userId,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("标记消息已读失败:", error);
+    }
+  });
+
+  // 添加新的事件监听
+  socket.on("viewing_conversation", async (data) => {
+    try {
+      const { conversationId } = data;
+
+      // 记录此用户正在查看的会话
+      socket.currentConversation = conversationId;
+
+      // 查找该会话的所有未读消息并标记为已读
+      await socket.emit("mark_messages_read", { conversationId });
+
+      // 通知该会话中的其他用户，此用户正在查看会话
+      const conversation = await Conversation.findById(conversationId);
+      if (conversation) {
+        const otherUserId =
+          conversation.buyer_id === userId
+            ? conversation.seller_id
+            : conversation.buyer_id;
+
+        const otherUserSocket = connectedUsers.get(otherUserId);
+        if (otherUserSocket && otherUserSocket.connected) {
+          // 让对方知道用户正在查看会话，可能需要标记消息为已读
+          otherUserSocket.emit("user_viewing", {
+            conversationId,
+            userId,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("处理查看会话事件失败:", error);
+    }
+  });
+
+  // 修改mark_messages_read事件处理，使其更高效
+  socket.on("mark_messages_read", async (data) => {
+    try {
+      const { conversationId } = data;
+      const userId = socket.userId;
+
+      // 获取会话
+      const conversation = await Conversation.findById(conversationId);
+      if (
+        !conversation ||
+        (conversation.buyer_id !== userId && conversation.seller_id !== userId)
+      ) {
+        return;
+      }
+
+      // 确定发送者（即要通知消息已读状态的用户）
+      const senderId =
+        conversation.buyer_id === userId
+          ? conversation.seller_id
+          : conversation.buyer_id;
+
+      // 标记来自发送者的消息为已读
+      const messagesMarked = await Message.markConversationMessagesAsRead(
+        conversationId,
+        senderId,
+        userId
+      );
+
+      // 重置会话未读计数
+      if (userId === conversation.buyer_id) {
+        await Conversation.resetUnreadCount(conversationId, "buyer");
+      } else {
+        await Conversation.resetUnreadCount(conversationId, "seller");
+      }
+
+      // 通知发送者其消息已被阅读
+      if (messagesMarked.length > 0) {
+        const senderSocket = connectedUsers.get(senderId);
+        if (senderSocket && senderSocket.connected) {
+          senderSocket.emit("messages_read", {
+            conversationId,
+            messageIds: messagesMarked.map((msg) => msg.message_id),
+            readBy: userId,
+          });
+
+          console.log(`用户 ${userId} 已读消息，通知发送者 ${senderId}`);
+        }
+      }
+    } catch (error) {
+      console.error("标记消息已读失败:", error);
     }
   });
 
