@@ -9,117 +9,139 @@ const orderRoutes = require("./routes/orderRoutes");
 const myRoutes = require("./routes/myRoutes");
 const Conversation = require("./models/conversation");
 const Message = require("./models/message");
-const addressRoutes = require('./routes/addressRoutes');
+const addressRoutes = require("./routes/addressRoutes");
 const cors = require("cors");
-const WebSocket = require("ws");
 const http = require("http");
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+// 替换WebSocket为Socket.io
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
 const jwtService = require("./services/jwtService");
 // 注册消息路由
 const messageRoutes = require("./routes/messageRoutes");
 // 存储在线用户
 const connectedUsers = new Map();
 
-wss.on("connection", (ws, req) => {
-  // 从URL获取token和用户ID
-  const urlParams = new URL(req.url, "http://localhost:3000").searchParams;
-  const token = urlParams.get("token");
-
+// Socket.io连接处理
+io.use((socket, next) => {
+  // 获取token
+  const token = socket.handshake.auth.token;
   if (!token) {
-    ws.close();
-    return;
+    return next(new Error("未提供认证令牌"));
   }
 
   // 验证token
-  jwtService.verifyToken(token, (err, decoded) => {
-    if (err) {
-      ws.close();
-      return;
+  try {
+    const decoded = jwtService.verifyToken(token);
+    if (!decoded) {
+      return next(new Error("无效的认证令牌"));
     }
+    socket.userId = decoded.student_id || decoded.id;
+    next();
+  } catch (err) {
+    next(new Error("Token验证失败"));
+  }
+}).on("connection", (socket) => {
+  const userId = socket.userId;
 
-    const userId = decoded.id||decoded.student_id;
+  // 存储连接
+  connectedUsers.set(userId, socket);
+  console.log(`用户 ${userId} 已连接 Socket.io`);
 
-    // 存储连接
-    connectedUsers.set(userId, ws);
+  // 加入个人房间
+  socket.join(`user_${userId}`);
 
-    console.log(`用户 ${userId} 已连接 WebSocket`);
+  // 在现有的Socket.io连接处理中添加新的事件监听
+  socket.on("join_conversation", (data) => {
+    const { conversationId } = data;
 
-    // 监听消息
-    ws.on("message", async (message) => {
-      try {
-        const messageStr = message.toString(); // WebSocket 接收到的是 Buffer 或字符串，需要转换
-        const data = JSON.parse(messageStr); // 使用转换后的字符串
-        const { type, conversationId, to, content, image_url } = data;
-        console.log("收到消息:", data); // 添加调试日志
-        if (type === "message") {
-          // 获取会话
-          const conversation = await Conversation.findById(conversationId);
-          if (!conversation) {
-            ws.send(JSON.stringify({
-              type: "error",
-              message: "会话不存在"
-            }));
-            return;
-          }
+    if (conversationId) {
+      // 加入特定会话的房间
+      const roomName = `conversation_${conversationId}`;
+      socket.join(roomName);
+      console.log(`用户 ${userId} 加入会话房间: ${roomName}`);
+    }
+  });
 
-          // 验证发送者权限
-          if (
-            conversation.buyer_id !== userId &&
-            conversation.seller_id !== userId
-          )
-            return;
+  // 修改消息发送部分
+  socket.on("send_message", async (data) => {
+    try {
+      const { conversationId, content, image_url } = data;
+      console.log("收到消息:", data);
 
-          // 创建消息
-          const receiverId =
-            conversation.buyer_id === userId
-              ? conversation.seller_id
-              : conversation.buyer_id;
-          const savedMessage = await Message.create(
-            conversationId,
-            userId,
-            receiverId,
-            content,
-            image_url
-          );
-
-          // 更新会话
-          await Conversation.updateLatestMessage(
-            conversationId,
-            savedMessage.message_id,
-            content || "[图片]",
-            userId
-          );
-
-          // 发送给接收者
-          const receiverWs = connectedUsers.get(receiverId);
-          if (receiverWs && receiverWs.readyState === WebSocket.OPEN) {
-            receiverWs.send(
-              JSON.stringify({
-                type: "message",
-                message: savedMessage,
-              })
-            );
-          }
-
-          // 通知发送者消息已保存
-          ws.send(
-            JSON.stringify({
-              type: "message_sent",
-              messageId: savedMessage.message_id,
-            })
-          );
-        }
-      } catch (error) {
-        console.error("处理WebSocket消息错误:", error);
+      // 获取会话
+      const conversation = await Conversation.findById(conversationId);
+      if (!conversation) {
+        socket.emit("error", { message: "会话不存在" });
+        return;
       }
-    });
 
-    // 处理连接关闭
-    ws.on("close", () => {
-      connectedUsers.delete(userId);
-      console.log(`用户 ${userId} 断开 WebSocket 连接`);
-    });
+      // 验证发送者权限
+      if (
+        conversation.buyer_id !== userId &&
+        conversation.seller_id !== userId
+      ) {
+        socket.emit("error", { message: "无权访问此会话" });
+        return;
+      }
+
+      // 确定接收者
+      const receiverId =
+        conversation.buyer_id === userId
+          ? conversation.seller_id
+          : conversation.buyer_id;
+
+      // 创建消息
+      const savedMessage = await Message.create(
+        conversationId,
+        userId,
+        receiverId,
+        content,
+        image_url
+      );
+
+      // 更新会话
+      await Conversation.updateLatestMessage(
+        conversationId,
+        savedMessage.message_id,
+        content || "[图片]",
+        userId
+      );
+
+      // 两种方式发送消息，提高可靠性
+      // 1. 通过用户房间
+      io.to(`user_${receiverId}`).emit("receive_message", {
+        type: "message",
+        message: savedMessage,
+      });
+
+      // 2. 通过会话房间
+      const roomName = `conversation_${conversationId}`;
+      io.to(roomName).emit("receive_message", {
+        type: "message",
+        message: savedMessage,
+      });
+
+      // 通知发送者
+      socket.emit("message_sent", {
+        messageId: savedMessage.message_id,
+      });
+
+      console.log(`消息已发送到房间 ${roomName} 和用户 ${receiverId}`);
+    } catch (error) {
+      console.error("处理消息错误:", error);
+      socket.emit("error", { message: "消息处理失败" });
+    }
+  });
+
+  // 处理断开连接
+  socket.on("disconnect", () => {
+    connectedUsers.delete(userId);
+    console.log(`用户 ${userId} 断开连接`);
   });
 });
 

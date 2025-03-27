@@ -53,7 +53,7 @@
       </view>
 
       <input class="solid-bottom" :adjust-position="false" :focus="false" maxlength="300" cursor-spacing="10"
-        v-model="messageText" @focus="InputFocus" @blur="InputBlur" @confirm="sendMessage" confirm-type="send" ></input>
+        v-model="messageText" @focus="InputFocus" @blur="InputBlur" @confirm="sendMessage" confirm-type="send"></input>
 
       <button class="cu-btn bg-blue shadow" @tap="sendMessage">发送</button>
     </view>
@@ -61,9 +61,14 @@
 </template>
 
 <script>
+// 引入Socket.io客户端
+// 需要先运行: npm install socket.io-client
+import io from 'socket.io-client';
+
 export default {
   data() {
     return {
+      socket: null,
       conversationId: '',
       otherUserId: '',
       productId: '',
@@ -107,8 +112,8 @@ export default {
     // 加载历史消息
     this.loadMessages();
 
-    // 连接WebSocket
-    this.connectWebSocket();
+    // 连接Socket.io
+    this.connectSocket();
   },
 
   onShow() {
@@ -118,13 +123,17 @@ export default {
         title: this.otherUserName
       });
     }
+    console.log('msg_chat页面显示，当前会话ID:', this.conversationId);
+    console.log('当前Socket.io状态:', this.socket ? (this.socket.connected ? '已连接' : '未连接') : '未初始化');
   },
 
 
   onUnload() {
     console.log('页面卸载');
-    // 只关闭这个页面的WebSocket标识，不实际关闭连接
-    this.currentPageId = null;
+    // 关闭Socket.io连接
+    if (this.socket) {
+      this.socket.disconnect();
+    }
   },
 
   methods: {
@@ -226,55 +235,41 @@ export default {
         return; // 不发送空消息
       }
 
-      const token = uni.getStorageSync('token');
-      if (!token) {
+      if (!this.socket || !this.socket.connected) {
         uni.showToast({
-          title: '请先登录',
+          title: '连接已断开，请重试',
           icon: 'none'
         });
         return;
       }
 
-      console.log("准备发送消息:", this.messageText);
+      // 添加临时消息到UI
+      const tempMessage = {
+        message_id: 'temp_' + Date.now(),
+        conversation_id: this.conversationId,
+        sender_id: this.userInfo.student_id,
+        content: this.messageText,
+        created_at: new Date().toISOString(),
+        is_read: false,
+        temp: true
+      };
 
-      // 先通过 HTTP API 发送，保证可靠性
-      uni.request({
-        url: `http://localhost:3000/api/conversations/${this.conversationId}/messages`,
-        method: 'POST',
-        data: {
-          content: this.messageText
-        },
-        header: {
-          'Authorization': `Bearer ${token}`
-        },
-        success: (res) => {
-          console.log("发送消息响应:", res.data);
-          if (res.statusCode === 201) {
-            // 消息发送成功，添加到本地显示
-            this.messages.push(res.data);
-            // 清空输入框
-            this.messageText = '';
-            // 确保 DOM 更新后滚动到底部
-            this.$nextTick(() => {
-              this.scrollToBottom();
-            });
-          } else {
-            uni.showToast({
-              title: '消息发送失败',
-              icon: 'none'
-            });
-          }
-        },
-        fail: (err) => {
-          console.error("发送消息失败:", err);
-          uni.showToast({
-            title: '网络错误',
-            icon: 'none'
-          });
-        }
+      this.messages.push(tempMessage);
+
+      // 通过Socket.io发送消息
+      this.socket.emit('send_message', {
+        conversationId: this.conversationId,
+        content: this.messageText
+      });
+
+      // 清空输入框
+      this.messageText = '';
+
+      // 滚动到底部
+      this.$nextTick(() => {
+        this.scrollToBottom();
       });
     },
-
 
     // 选择图片
     chooseImage() {
@@ -379,91 +374,77 @@ export default {
       return `http://localhost:3000/${url.replace(/\\/g, '/')}`;
     },
 
-    // 连接WebSocket
-    connectWebSocket() {
+    // 连接Socket.io
+    connectSocket() {
       const token = uni.getStorageSync('token');
       if (!token) return;
-      
-      // 先检查WebSocket是否已连接
-      uni.sendSocketMessage({
-        data: "ping",
-        fail: () => {
-          // 只有在WebSocket未连接时才创建新连接
-          console.log("WebSocket未连接，创建新连接");
-          uni.closeSocket(); // 确保关闭任何现有连接
-          
-          // 短暂延迟后创建新连接
-          setTimeout(() => {
-            uni.connectSocket({
-              url: `ws://localhost:3000?token=${token}`,
-              success: () => {
-                console.log('WebSocket连接创建成功');
-              },
-              fail: (error) => {
-                console.error('WebSocket连接失败:', error);
-              }
-            });
-          }, 300);
+
+      // 断开任何现有连接
+      if (this.socket) {
+        console.log('断开旧的Socket.io连接');
+        // 先移除所有事件监听器，避免事件重复
+        this.socket.off('receive_message');
+        this.socket.off('message_sent');
+        this.socket.off('error');
+        this.socket.disconnect();
+      }
+
+      console.log(`创建新的Socket.io连接，会话ID: ${this.conversationId}`);
+
+      // 创建Socket.io连接
+      this.socket = io('http://localhost:3000', {
+        auth: {
+          token: token
         },
-        success:(success)=>{
-          console.log("原有的WebSocket已连接");
-          
-        },
+        // 添加重连选项，提高稳定性
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
       });
-      console.log("2222224564");
-      
-      
-      // 重新注册所有事件监听器
-      uni.onSocketOpen(function() {
-        console.log('WebSocket已打开 - 当前页面ID:', this.conversationId);
-      }.bind(this));
-      
-      uni.onSocketError(function(error) {
-        console.error('WebSocket错误:', error);
+
+      // 连接事件
+      this.socket.on('connect', () => {
+        console.log('Socket.io连接成功');
+
+        // 加入特定会话房间
+        this.socket.emit('join_conversation', {
+          conversationId: this.conversationId
+        });
       });
-      
-      uni.onSocketClose(function() {
-        console.log('WebSocket已关闭');
-        this.webSocket = null;
-      }.bind(this));
-      
-      // 记住当前会话ID
-      const currentPageId = Date.now(); // 创建唯一标识符
-      this.currentPageId = currentPageId;
-      
-      // 确保消息监听器不重复
-      uni.onSocketMessage(function(res) {
-        // 确保这是当前活跃页面的监听器
-        if (this.currentPageId !== currentPageId) {
-          console.log('忽略过期页面的消息');
-          return;
-        }
+
+      // 接收消息 - 使用箭头函数确保正确的this上下文
+      this.socket.on('receive_message', (data) => {
+        console.log('收到Socket.io消息:', JSON.stringify(data));
+        console.log('当前会话ID:', this.conversationId);
+        console.log('消息所属会话ID:', data.message?.conversation_id);
+        console.log(data.type === 'message' &&
+          data.message &&
+          data.message.conversation_id === this.conversationId);
+        console.log(data.type === 'message' ? '是消息' : '不是消息');
+        console.log(data.message ? '有消息' : '没有消息');
+        console.log(data.message.conversation_id === this.conversationId ? '是当前会话' : '不是当前会话');
+        console.log(typeof data.message.conversation_id);
         
-        try {
-          console.log(`页面${currentPageId}收到WebSocket消息:`, res.data);
-          const data = JSON.parse(res.data);
-          
-          if (data.type === 'message' && 
-              data.message && 
-              data.message.conversation_id === this.conversationId) {
-            
-            console.log('添加新消息到当前会话:', data.message);
-            this.messages.push(data.message);
-            this.$nextTick(() => {
-              this.scrollToBottom();
-            });
-          } else if (data.type === 'message_sent') {
-            // 处理发送确认
-            const messageIndex = this.messages.findIndex(m => m.message_id === data.tempId);
-            if (messageIndex !== -1) {
-              this.messages[messageIndex].message_id = data.messageId;
-              this.messages[messageIndex].temp = false;
-            }
-          }
-        } catch (error) {
-          console.error('解析WebSocket消息失败:', error);
+        // 确保消息属于当前会话
+        if (data.type === 'message' &&
+          data.message &&
+          String(data.message.conversation_id) === String(this.conversationId)) {
+
+          console.log('添加新消息到聊天:', data.message);
+
+          // 使用Vue的变更检测确保UI更新
+          this.$nextTick(() => {
+            // 显式复制数组以确保Vue检测到变更
+            const updatedMessages = [...this.messages];
+            updatedMessages.push(data.message);
+            this.messages = updatedMessages;
+            // 滚动到底部
+            this.scrollToBottom();
+          });
         }
-      }.bind(this));
+      });
+
+
     },
 
     // 滚动到底部
@@ -508,8 +489,10 @@ page {
 }
 
 .cu-chat .cu-item {
-  margin-bottom: 10rpx;  /* 减小上下间距 */
-  padding: 5rpx 10rpx;  /* 缩小内边距 */
+  margin-bottom: 10rpx;
+  /* 减小上下间距 */
+  padding: 5rpx 10rpx;
+  /* 缩小内边距 */
 }
 
 
