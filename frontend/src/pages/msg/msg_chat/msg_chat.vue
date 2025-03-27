@@ -78,7 +78,8 @@ export default {
       webSocket: null,
       isLoading: false,
       page: 1,
-      hasMoreMessages: true
+      hasMoreMessages: true,
+      currentPageId: null
     };
   },
 
@@ -121,10 +122,9 @@ export default {
 
 
   onUnload() {
-    // 断开WebSocket连接
-    if (this.webSocket) {
-      this.webSocket.close();
-    }
+    console.log('页面卸载');
+    // 只关闭这个页面的WebSocket标识，不实际关闭连接
+    this.currentPageId = null;
   },
 
   methods: {
@@ -383,30 +383,77 @@ export default {
     connectWebSocket() {
       const token = uni.getStorageSync('token');
       if (!token) return;
-
-      this.webSocket = uni.connectSocket({
-        url: `ws://localhost:3000?token=${token}`,
-        success: () => {
-          console.log('WebSocket连接成功');
+      
+      // 先检查WebSocket是否已连接
+      uni.sendSocketMessage({
+        data: "ping",
+        fail: () => {
+          // 只有在WebSocket未连接时才创建新连接
+          console.log("WebSocket未连接，创建新连接");
+          uni.closeSocket(); // 确保关闭任何现有连接
+          
+          // 短暂延迟后创建新连接
+          setTimeout(() => {
+            uni.connectSocket({
+              url: `ws://localhost:3000?token=${token}`,
+              success: () => {
+                console.log('WebSocket连接创建成功');
+              },
+              fail: (error) => {
+                console.error('WebSocket连接失败:', error);
+              }
+            });
+          }, 300);
+        },
+        success:(success)=>{
+          console.log("原有的WebSocket已连接");
+          
+        },
+      });
+      console.log("2222224564");
+      
+      
+      // 重新注册所有事件监听器
+      uni.onSocketOpen(function() {
+        console.log('WebSocket已打开 - 当前页面ID:', this.conversationId);
+      }.bind(this));
+      
+      uni.onSocketError(function(error) {
+        console.error('WebSocket错误:', error);
+      });
+      
+      uni.onSocketClose(function() {
+        console.log('WebSocket已关闭');
+        this.webSocket = null;
+      }.bind(this));
+      
+      // 记住当前会话ID
+      const currentPageId = Date.now(); // 创建唯一标识符
+      this.currentPageId = currentPageId;
+      
+      // 确保消息监听器不重复
+      uni.onSocketMessage(function(res) {
+        // 确保这是当前活跃页面的监听器
+        if (this.currentPageId !== currentPageId) {
+          console.log('忽略过期页面的消息');
+          return;
         }
-      });
-
-      // 监听WebSocket事件
-      uni.onSocketOpen(() => {
-        console.log('WebSocket已打开');
-      });
-
-      uni.onSocketMessage((res) => {
+        
         try {
+          console.log(`页面${currentPageId}收到WebSocket消息:`, res.data);
           const data = JSON.parse(res.data);
-          if (data.type === 'message' && data.message.conversation_id === this.conversationId) {
-            // 接收到新消息
+          
+          if (data.type === 'message' && 
+              data.message && 
+              data.message.conversation_id === this.conversationId) {
+            
+            console.log('添加新消息到当前会话:', data.message);
             this.messages.push(data.message);
             this.$nextTick(() => {
               this.scrollToBottom();
             });
           } else if (data.type === 'message_sent') {
-            // 消息发送确认
+            // 处理发送确认
             const messageIndex = this.messages.findIndex(m => m.message_id === data.tempId);
             if (messageIndex !== -1) {
               this.messages[messageIndex].message_id = data.messageId;
@@ -416,16 +463,7 @@ export default {
         } catch (error) {
           console.error('解析WebSocket消息失败:', error);
         }
-      });
-
-      uni.onSocketError((error) => {
-        console.error('WebSocket错误:', error);
-      });
-
-      uni.onSocketClose(() => {
-        console.log('WebSocket已关闭');
-        this.webSocket = null;
-      });
+      }.bind(this));
     },
 
     // 滚动到底部

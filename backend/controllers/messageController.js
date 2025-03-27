@@ -172,8 +172,6 @@ const sendMessage = async (req, res) => {
       content || "[图片]",
       senderId
     );
-    // TOdO: 如果WebSocket在线，通过WebSocket推送
-    // ...WebSocket代码省略...
 
     res.status(201).json(message);
   } catch (error) {

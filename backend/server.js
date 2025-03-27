@@ -38,7 +38,7 @@ wss.on("connection", (ws, req) => {
       return;
     }
 
-    const userId = decoded.id;
+    const userId = decoded.id||decoded.student_id;
 
     // 存储连接
     connectedUsers.set(userId, ws);
