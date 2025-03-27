@@ -417,30 +417,59 @@ export default {
         console.log('收到Socket.io消息:', JSON.stringify(data));
         console.log('当前会话ID:', this.conversationId);
         console.log('消息所属会话ID:', data.message?.conversation_id);
-        console.log(data.type === 'message' &&
-          data.message &&
-          data.message.conversation_id === this.conversationId);
-        console.log(data.type === 'message' ? '是消息' : '不是消息');
-        console.log(data.message ? '有消息' : '没有消息');
-        console.log(data.message.conversation_id === this.conversationId ? '是当前会话' : '不是当前会话');
-        console.log(typeof data.message.conversation_id);
-        
+
         // 确保消息属于当前会话
         if (data.type === 'message' &&
           data.message &&
           String(data.message.conversation_id) === String(this.conversationId)) {
+
+          // 关键修改：检查该消息是否是自己发出的，如果是，则不添加
+          if (data.message.sender_id === this.userInfo.student_id) {
+            console.log('这是自己发送的消息，不重复添加');
+
+            // 更新临时消息
+            const tempIndex = this.messages.findIndex(msg =>
+              msg.temp && msg.content === data.message.content);
+
+            if (tempIndex !== -1) {
+              console.log('更新临时消息');
+              this.messages.splice(tempIndex, 1, data.message);
+            }
+            return;
+          }
+
+          // 关键修改：检查消息是否已存在，避免重复添加
+          const messageExists = this.messages.some(msg =>
+            msg.message_id === data.message.message_id ||
+            (msg.content === data.message.content &&
+              Math.abs(new Date(msg.created_at) - new Date(data.message.created_at)) < 3000)
+          );
+
+          if (messageExists) {
+            console.log('消息已存在，不重复添加:', data.message);
+            return;
+          }
 
           console.log('添加新消息到聊天:', data.message);
 
           // 使用Vue的变更检测确保UI更新
           this.$nextTick(() => {
             // 显式复制数组以确保Vue检测到变更
-            const updatedMessages = [...this.messages];
-            updatedMessages.push(data.message);
-            this.messages = updatedMessages;
+            this.messages = [...this.messages, data.message];
             // 滚动到底部
             this.scrollToBottom();
           });
+        }
+      });
+
+      // 接收消息发送确认
+      this.socket.on('message_sent', (data) => {
+        console.log('消息发送确认:', data);
+        const tempIndex = this.messages.findIndex(msg => msg.message_id === 'temp_' + data.tempId);
+        if (tempIndex !== -1) {
+          // 更新临时消息ID，标记为已确认
+          this.messages[tempIndex].message_id = data.messageId;
+          this.messages[tempIndex].temp = false;
         }
       });
 
