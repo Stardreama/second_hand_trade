@@ -72,6 +72,26 @@ export default {
     };
   },
   methods: {
+     // 添加新方法用于验证密码强度
+     validatePassword(password) {
+      // 检查密码长度是否至少为8位
+      if (password.length < 8) {
+        return { valid: false, message: "密码长度至少为8位" };
+      }
+      
+      // 检查是否包含至少一个数字
+      if (!/\d/.test(password)) {
+        return { valid: false, message: "密码必须包含至少一个数字" };
+      }
+      
+      // 检查是否包含至少一个字母
+      if (!/[a-zA-Z]/.test(password)) {
+        return { valid: false, message: "密码必须包含至少一个字母" };
+      }
+      
+      // 所有检查都通过
+      return { valid: true };
+    },
     chooseImage() {
       uni.chooseImage({
         count: 1,
@@ -99,6 +119,14 @@ export default {
         console.error("密码未输入");
         return;
       }
+          // 添加密码强度验证
+          const passwordValidation = this.validatePassword(this.password);
+      if (!passwordValidation.valid) {
+        uni.showToast({ title: passwordValidation.message, icon: "none" });
+        console.error(passwordValidation.message);
+        return;
+      }
+      
       if (this.password !== this.confirmPassword) {
         uni.showToast({ title: "两次密码输入不一致", icon: "none" });
         console.error("两次密码输入不一致");
