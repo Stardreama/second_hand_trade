@@ -28,7 +28,7 @@
         <view class="container-address-1">
           <text>收货地址</text>
         </view>
-        <view class="container-address-2">
+        <view class="container-address-2" @tap="openModal">
           <view class="container-address-2_1">
             <text>{{ address.name }}</text>
             <text>{{ address.phone }}</text>
@@ -70,6 +70,30 @@
       </view>
     </view>
   </view>
+
+  <!-- 弹出滑动框，显示地址列表 -->
+  <view class="modal-mask" v-if="showModal" @tap.self="closeModal">
+    <view class="address-modal">
+      <view class="modal-header">
+        <text>请选择收货地址</text>
+        <text class="modal-close" @tap="closeModal">关闭</text>
+      </view>
+      <!-- scroll-view 限制高度，最多显示 3 条地址 -->
+      <scroll-view scroll-y class="modal-scroll" style="max-height: 300rpx;">
+        <view class="modal-item" v-for="(item, index) in addresses" :key="index" @tap="chooseAddress(item)">
+          <view class="item-line1">
+            <text>{{ item.name }}</text>
+            <text>{{ item.phone }}</text>
+          </view>
+          <view class="item-line2">
+            <text>
+              {{ item.province }} {{ item.city }} {{ item.district }} {{ item.address }}
+            </text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
 </template>
 
 <script>
@@ -78,7 +102,52 @@ export default {
     return {
       product: {},    // 用于存储商品详情数据
       address: null,  // 用于存储默认收货地址数据
-      userId: null    // 从 token 中解析获取 user_id
+      userId: null,    // 从 token 中解析获取 user_id
+      showModal: false, // 控制弹出框显示
+      // 硬编码 5 条地址数据，供弹出框显示（两行显示）
+      // addresses: [
+      //   {
+      //     name: '张三',
+      //     phone: '13800138000',
+      //     province: '北京',
+      //     city: '北京',
+      //     district: '朝阳区',
+      //     address: '幸福路1号'
+      //   },
+      //   {
+      //     name: '李四',
+      //     phone: '13900139000',
+      //     province: '上海',
+      //     city: '上海',
+      //     district: '浦东区',
+      //     address: '光明路88号'
+      //   },
+      //   {
+      //     name: '王五',
+      //     phone: '13700137000',
+      //     province: '广东',
+      //     city: '广州',
+      //     district: '天河区',
+      //     address: '体育路5号'
+      //   },
+      //   {
+      //     name: '赵六',
+      //     phone: '13600136000',
+      //     province: '浙江',
+      //     city: '杭州',
+      //     district: '西湖区',
+      //     address: '文一路2号'
+      //   },
+      //   {
+      //     name: '钱七',
+      //     phone: '13500135000',
+      //     province: '江苏',
+      //     city: '南京',
+      //     district: '鼓楼区',
+      //     address: '中山路3号'
+      //   }
+      // ]
+      addresses: []      // 真实的地址列表，从数据库中获取
     };
   },
   onLoad(options) {
@@ -146,6 +215,8 @@ export default {
         success: (res) => {
           console.log(res);
           if (res.data && res.data.data && res.data.data.length > 0) {
+            // 保存所有地址数据
+            this.addresses = res.data.data;
             // 后端返回的地址按照默认地址排序，第一个即为默认地址
             this.address = res.data.data[0];
           } else {
@@ -178,6 +249,19 @@ export default {
 
       const formattedPath = imagePath.replace(/\\/g, "/");
       return `http://localhost:3000/${formattedPath}`;
+    },
+    // 打开弹出框
+    openModal() {
+      this.showModal = true;
+    },
+    // 关闭弹出框
+    closeModal() {
+      this.showModal = false;
+    },
+    // 选择地址，替换当前订单页面的收货地址，并关闭弹框
+    chooseAddress(selectedAddress) {
+      this.address = selectedAddress;
+      this.closeModal();
     }
   }
 };
@@ -303,5 +387,76 @@ export default {
 .foot-1_2 {
   padding-left: 10rpx;
   font-weight: 550;
+}
+
+/* 新增弹出框相关样式，弹框居中显示 */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.address-modal {
+  width: 90%;
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  animation: scaleUp 0.3s ease;
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.8);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.modal-close {
+  color: #999;
+  font-size: 28rpx;
+}
+
+.modal-scroll {
+  /* 如果地址较多，可滚动显示，最多显示3条地址 */
+  overflow-y: auto;
+}
+
+.modal-item {
+  padding: 10rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.modal-item:last-child {
+  border-bottom: none;
+}
+
+.item-line1 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 28rpx;
+  margin-bottom: 10rpx;
+}
+
+.item-line2 {
+  font-size: 26rpx;
+  color: #666;
 }
 </style>
