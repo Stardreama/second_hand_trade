@@ -115,13 +115,29 @@ export default {
       uni.showLoading({
         title: '加载中...'
       });
-      
+      // 获取用户ID
+  const userInfo = uni.getStorageSync('userInfo');
+  const userId = userInfo ? userInfo.student_id : null;
+  
+  // 如果没有用户ID，显示提示并返回
+  if (!userId) {
+    uni.hideLoading();
+    uni.showToast({
+      title: '请先登录',
+      icon: 'none'
+    });
+    return;
+  }
+  
       uni.request({
         url: `http://localhost:3000/api/address/${this.addressId}`,
         method: 'GET',
         header: {
           'Authorization': `Bearer ${uni.getStorageSync('token')}`
         },
+        data: {  // 添加user_id参数
+      user_id: userId
+    },
         success: (res) => {
           if (res.data.success) {
             const address = res.data.data;
