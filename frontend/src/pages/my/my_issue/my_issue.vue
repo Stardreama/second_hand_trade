@@ -65,7 +65,7 @@
           <view class="container-compile">
             <view class="cu-tag line-yellow" @tap="show_model">降价</view>
             <view class="cu-tag line-yellow" @tap="toIssue(item)">编辑</view>
-            <view class="cu-tag line-yellow" @tap="actionSheetTap">分享</view>
+            <view class="cu-tag line-yellow" @tap="actionSheetTap">更多</view>
           </view>
 
           <view class="container-line"></view>
