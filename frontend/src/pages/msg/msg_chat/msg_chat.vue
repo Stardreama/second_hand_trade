@@ -2,7 +2,7 @@
   <view>
     <cu-custom bgColor="bg-gradual-blue" :isBack="true">
       <!-- <block slot="backText">返回</block> -->
-      <!-- <block slot="content">{{ otherUserName }}</block> -->
+      <block slot="content">{{ otherUserName }}</block>
     </cu-custom>
 
     <scroll-view scroll-y="true" class="chat-container" :scroll-top="scrollTop"
@@ -35,7 +35,7 @@
             <view class="content" v-else
               :style="{ 'background-color': msg.sender_id === userInfo.student_id ? '#0081ff' : '' }">
               <text>{{ msg.content }}</text>
-              
+
               <!-- 添加已读状态图标 - 仅对自己发送的消息显示 -->
               <view class="message-status" v-if="msg.sender_id === userInfo.student_id">
                 <text v-if="msg.is_read" class="cuIcon-check text-gray"></text>
@@ -99,14 +99,19 @@ export default {
     this.conversationId = options.conversation_id;
     this.otherUserId = options.user_id;
     this.productId = options.product_id || '';
-    this.otherUserName = options.otherUserName || "未知用户";
+    this.loadOtherUserInfo();
+    console.log("555554444545");
+    console.log(this.otherUserName);
+    console.log("2222222222222");
+
+    //this.otherUserName = options.otherUserName || "未知用户";
     // 设置导航栏标题为对方的用户名
     if (this.otherUserName) {
       uni.setNavigationBarTitle({
         title: this.otherUserName
       });
     }
-    // 获取用户信息
+    //获取用户信息
     const userInfo = uni.getStorageSync('userInfo');
     if (userInfo) {
       this.userInfo = userInfo;
@@ -114,17 +119,17 @@ export default {
     }
 
     // 获取对方用户信息
-    this.loadOtherUserInfo();
+
 
     // 加载历史消息
     this.loadMessages();
 
     // 连接Socket.io
     this.connectSocket();
-    
+
     // 标记现有消息为已读
     this.markMessagesAsRead();
-    
+
     // 设置自动检查已读状态
     this.setupReadStatusCheck();
   },
@@ -138,15 +143,15 @@ export default {
     }
     console.log('msg_chat页面显示，当前会话ID:', this.conversationId);
     console.log('当前Socket.io状态:', this.socket ? (this.socket.connected ? '已连接' : '未连接') : '未初始化');
-    
+
     // 每次显示页面时标记消息为已读
     if (this.socket && this.socket.connected) {
       this.markMessagesAsRead();
     }
-    
+
     // 设置自动检查已读状态
     this.setupReadStatusCheck();
-    
+
     // 通知服务器用户正在查看会话
     if (this.socket && this.socket.connected) {
       this.socket.emit('viewing_conversation', {
@@ -158,13 +163,13 @@ export default {
 
   onUnload() {
     console.log('页面卸载');
-    
+
     // 清除计时器
     if (this.readCheckTimer) {
       clearInterval(this.readCheckTimer);
       this.readCheckTimer = null;
     }
-    
+
     // 关闭Socket.io连接
     if (this.socket) {
       this.socket.disconnect();
@@ -185,6 +190,10 @@ export default {
           if (res.statusCode === 200) {
             this.otherUserName = res.data.username || '对方';
             this.otherUserAvatar = this.getFullImageUrl(res.data.avatar);
+            // 成功获取用户信息后，立即设置导航栏标题
+            uni.setNavigationBarTitle({
+              title: this.otherUserName
+            });
           } else {
             this.otherUserName = '对方';
             console.error("获取用户信息失败:", res.data);
@@ -490,11 +499,11 @@ export default {
           this.messages[tempIndex].temp = false;
         }
       });
-      
+
       // 添加消息已读事件监听
       this.socket.on('messages_read', (data) => {
         console.log('消息已读通知:', data);
-        
+
         // 更新消息的已读状态
         if (data.conversationId === this.conversationId) {
           data.messageIds.forEach(messageId => {
@@ -508,7 +517,7 @@ export default {
       });
 
     },
-    
+
     // 添加标记消息已读的方法
     markMessagesAsRead() {
       if (this.socket && this.socket.connected && this.conversationId) {
@@ -516,21 +525,21 @@ export default {
         this.socket.emit('mark_messages_read', {
           conversationId: this.conversationId
         });
-        
+
         // 发送消息查看事件
         this.socket.emit('viewing_conversation', {
           conversationId: this.conversationId
         });
       }
     },
-    
+
     // 添加自动检查已读状态的方法
     setupReadStatusCheck() {
       // 清除现有计时器
       if (this.readCheckTimer) {
         clearInterval(this.readCheckTimer);
       }
-      
+
       // 设置新的计时器
       this.readCheckTimer = setInterval(() => {
         // 如果有新发送的消息且足够时间已过去，检查是否已读
@@ -594,8 +603,10 @@ page {
 .cu-chat .cu-item .main .content {
   padding: 10rpx 20rpx;
   border-radius: 20rpx;
-  position: relative; /* 添加相对定位，让已读图标可以绝对定位 */
-  padding-right: 30rpx; /* 为已读图标留出空间 */
+  position: relative;
+  /* 添加相对定位，让已读图标可以绝对定位 */
+  padding-right: 30rpx;
+  /* 为已读图标留出空间 */
 }
 
 .cu-chat .cu-item .main .content.bg-img {

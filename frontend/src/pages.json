@@ -24,7 +24,7 @@
       }
     },
     // {
-    //   "path": "pages/disconver/disconver",
+    //   "path": "pages/discover/discover",
     //   "style": {
     //     "enablePullDownRefresh": true,
     //     "navigationBarTitleText": "发现"
@@ -91,13 +91,13 @@
           "navigationBarTitleText": "订单详情"}
     },
     // {
-    //   "path": "pages/disconver/discover_desc/discover_desc",
+    //   "path": "pages/discover/discover_desc/discover_desc",
     //   "style": {
     //     "navigationBarTitleText": "评论"
     //   }
     // },
     // {
-    //   "path": "pages/disconver/discover_desc_more/discover_desc_more",
+    //   "path": "pages/discover/discover_desc_more/discover_desc_more",
     //   "style": {
     //     "navigationBarTitleText": "更多评论"
     //   }
@@ -191,7 +191,7 @@
         "text": "首页"
       },
       // {
-      //   "pagePath": "pages/disconver/disconver",
+      //   "pagePath": "pages/discover/discover",
       //   "iconPath": "static/img/f1.png",
       //   "selectedIconPath": "static/img/f2.png",
       //   "text": "发现"

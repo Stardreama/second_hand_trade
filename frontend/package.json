@@ -34,6 +34,7 @@
     "build:quickapp-webview-union": "uni build -p quickapp-webview-union"
   },
   "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
     "@dcloudio/uni-app": "3.0.0-4040520250104002",
     "@dcloudio/uni-app-harmony": "3.0.0-4040520250104002",
     "@dcloudio/uni-app-plus": "3.0.0-4040520250104002",

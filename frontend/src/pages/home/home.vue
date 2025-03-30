@@ -5,30 +5,16 @@
     <view class="cu-bar search bg-white" id="TabCurTab">
       <view class="search-form round">
         <text class="cuIcon-search"></text>
-        <input
-          type="text"
-          v-model="searchKeyword"
-          placeholder="搜索物品"
-          confirm-type="search"
-          @confirm="handleSearch"
-        />
+        <input type="text" v-model="searchKeyword" placeholder="搜索物品" confirm-type="search" @confirm="handleSearch" />
       </view>
-      <view
-        class="cu-avatar round search_img"
-        :style="{ 'background-image': `url(${userAvatar})` }"
-        @tap="toUserPage"
-      ></view>
+      <view class="cu-avatar round search_img" :style="{ 'background-image': `url(${userAvatar})` }" @tap="toUserPage">
+      </view>
     </view>
     <!-- 搜索end -->
 
     <!--头条滚动区域-->
-    <swiper
-      class="swiperitem margin-top solid-bottom"
-      autoplay="true"
-      vertical="true"
-      circular="true"
-      @click="lineschange"
-    >
+    <swiper class="swiperitem margin-top solid-bottom" autoplay="true" vertical="true" circular="true"
+      @click="lineschange">
       <block v-for="(item, index) in Headlines" :key="index">
         <swiper-item @click="linesclick">
           <view class="cu-bar bg-white">
@@ -48,30 +34,18 @@
 
     <!-- 点击回到顶部 -->
     <view class="goTop">
-      <image
-        src="../../static/img/top_top.png"
-        v-if="!showTop"
-        @click="goTop"
-      ></image>
+      <image src="../../static/img/top_top.png" v-if="!showTop" @click="goTop"></image>
     </view>
     <!-- end -->
 
     <!-- 内容 -->
     <!-- 商品列表容器 -->
     <!-- 使用v-for循环渲染products数组中的每个商品 -->
-    <view
-      class="card-menu container"
-      v-for="item in products"
-      :key="item.product_id"
-    >
+    <view class="card-menu container" v-for="item in products" :key="item.product_id">
       <!-- 商品详情页导航 -->
       <!-- <navigator url="/pages/home/home_detail/home_detail" hover-class="none"> -->
-      <navigator
-        :url="
-          '/pages/home/home_detail/home_detail?product_id=' + item.product_id
-        "
-        hover-class="none"
-      >
+      <navigator :url="'/pages/home/home_detail/home_detail?product_id=' + item.product_id
+        " hover-class="none">
         <!-- 商品图片容器 -->
         <view class="container_img">
           <!-- 动态绑定图片路径，调用方法处理图片地址 -->
@@ -220,8 +194,8 @@ export default {
   },
   onShow() {
     // 获取token
-	console.log("首页页面显示");
-	
+    console.log("首页页面显示");
+
     const token = uni.getStorageSync("token");
     if (!token) return;
     // 每次页面显示时从服务器获取最新用户信息
@@ -249,8 +223,8 @@ export default {
                 "/"
               )}`;
             }
-			console.log("设置的头像URL:", this.userAvatar);
-			
+            console.log("设置的头像URL:", this.userAvatar);
+
           }
         }
       },
@@ -292,22 +266,27 @@ export default {
   methods: {
     // 获取商品数据的方法
     fetchProducts() {
-      // 使用 uni.request 替代 axios 获取商品数据
-      uni.request({
-        url: "http://localhost:3000/api/products", // API endpoint
-        method: "GET", // HTTP method
-        success: (res) => {
-          if (res.statusCode === 200) {
-            // 更新 products 数据
-            this.products = res.data; // Assuming the response data is an array
-            console.log("商品数据已更新", this.products);
-          } else {
-            console.error("请求失败", res);
+      return new Promise((resolve, reject) => {
+        // 使用 uni.request 替代 axios 获取商品数据
+        uni.request({
+          url: "http://localhost:3000/api/products", // API endpoint
+          method: "GET", // HTTP method
+          success: (res) => {
+            if (res.statusCode === 200) {
+              // 更新 products 数据
+              this.products = res.data; // Assuming the response data is an array
+              console.log("商品数据已更新", this.products);
+              resolve(res.data); // 解析Promise
+            } else {
+              console.error("请求失败", res);
+              reject(new Error(res.errMsg || "请求失败")); // 拒绝Promise
+            }
+          },
+          fail: (err) => {
+            console.error("获取商品数据失败:", err);
+            reject(err); // 拒绝Promise
           }
-        },
-        fail: (err) => {
-          console.error("获取商品数据失败:", err);
-        }
+        });
       });
     },
 
@@ -467,14 +446,19 @@ export default {
 
 .container_img {
   display: flex;
-  justify-content: center;  /* 水平方向居中 */
-  align-items: center;      /* 垂直方向居中 */
+  justify-content: center;
+  /* 水平方向居中 */
+  align-items: center;
+  /* 垂直方向居中 */
 }
 
 .container_img image {
-  height: 280rpx;  /* 设置图片的高度为150rpx */
-  width: 280rpx;   /* 设置图片的宽度为150rpx，使其成为正方形 */
-  object-fit: cover;  /* 确保图片在容器内保持比例且不被拉伸 */
+  height: 280rpx;
+  /* 设置图片的高度为150rpx */
+  width: 280rpx;
+  /* 设置图片的宽度为150rpx，使其成为正方形 */
+  object-fit: cover;
+  /* 确保图片在容器内保持比例且不被拉伸 */
 }
 
 
@@ -617,11 +601,11 @@ export default {
   max-width: 150rpx;
 }
 
-.cu-card > .cu-item {
+.cu-card>.cu-item {
   margin-top: 0rpx;
 }
 
-.cu-card > .margin-top {
+.cu-card>.margin-top {
   margin-top: 30rpx;
 }
 
@@ -670,5 +654,4 @@ export default {
 .loginButton {
   width: 100%;
 }
-
 </style>
