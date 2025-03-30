@@ -23,37 +23,40 @@
         </view>
       </view>
 
-      <!-- 收货地址部分保持原样 -->
-      <view class="container-address bg-white">
+      <!-- 收货地址部分，动态加载默认地址 -->
+      <view class="container-address bg-white" v-if="address">
         <view class="container-address-1">
           <text>收货地址</text>
         </view>
         <view class="container-address-2">
           <view class="container-address-2_1">
-            <text>董先生</text>
-            <text>185****1336</text>
+            <text>{{ address.name }}</text>
+            <text>{{ address.phone }}</text>
           </view>
           <view class="container-address-2_2">
-            <text>贵州省毕节市七星关区*****学院</text>
+            <text>
+              {{ address.province }} {{ address.city }} {{ address.district }} {{ address.address }}
+            </text>
           </view>
         </view>
         <view class="container-address-3">
           <text class="cuIcon-right lg text-gray"></text>
         </view>
       </view>
-
-      <!-- 运费部分，目前注释掉（保留代码） -->
-      <!--
-      <view class="freight bg-white">
-        <view class="line-freight"></view>
-        <view class="freight-price">
-          <view class="freight-price-1">运费</view>
-          <view>
-            <text class="text-price text-red freight-price-1">0.0</text>
+      <!-- 地址数据加载中显示提示 -->
+      <view class="container-address bg-white" v-else>
+        <view class="container-address-1">
+          <text>收货地址</text>
+        </view>
+        <view class="container-address-2">
+          <view class="container-address-2_1">
+            <text>加载中...</text>
           </view>
         </view>
+        <view class="container-address-3">
+          <text class="cuIcon-right lg text-gray"></text>
+        </view>
       </view>
-      -->
     </view>
 
     <!-- 底部操作栏 -->
@@ -73,15 +76,34 @@
 export default {
   data() {
     return {
-      product: {} // 用于存储商品详情数据
+      product: {},    // 用于存储商品详情数据
+      address: null,  // 用于存储默认收货地址数据
+      userId: null    // 从 token 中解析获取 user_id
     };
   },
   onLoad(options) {
-    // 从路由参数中获取 product_id
+    // 从 token 中解析获取 user_id
+    const token = uni.getStorageSync('token');
+    if (token) {
+      try {
+        // 解析 token 的 payload，假设 token 格式为 header.payload.signature
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('Token payload:', payload);
+        this.userId = payload.student_id;  // 注意字段名称与后端保持一致
+      } catch (e) {
+        console.error('Token解析失败：', e);
+      }
+    } else {
+      console.error('未找到token');
+    }
+
+    // 加载商品详情
     const productId = options.product_id;
     if (productId) {
       this.fetchProductDetail(productId);
     }
+    // 加载默认收货地址，传递 user_id 给后端
+    this.fetchDefaultAddress();
   },
   methods: {
     fetchProductDetail(productId) {
@@ -107,8 +129,41 @@ export default {
         }
       });
     },
+    fetchDefaultAddress() {
+      // 获取 token 保证 header 中有正确的认证信息
+      const token = uni.getStorageSync('token');
+      console.log("userId:",this.userId);
+      uni.request({
+        // url: 'http://localhost:3000/api/address',
+        url: `http://localhost:3000/api/address?user_id=${this.userId}`,
+        method: 'GET',
+        data: {
+          user_id: this.userId  // 将 userId 作为参数传递给后端
+        },
+        header: {
+          Authorization: `Bearer ${token}`
+        },
+        success: (res) => {
+          console.log(res);
+          if (res.data && res.data.data && res.data.data.length > 0) {
+            // 后端返回的地址按照默认地址排序，第一个即为默认地址
+            this.address = res.data.data[0];
+          } else {
+            uni.showToast({
+              title: '地址信息为空',
+              icon: 'none'
+            });
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: '获取地址失败',
+            icon: 'none'
+          });
+        }
+      });
+    },
     confirmOrder() {
-      // 此处保留原有确认订单逻辑：跳转到订单详情页面或调用支付接口
       uni.navigateTo({
         url: '/pages/home/order_detail/order_detail'
       });
@@ -117,12 +172,10 @@ export default {
     getImageUrl(imagePath) {
       if (!imagePath) return ""; // 防空处理
 
-      // 如果已经是完整 URL，直接返回
       if (/^https?:\/\//.test(imagePath)) {
         return imagePath;
       }
 
-      // 否则将反斜杠替换成斜杠，并拼接服务器地址
       const formattedPath = imagePath.replace(/\\/g, "/");
       return `http://localhost:3000/${formattedPath}`;
     }
@@ -213,28 +266,6 @@ export default {
 .container-address-2_2 text {
   font-size: 25rpx;
   font-weight: 550;
-}
-
-.freight {
-  height: 100rpx;
-  width: 100%;
-  padding: 20rpx;
-}
-
-.line-freight {
-  width: 100%;
-  height: 2rpx;
-  background: gainsboro;
-}
-
-.freight-price {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 25rpx;
-}
-
-.freight-price-1 {
-  font-weight: 600;
 }
 
 .foot {
