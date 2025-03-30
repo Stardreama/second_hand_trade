@@ -287,106 +287,123 @@ const updateProduct = async (req, res) => {
         return res.status(404).json({ message: "商品不存在或您无权编辑" });
       }
 
-      // 开始事务
-      db.beginTransaction(async (err) => {
+      // 从连接池获取连接
+      db.getConnection((err, connection) => {
         if (err) {
           return res
             .status(500)
-            .json({ message: "事务开始失败", error: err.message });
+            .json({ message: "获取数据库连接失败", error: err.message });
         }
 
-        try {
-          // 1. 更新商品基本信息
-          let coverImage = results[0].image; // 默认保持原来的封面图片
-
-          // 如果有新上传的图片，使用第一张作为新的封面
-          if (files.length > 0) {
-            coverImage = files[0].path;
+        // 开始事务
+        connection.beginTransaction(async (err) => {
+          if (err) {
+            connection.release(); // 发生错误时释放连接
+            return res
+              .status(500)
+              .json({ message: "事务开始失败", error: err.message });
           }
 
-          const updateQuery = `
-            UPDATE products 
-            SET product_title = ?, description = ?, price = ?, original_price = ?,
-                product_status = ?, product_class = ?, status = ?, product_type = ?, image = ?
-            WHERE product_id = ? AND seller_id = ?
-          `;
+          try {
+            // 1. 更新商品基本信息
+            let coverImage = results[0].image; // 默认保持原来的封面图片
 
-          await new Promise((resolve, reject) => {
-            db.query(
-              updateQuery,
-              [
-                title,
-                description,
-                price || 0,
-                original_price || 0,
-                product_status,
-                product_class,
-                status || "",
-                product_type,
-                coverImage,
-                product_id,
-                seller_id,
-              ],
-              (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-              }
-            );
-          });
-
-          // 2. 处理删除的图片
-          if (deleted_images) {
-            const imagesToDelete = JSON.parse(deleted_images);
-            if (imagesToDelete.length > 0) {
-              const deleteImageQuery =
-                "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?)";
-              await new Promise((resolve, reject) => {
-                db.query(
-                  deleteImageQuery,
-                  [product_id, imagesToDelete],
-                  (err, result) => {
-                    if (err) reject(err);
-                    else resolve(result);
-                  }
-                );
-              });
+            // 如果有新上传的图片，使用第一张作为新的封面
+            if (files.length > 0) {
+              coverImage = files[0].path;
             }
-          }
 
-          // 3. 添加新图片
-          if (files.length > 0) {
-            const insertImagePromises = files.map((file) => {
-              return new Promise((resolve, reject) => {
-                Product.addImage(product_id, file.path, (err, result) => {
+            const updateQuery = `
+              UPDATE products 
+              SET product_title = ?, description = ?, price = ?, original_price = ?,
+                  product_status = ?, product_class = ?, status = ?, product_type = ?, image = ?
+              WHERE product_id = ? AND seller_id = ?
+            `;
+
+            await new Promise((resolve, reject) => {
+              connection.query(
+                updateQuery,
+                [
+                  title,
+                  description,
+                  price || 0,
+                  original_price || 0,
+                  product_status,
+                  product_class,
+                  status || "",
+                  product_type,
+                  coverImage,
+                  product_id,
+                  seller_id,
+                ],
+                (err, result) => {
                   if (err) reject(err);
                   else resolve(result);
-                });
-              });
+                }
+              );
             });
 
-            await Promise.all(insertImagePromises);
-          }
-
-          // 提交事务
-          db.commit((err) => {
-            if (err) {
-              return db.rollback(() => {
-                res
-                  .status(500)
-                  .json({ message: "提交事务失败", error: err.message });
-              });
+            // 2. 处理删除的图片
+            if (deleted_images) {
+              const imagesToDelete = JSON.parse(deleted_images);
+              if (imagesToDelete.length > 0) {
+                const deleteImageQuery =
+                  "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?)";
+                await new Promise((resolve, reject) => {
+                  connection.query(
+                    deleteImageQuery,
+                    [product_id, imagesToDelete],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                });
+              }
             }
 
-            res.status(200).json({ message: "商品更新成功", product_id });
-          });
-        } catch (error) {
-          // 回滚事务
-          db.rollback(() => {
-            res
-              .status(500)
-              .json({ message: "更新商品失败", error: error.message });
-          });
-        }
+            // 3. 添加新图片
+            if (files.length > 0) {
+              const insertImagePromises = files.map((file) => {
+                return new Promise((resolve, reject) => {
+                  connection.query(
+                    "INSERT INTO product_images (product_id, image_url) VALUES (?, ?)",
+                    [product_id, file.path],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                });
+              });
+
+              await Promise.all(insertImagePromises);
+            }
+
+            // 提交事务
+            connection.commit((err) => {
+              if (err) {
+                return connection.rollback(() => {
+                  connection.release(); // 释放连接
+                  res
+                    .status(500)
+                    .json({ message: "提交事务失败", error: err.message });
+                });
+              }
+              
+              connection.release(); // 释放连接
+              res.status(200).json({ message: "商品更新成功", product_id });
+            });
+          } catch (error) {
+            // 回滚事务
+            connection.rollback(() => {
+              connection.release(); // 释放连接
+              res
+                .status(500)
+                .json({ message: "更新商品失败", error: error.message });
+            });
+          }
+        });
       });
     });
   } catch (error) {
