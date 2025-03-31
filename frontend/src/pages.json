@@ -56,7 +56,7 @@
         "navigationBarTextStyle": "white"
       }
     },
-    
+
     // {
     // 	"path":"pages/home/home_grid/home_grid",
     // 	"style":{
@@ -70,25 +70,26 @@
     //     }
     // },
     {
-        "path" : "pages/home/home_detail/home_detail",
-        "style" : {
-          "navigationBarTitleText": "商品详情"
-        }
+      "path": "pages/home/home_detail/home_detail",
+      "style": {
+        "navigationBarTitleText": "商品详情"
+      }
     },
     // ,{
     //     "path" : "pages/home/home_grid_detail/home_grid_detail",
     //     "style" : {}
     // }
     {
-        "path" : "pages/home/confirm_order/confirm_order",
-        "style" : {
-          "navigationBarTitleText": "确认订单"
-        }
+      "path": "pages/home/confirm_order/confirm_order",
+      "style": {
+        "navigationBarTitleText": "确认订单"
+      }
     },
     {
-        "path" : "pages/home/order_detail/order_detail",
-        "style" : {
-          "navigationBarTitleText": "订单详情"}
+      "path": "pages/home/order_detail/order_detail",
+      "style": {
+        "navigationBarTitleText": "订单详情"
+      }
     },
     // {
     //   "path": "pages/discover/discover_desc/discover_desc",
@@ -127,10 +128,16 @@
       }
     },
     {
-        "path" : "pages/issue/issue_edit/issue_edit",
-        "style" : {
-          "navigationBarTitleText": "修改发布"
-        }
+      "path": "pages/my/my_pay/my_pay",
+      "style": {
+        "navigationBarTitleText": "我的支付"
+      }
+    },
+    {
+      "path": "pages/issue/issue_edit/issue_edit",
+      "style": {
+        "navigationBarTitleText": "修改发布"
+      }
     },
     {
       "path": "pages/my/my_sale/my_sale",
@@ -156,7 +163,7 @@
         "navigationBarTitleText": "收货地址"
       }
     },
-    
+
     {
       "path": "pages/my/my_feedback/my_feedback",
       "style": {
