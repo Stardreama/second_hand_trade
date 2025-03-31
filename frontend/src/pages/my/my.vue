@@ -1,18 +1,13 @@
 <template>
   <view>
     <!-- 用户信息 -->
-    <view class="UCenter-bg" catchtap="toMy_detail">
+    <view class="user-center-bg" @tap="toMy_detail">
       <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
       <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
       <view class="nickname-container" @tap.stop="editNickname">
         <text>{{ nickname || "Amibition" }}</text>
+        <EditOutlined class="edit-icon" />
       </view>
-
-      <image
-        src="https://raw.githubusercontent.com/weilanwl/ColorUI/master/demo/images/wave.gif"
-        mode="scaleToFill"
-        class="gif-wave"
-      ></image>
     </view>
     <!-- 修改昵称弹框 -->
     <view v-if="isNicknameModalVisible" class="nickname-modal">
@@ -24,120 +19,157 @@
           class="nickname-input"
         />
         <view class="modal-actions" @tap.stop>
-          <button @tap="updateNickname" class="btn-confirm">确认</button>
-          <button @tap="cancelNicknameUpdate" class="btn-cancel">取消</button>
+          <button @tap="updateNickname" class="btn-confirm"><CheckOutlined />确认</button>
+          <button @tap="cancelNicknameUpdate" class="btn-cancel"><CloseOutlined /> 取消</button>
         </view>
       </view>
     </view>
     <!-- 用户信息end -->
 
-    <view class="padding flex text-center text-grey bg-white shadow-warp">
-      <view class="flex flex-sub flex-direction solid-right" bindtap="toPraise">
-        <view class="text-xxl text-orange">{{ totalLikes }}</view>
-        <view class="margin-top-sm">
-          <text class="cuIcon-attentionfill"></text> 超赞
-        </view>
+    <view class="stats-card">
+      <view class="stat-item" @tap="toPraise">
+        <LikeOutlined class="stat-icon like-icon" />
+        <view class="stat-number">{{ totalLikes }}</view>
+        <view class="stat-label">超赞</view>
       </view>
-      <view
-        class="flex flex-sub flex-direction solid-right"
-        bindtap="toAttention"
-      >
-        <view class="text-xxl text-blue">5</view>
-        <view class="margin-top-sm">
-          <text class="cuIcon-favorfill"></text>关注数
-        </view>
+      <view class="stat-item" @tap="toAttention">
+        <StarOutlined class="stat-icon star-icon" />
+        <view class="stat-number">5</view>
+        <view class="stat-label">关注数</view>
       </view>
-      <view class="flex flex-sub flex-direction" bindtap="toFans">
-        <view class="text-xxl text-green">0</view>
-        <view class="margin-top-sm">
-          <text class="cuIcon-fork"></text>粉丝数
-        </view>
+      <view class="stat-item" @tap="toFans">
+        <TeamOutlined class="stat-icon team-icon" />
+        <view class="stat-number">0</view>
+        <view class="stat-label">粉丝数</view>
       </view>
     </view>
 
     <!-- 设置详细 -->
-    <view
-      class="cu-list menu card-menu margin-top-xl margin-bottom-xl shadow-lg radius"
-    >
-      <view class="cu-item arrow">
-        <view class="content" @tap="toIssue_page">
-          <text class="cuIcon-moneybagfill text-red"></text>
-          <text class="text-grey">我的发布</text>
-          <text class="num">19</text>
+    <view class="menu-card">
+      <view class="menu-item" @tap="toIssue_page">
+        <view class="menu-icon-container">
+          <AppstoreOutlined class="menu-icon primary-icon" />
         </view>
-      </view>
-      <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_pay/my_pay"
-        >
-          <text class="cuIcon-redpacket text-orange"></text>
-          <text class="text-grey">我的支付</text>
-        </navigator>
-      </view>
-      <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_sale/my_sale"
-        >
-          <text class="cuIcon-titles text-green"></text>
-          <text class="text-grey">我的卖出</text>
-          <text class="num">99</text>
-        </navigator>
-      </view>
-      <view class="cu-item arrow">
-        <navigator
-          class="content"
-          hover-class="none"
-          url="/pages/my/my_buy/my_buy"
-        >
-          <text class="cuIcon-formfill text-green"></text>
-          <text class="text-grey">我买到的</text>
-          <text class="num">1</text>
-        </navigator>
-      </view>
-      <view class="cu-item arrow">
-        <view class="content" @tap="toAddress">
-          <text class="cuIcon-locationfill text-grey"></text>
-          <text class="text-grey">收货地址</text>
+        <view class="menu-content">
+          <text>我的发布</text>
+          <view class="menu-badge">19</view>
         </view>
+        <RightOutlined class="menu-arrow" />
       </view>
-      <view class="cu-item arrow">
-        <view class="content" @tap="toCollect">
-          <text class="cuIcon-appreciatefill text-red"></text>
-          <text class="text-grey">我的收藏</text>
-          <text class="num">39</text>
+      
+      <view class="menu-item" @tap="toPay">
+        <view class="menu-icon-container">
+          <WalletOutlined class="menu-icon wallet-icon" />
         </view>
-      </view>
-      <view class="cu-item arrow">
-        <view class="content" @tap="toFeedback">
-          <text class="cuIcon-writefill text-cyan"></text>
-          <text class="text-grey">意见反馈</text>
+        <view class="menu-content">
+          <text>我的支付</text>
         </view>
+        <RightOutlined class="menu-arrow" />
       </view>
-      <!-- <view class="cu-item arrow content">
-        <button class="cu-btn content" @click="clearAllStore">
-          <text class="cuIcon-creativefill text-orange"></text>
-          <text class="text-grey">清除缓存</text>
-        </button>
-      </view> -->
+      
+      <view class="menu-item" @tap="toPay">
+        <view class="menu-icon-container">
+          <SolutionOutlined class="menu-icon solution-icon" />
+        </view>
+        <view class="menu-content">
+          <text>我的卖出</text>
+          <view class="menu-badge">99</view>
+        </view>
+        <RightOutlined class="menu-arrow" />
+      </view>
+      
+      <view class="menu-item" @tap="toPay">
+        <view class="menu-icon-container">
+          <ShoppingCartOutlined class="menu-icon cart-icon" />
+        </view>
+        <view class="menu-content">
+          <text>我买到的</text>
+          <view class="menu-badge">1</view>
+        </view>
+        <RightOutlined class="menu-arrow" />
+      </view>
+      
+      <view class="menu-item" @tap="toAddress">
+        <view class="menu-icon-container">
+          <EnvironmentOutlined class="menu-icon location-icon" />
+        </view>
+        <view class="menu-content">
+          <text>收货地址</text>
+        </view>
+        <RightOutlined class="menu-arrow" />
+      </view>
+      
+      <view class="menu-item" @tap="toCollect">
+        <view class="menu-icon-container">
+          <HeartOutlined class="menu-icon heart-icon" />
+        </view>
+        <view class="menu-content">
+          <text>我的收藏</text>
+          <view class="menu-badge">39</view>
+        </view>
+        <RightOutlined class="menu-arrow" />
+      </view>
+      
+      <view class="menu-item" @tap="toFeedback">
+        <view class="menu-icon-container">
+          <CommentOutlined class="menu-icon comment-icon" />
+        </view>
+        <view class="menu-content">
+          <text>意见反馈</text>
+        </view>
+        <RightOutlined class="menu-arrow" />
+      </view>
     </view>
 
-    <!-- 红色的退出按钮 -->
-    <view class="logout-btn" @tap="logout">
-      <text>退出</text>
+      <!-- 退出按钮 -->
+      <view class="logout-btn" @tap="logout">
+      <LogoutOutlined class="logout-icon" />
+      <text>退出登录</text>
     </view>
 
     <!-- tabbar 预留高度 -->
     <view class="cu-tabbar-height"></view>
-    <!-- 设置详细end -->
   </view>
 </template>
 
 <script>
+import { 
+  LikeOutlined, 
+  StarOutlined, 
+  TeamOutlined,
+  AppstoreOutlined,
+  WalletOutlined,
+  SolutionOutlined,
+  ShoppingCartOutlined,
+  EnvironmentOutlined,
+  HeartOutlined,
+  CommentOutlined,
+  RightOutlined,
+  EditOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  LogoutOutlined
+} from '@ant-design/icons-vue';
+
 export default {
+  name: 'MyPage',
+  components: {
+    LikeOutlined, 
+    StarOutlined, 
+    TeamOutlined,
+    AppstoreOutlined,
+    WalletOutlined,
+    SolutionOutlined,
+    ShoppingCartOutlined,
+    EnvironmentOutlined,
+    HeartOutlined,
+    CommentOutlined,
+    RightOutlined,
+    EditOutlined,
+    CheckOutlined,
+    CloseOutlined,
+    LogoutOutlined
+  },
   data() {
     return {
       avatar: "https://s21.ax1x.com/2025/03/18/pEdfnjP.jpg",
@@ -149,7 +181,7 @@ export default {
   },
   methods: {
     // 清除全部缓存
-    clearAllStore: function (res) {
+    clearAllStore(res) {
       uni.showModal({
         title: "清除缓存",
         content: "是否要清除全部缓存!",
@@ -174,6 +206,7 @@ export default {
         },
       });
     },
+    
     // 退出登录
     logout() {
       uni.showModal({
@@ -181,10 +214,10 @@ export default {
         content: "确定要退出当前账号吗？",
         success: (res) => {
           if (res.confirm) {
-            // 这里可做清除 token、清除用户信息等操作
+            // 清除 token、清除用户信息
             uni.removeStorageSync("token");
             uni.removeStorageSync("userInfo");
-            // 跳转到登录页，也可以选择 switchTab 或 reLaunch 根据需要来做
+            // 跳转到登录页
             uni.reLaunch({
               url: "/pages/auth/login",
             });
@@ -192,6 +225,7 @@ export default {
         },
       });
     },
+    
     // 读取用户信息（昵称）
     fetchUserProfile() {
       const token = uni.getStorageSync("token");
@@ -237,12 +271,10 @@ export default {
     editNickname() {
       this.isNicknameModalVisible = true;
       this.newNickname = this.nickname; // 默认显示当前昵称
-      console.log("editNickname triggered"); // 确保事件被触发
     },
 
     // 确认修改昵称
     updateNickname() {
-      console.log(this.newNickname);
       if (this.newNickname.trim() === "") {
         uni.showToast({
           title: "昵称不能为空",
@@ -289,54 +321,62 @@ export default {
 
     // 取消修改
     cancelNicknameUpdate() {
-      console.log("取消修改");
       this.isNicknameModalVisible = false; // 关闭弹框
       this.newNickname = ""; // 清空输入框
     },
-    toPay: function () {
+    
+    toPay() {
       uni.navigateTo({
         url: "/pages/my/my_pay/my_pay",
       });
     },
+    
     // 我的发布跳转
-    toIssue_page: function () {
+    toIssue_page() {
       uni.navigateTo({
         url: "/pages/my/my_issue/my_issue",
       });
     },
+    
     toCollect() {
       uni.navigateTo({
         url: "/pages/my/my_collect/my_collect",
       });
     },
+    
     toAddress() {
       uni.navigateTo({
         url: "/pages/my/my_address/my_address",
       });
     },
+    
     toFeedback() {
       uni.navigateTo({
         url: "/pages/my/my_feedback/my_feedback",
       });
     },
+    
     toPraise() {
       uni.showToast({
         title: "暂未开放",
         icon: "none",
       });
     },
+    
     toAttention() {
       uni.showToast({
         title: "暂未开放",
         icon: "none",
       });
     },
+    
     toFans() {
       uni.showToast({
         title: "暂未开放",
         icon: "none",
       });
     },
+    
     // 点击头像的事件，弹出预览或更换头像的选项
     changeAvatar() {
       uni.showActionSheet({
@@ -418,13 +458,14 @@ export default {
         },
       });
     },
-    // 跳转到个人详情（此处仍保留原有逻辑）
+    
+    // 跳转到个人详情
     toMy_detail() {
-      // 根据需求可在此处添加查看个人详情的逻辑
       uni.navigateTo({
         url: "/pages/my/my_detail/my_detail",
       });
     },
+    
     // 获取点赞总数
     fetchUserLikes() {
       const token = uni.getStorageSync("token");
@@ -453,99 +494,231 @@ export default {
     this.isNicknameModalVisible = false;
     this.fetchUserProfile(); // 页面显示时获取用户信息
     this.fetchUserLikes(); // 页面显示时获取点赞总数
-  },
+  }
 };
 </script>
 
 <style scoped>
-/* pages/my/my.wxss */
+/* 全新美化的样式 */
 
 /* 用户信息部分 */
-.UCenter-bg {
-  background-image: url(https://image.weilanwl.com/color2.0/index.jpg);
-  background-size: cover;
-  height: 450rpx;
+.user-center-bg {
+  background: linear-gradient(120deg, #1890ff, #722ed1);
+  height: 400rpx;
   display: flex;
   justify-content: center;
-  padding-top: 40rpx;
+  padding-top: 60rpx;
   overflow: hidden;
   position: relative;
   flex-direction: column;
   align-items: center;
   color: #fff;
   font-weight: 300;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
 }
 
-.UCenter-bg text {
-  opacity: 0.8;
+.avatar-image {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s;
 }
 
-.UCenter-bg image {
-  width: 200rpx;
-  height: 200rpx;
+.avatar-image:active {
+  transform: scale(0.95);
 }
 
-.UCenter-bg .gif-wave {
+.nickname-container {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+}
+
+.nickname-container text {
+  font-size: 32rpx;
+  margin-right: 10rpx;
+}
+
+.edit-icon {
+  font-size: 24rpx;
+}
+
+/* 统计卡片 */
+.stats-card {
+  display: flex;
+  justify-content: space-around;
+  background-color: #fff;
+  margin: -40rpx 30rpx 30rpx;
+  border-radius: 16rpx;
+  padding: 30rpx 0;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 10;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-icon {
+  font-size: 48rpx;
+  margin-bottom: 10rpx;
+}
+
+.like-icon {
+  color: #f56a00;
+}
+
+.star-icon {
+  color: #1890ff;
+}
+
+.team-icon {
+  color: #52c41a;
+}
+
+.stat-number {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+/* 菜单卡片 */
+.menu-card {
+  background-color: #fff;
+  margin: 30rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 24rpx;
+  position: relative;
+}
+
+.menu-item:after {
+  content: '';
   position: absolute;
-  width: 100%;
+  left: 90rpx;
+  right: 0;
   bottom: 0;
-  left: 0;
-  z-index: 99;
-  mix-blend-mode: screen;
-  height: 100rpx;
+  height: 1px;
+  background-color: #f0f0f0;
 }
 
-map,
-.mapBox {
-  left: 0;
-  z-index: 99;
-  mix-blend-mode: screen;
-  height: 100rpx;
+.menu-item:last-child:after {
+  display: none;
 }
 
-map,
-.mapBox {
-  width: 750rpx;
-  height: 300rpx;
+.menu-icon-container {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  border-radius: 16rpx;
+  margin-right: 24rpx;
 }
 
-.text-xl image {
-  height: 100rpx;
-  width: 100rpx;
+.menu-icon {
+  font-size: 40rpx;
 }
 
-.png {
-  border-radius: 100%;
+.primary-icon {
+  color: #1890ff;
 }
 
-.num {
-  direction: rtl;
-  margin-left: 58%;
-  font-size: 25rpx;
+.wallet-icon {
+  color: #fa8c16;
+}
+
+.solution-icon {
+  color: #52c41a;
+}
+
+.cart-icon {
+  color: #722ed1;
+}
+
+.location-icon {
+  color: #eb2f96;
+}
+
+.heart-icon {
+  color: #f5222d;
+}
+
+.comment-icon {
+  color: #13c2c2;
+}
+
+.menu-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.menu-badge {
+  background-color: #f5222d;
+  color: white;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  padding: 2rpx 14rpx;
+  margin-right: 20rpx;
+}
+
+.menu-arrow {
+  color: #ccc;
+  font-size: 28rpx;
 }
 
 /* 退出按钮样式 */
 .logout-btn {
-  background-color: red;
-  color: #fff;
-  width: 100%;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  color: #f5222d;
+  margin: 40rpx 30rpx;
+  padding: 24rpx 0;
+  border-radius: 16rpx;
   font-size: 30rpx;
-  padding: 20rpx 0;
-  margin-bottom: 20rpx;
-  border-radius: 8rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.2);
+  border: 1px solid #f5222d;
+  box-shadow: 0 4rpx 12rpx rgba(245, 34, 45, 0.15);
 }
 
-/* 修改昵称的弹框样式 */
+.logout-icon {
+  margin-right: 10rpx;
+}
+
+/* 弹框样式优化 */
 .nickname-modal {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -554,41 +727,48 @@ map,
 
 .modal-content {
   background-color: white;
-  padding: 30rpx;
-  border-radius: 10rpx;
-  width: 80%;
+  padding: 40rpx;
+  border-radius: 16rpx;
+  width: 70%;
   text-align: center;
-  z-index: 10000;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
 }
 
 .nickname-input {
   width: 100%;
-  margin-top: 20rpx;
-  padding: 5rpx;
-  border: 1px solid #ccc;
-  border-radius: 5rpx;
+  margin: 30rpx 0;
+  padding: 20rpx;
+  border: 1px solid #d9d9d9;
+  border-radius: 8rpx;
+  font-size: 28rpx;
 }
 
 .modal-actions {
   display: flex;
   justify-content: space-around;
-  margin-top: 20rpx;
+  margin-top: 30rpx;
 }
 
 .btn-confirm,
 .btn-cancel {
-  width: 30%;
-  padding: 1rpx;
-  background-color: #5cb85c;
+  padding: 16rpx 0;
+  width: 40%;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-confirm {
+  background-color: #1890ff;
   color: white;
-  border-radius: 10rpx;
+  border: none;
 }
 
 .btn-cancel {
-  background-color: #d9534f;
-}
-
-.nickname-container {
-  text-align: center;
+  background-color: white;
+  color: #666;
+  border: 1px solid #d9d9d9;
 }
 </style>
