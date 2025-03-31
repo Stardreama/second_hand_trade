@@ -59,14 +59,14 @@
         <view>
           <text></text>
         </view>
-        <view class="text-gray text-sm text-right padding-browse">
+        <!-- <view class="text-gray text-sm text-right padding-browse">
           <text class="cuIcon-attentionfill margin-lr-xs"></text>
           {{ productDetail.attention_count || 0 }}
           <text class="cuIcon-appreciatefill margin-lr-xs"></text>
           {{ productDetail.like_amount || 0 }}
           <text class="cuIcon-messagefill margin-lr-xs"></text>
           {{ productDetail.message_count || 0 }}
-        </view>
+        </view> -->
       </view>
     </view>
     <!-- 商品内容end -->
