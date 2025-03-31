@@ -96,7 +96,7 @@
   </view>
 </template>
 
-<script>
+<script> 
 export default {
   data() {
     return {
@@ -201,7 +201,7 @@ export default {
     fetchDefaultAddress() {
       // 获取 token 保证 header 中有正确的认证信息
       const token = uni.getStorageSync('token');
-      console.log("userId:",this.userId);
+      console.log("userId:", this.userId);
       uni.request({
         // url: 'http://localhost:3000/api/address',
         url: `http://localhost:3000/api/address?user_id=${this.userId}`,
@@ -234,11 +234,13 @@ export default {
         }
       });
     },
-    confirmOrder() {
+    confirmOrder(productId) {
+      console.log("Product ID:", this.product.product_id);  // 检查 product.id 的值
       uni.navigateTo({
-        url: '/pages/home/order_detail/order_detail'
+        url: `/pages/home/order_detail/order_detail?product_id=${this.product.product_id}`
       });
     },
+
     // 拼接图片完整 URL 的方法
     getImageUrl(imagePath) {
       if (!imagePath) return ""; // 防空处理
