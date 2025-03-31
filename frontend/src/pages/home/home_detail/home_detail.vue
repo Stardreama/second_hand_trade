@@ -9,12 +9,9 @@
         <view class="radius fl padding-sm">
           <!-- <image src="../../../static/img/avatar.jpg"></image> -->
           <!-- <image :src="productDetail.seller_avatar || '../../../static/img/avatar.jpg'"></image> -->
-          <image
-            :src="
-              getImageUrl(productDetail.seller_avatar) ||
-              '../../../static/img/avatar.jpg'
-            "
-          ></image>
+          <image :src="getImageUrl(productDetail.seller_avatar) ||
+            '../../../static/img/avatar.jpg'
+            "></image>
           <view class="fr padding-name">
             <!-- <view>Amibition</view> -->
             <view>{{ productDetail.seller_name }}</view>
@@ -28,16 +25,8 @@
     <!-- 商品内容 -->
     <view class="contanier bg-white padding-sm top-20">
       <view class="price">
-        <!-- <text class="price-size">2500</text> -->
-        <!-- <text class="price-ori">￥1221</text> -->
-        <!-- <view class="cu-tag">不讲价</view> -->
-        <!-- 不太懂这里的不讲价是什么鬼 -->
-        <text class="price-size" v-if="productDetail.product_type !== 'buy'"
-          >￥{{ productDetail.price }}</text
-        >
-        <text class="price-ori" v-if="productDetail.product_type !== 'buy'"
-          >￥{{ productDetail.original_price }}</text
-        >
+        <text class="price-size" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.price }}</text>
+        <text class="price-ori" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.original_price }}</text>
         <view class="cu-tag">{{ productDetail.product_status }}</view>
         <view class="cu-tag">{{ productDetail.status }}</view>
       </view>
@@ -62,8 +51,6 @@
         <image class="img" src="../../../static/img/qiu.jpeg"></image>
       </block> -->
       <block v-for="(item, index) in images" :key="index">
-        <!-- <image class="img" :src="'http://localhost:3000/' + item"></image> -->
-        <!-- <image class="img" :src="'http://localhost:3000/'+ item"></image> -->
         <image class="img" :src="getImageUrl(item)"></image>
       </block>
       <!--图片位置end  -->
@@ -93,24 +80,27 @@
     <view class="cu-bar bg-white tabbar border shop fixation">
       <view class="action-buttons padding-sm">
         <!-- 仅当商品不是自己发布的时候显示聊一聊按钮 -->
-        <button
-          class="cu-btn bg-blue lg shadow"
-          @tap="chatWithSeller"
-          v-if="productDetail.seller_id !== userInfo.student_id"
-        >
+        <button class="cu-btn bg-blue lg shadow" @tap="chatWithSeller"
+          v-if="productDetail.seller_id !== userInfo.student_id">
           <text class="cuIcon-message"></text> 聊一聊
         </button>
       </view>
       <view class="action" @tap="toggleLike">
-        <view
-          :class="[
-            'cuIcon-appreciatefill',
-            liked ? 'text-orange' : 'text-gray',
-          ]"
-        ></view>
+        <view :class="[
+          'cuIcon-appreciatefill',
+          liked ? 'text-orange' : 'text-gray',
+        ]"></view>
         点赞
       </view>
-      <view class="bg-red submit margin-rigth-20" @tap="buy">立即结算</view>
+      <!-- <view class="bg-red submit margin-rigth-20" @tap="buy">立即结算</view> -->
+      <!-- 条件渲染：如果是自己发布的商品，显示“编辑商品”按钮；否则显示“立即结算”按钮 -->
+      <view v-if="productDetail.seller_id === userInfo.student_id" class="bg-red submit margin-rigth-20"
+        @tap="editProduct">
+        编辑商品
+      </view>
+      <view v-else class="bg-red submit margin-rigth-20" @tap="buy">
+        立即结算
+      </view>
     </view>
     <!-- end -->
   </view>
@@ -221,6 +211,12 @@ export default {
         url:
           "/pages/home/confirm_order/confirm_order?product_id=" +
           this.productDetail.product_id,
+      });
+    },
+    // 跳转到编辑商品页面
+    editProduct() {
+      uni.navigateTo({
+        url: '/pages/issue/issue_edit/issue_edit?product_id=' + this.productDetail.product_id
       });
     },
     // 跳转到聊天页面
