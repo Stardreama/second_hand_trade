@@ -207,11 +207,11 @@ export default {
     },
 
     // 新增方法 - 跳转到发布页面
-toPublish() {
-  uni.switchTab({
-    url: "/pages/issue/issue",
-  });
-},
+    toPublish() {
+      uni.switchTab({
+        url: "/pages/issue/issue",
+      });
+    },
 
     // 拦截弹窗 滚动
     pageModel: function (e) {},

@@ -1,5 +1,13 @@
 const { db } = require("../config/config");
 
+const query = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
 const User = {
   // 添加创建带头像用户的方法
   createWithAvatar: (
@@ -42,6 +50,23 @@ const User = {
   updateNickname: (student_id, nickname, callback) => {
     const query = "UPDATE users SET username = ? WHERE student_id = ?";
     db.query(query, [nickname, student_id], callback);
+  },
+  // 获取用户的 QRCode
+  getQRCode: async (userId) => {
+    const result = await query(
+      "SELECT QRCode FROM users WHERE student_id = ?",
+      [userId]
+    );
+    return result.length > 0 ? result[0].QRCode : null;
+  },
+
+  // 更新用户的 QRCode
+  updateQRCode: async (userId, QRCode) => {
+    const result = await query(
+      "UPDATE users SET QRCode = ? WHERE student_id = ?",
+      [QRCode, userId]
+    );
+    return result.affectedRows > 0;
   },
 };
 
