@@ -3,7 +3,7 @@
     <!-- 用户信息 -->
     <view class="user-center-bg" @tap="toMy_detail">
       <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
-      <image :src="avatar" class="png" @tap.stop="changeAvatar"></image>
+      <image :src="avatar" class="avatar-image" @tap.stop="changeAvatar"></image>
       <view class="nickname-container" @tap.stop="editNickname">
         <text>{{ nickname || "Amibition" }}</text>
         <EditOutlined class="edit-icon" />
@@ -19,8 +19,8 @@
           class="nickname-input"
         />
         <view class="modal-actions" @tap.stop>
-          <button @tap="updateNickname" class="btn-confirm"><CheckOutlined />确认</button>
-          <button @tap="cancelNicknameUpdate" class="btn-cancel"><CloseOutlined /> 取消</button>
+          <button @tap="updateNickname" class="btn-confirm">确认</button>
+          <button @tap="cancelNicknameUpdate" class="btn-cancel">取消</button>
         </view>
       </view>
     </view>
@@ -67,7 +67,7 @@
         <RightOutlined class="menu-arrow" />
       </view>
       
-      <view class="menu-item" @tap="toPay">
+      <view class="menu-item" @tap="toSale">
         <view class="menu-icon-container">
           <SolutionOutlined class="menu-icon solution-icon" />
         </view>
@@ -78,7 +78,7 @@
         <RightOutlined class="menu-arrow" />
       </view>
       
-      <view class="menu-item" @tap="toPay">
+      <view class="menu-item" @tap="toBuy">
         <view class="menu-icon-container">
           <ShoppingCartOutlined class="menu-icon cart-icon" />
         </view>
@@ -267,14 +267,16 @@ export default {
       });
     },
 
-    // 修改昵称弹框
-    editNickname() {
+   // 修改昵称弹框
+   editNickname() {
       this.isNicknameModalVisible = true;
       this.newNickname = this.nickname; // 默认显示当前昵称
+      console.log("editNickname triggered"); // 确保事件被触发
     },
 
     // 确认修改昵称
     updateNickname() {
+      console.log(this.newNickname);
       if (this.newNickname.trim() === "") {
         uni.showToast({
           title: "昵称不能为空",
@@ -321,10 +323,11 @@ export default {
 
     // 取消修改
     cancelNicknameUpdate() {
+      console.log("取消修改");
       this.isNicknameModalVisible = false; // 关闭弹框
       this.newNickname = ""; // 清空输入框
     },
-    
+
     toPay() {
       uni.navigateTo({
         url: "/pages/my/my_pay/my_pay",
@@ -374,6 +377,18 @@ export default {
       uni.showToast({
         title: "暂未开放",
         icon: "none",
+      });
+    },
+    toSale() {
+      uni.navigateTo({
+        url: "/pages/my/my_sale/my_sale",
+      });
+    },
+    
+    // 我买到的跳转
+    toBuy() {
+      uni.navigateTo({
+        url: "/pages/my/my_buy/my_buy",
       });
     },
     
@@ -733,14 +748,22 @@ export default {
   text-align: center;
   box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
 }
-
-.nickname-input {
+/* .nickname-input {
+    width: 100%;
+    margin-top: 20rpx;
+    padding: 5rpx;
+    border: 1px solid #ccc;
+    border-radius: 5rpx;
+  } */
+  .nickname-input {
   width: 100%;
+  height: 80rpx;
   margin: 30rpx 0;
-  padding: 20rpx;
+  padding: 15rpx 20rpx;
   border: 1px solid #d9d9d9;
   border-radius: 8rpx;
-  font-size: 28rpx;
+  font-size: 32rpx;
+  box-sizing: border-box;
 }
 
 .modal-actions {
@@ -752,9 +775,9 @@ export default {
 .btn-confirm,
 .btn-cancel {
   padding: 16rpx 0;
-  width: 40%;
+  width: 35%;
   border-radius: 8rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -772,3 +795,4 @@ export default {
   border: 1px solid #d9d9d9;
 }
 </style>
+
