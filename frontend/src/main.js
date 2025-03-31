@@ -9,9 +9,11 @@ import { faTags, faShoppingCart, faUpload, faMapMarkerAlt, faDollarSign, faSortA
 // 添加图标到库中
 library.add(faTags, faShoppingCart, faUpload, faMapMarkerAlt, faDollarSign, faSortAmountUp, faList, faHandshake, faPaperPlane)
 
+// 创建Vue应用实例
 const app = createApp(App)
 
-// 注册全局组件
+// 使用Vue 3的方法注册插件和组件
 app.component('font-awesome-icon', FontAwesomeIcon)
 
+// 挂载应用
 app.mount('#app')
