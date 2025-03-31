@@ -174,6 +174,10 @@ export default {
     // 加载默认收货地址，传递 user_id 给后端
     this.fetchDefaultAddress();
   },
+  // onShow 每次页面显示时调用
+  onShow() {
+    this.fetchDefaultAddress();
+  },
   methods: {
     fetchProductDetail(productId) {
       uni.request({
@@ -201,7 +205,7 @@ export default {
     fetchDefaultAddress() {
       // 获取 token 保证 header 中有正确的认证信息
       const token = uni.getStorageSync('token');
-      console.log("userId:",this.userId);
+      console.log("userId:", this.userId);
       uni.request({
         // url: 'http://localhost:3000/api/address',
         url: `http://localhost:3000/api/address?user_id=${this.userId}`,
@@ -220,9 +224,23 @@ export default {
             // 后端返回的地址按照默认地址排序，第一个即为默认地址
             this.address = res.data.data[0];
           } else {
-            uni.showToast({
-              title: '地址信息为空',
-              icon: 'none'
+            // uni.showToast({
+            //   title: '地址信息为空',
+            //   icon: 'none'
+            // });
+            // 提示无默认地址，要求新建地址
+            uni.showModal({
+              title: '提示',
+              content: '无默认地址，请新建地址后重新确认订单',
+              confirmText: '确认',
+              cancelText: '取消',
+              success: (result) => {
+                if (result.confirm) {
+                  uni.navigateTo({ url: '/pages/my/my_address/my_address' });
+                } else {
+                  uni.navigateBack();
+                }
+              }
             });
           }
         },
