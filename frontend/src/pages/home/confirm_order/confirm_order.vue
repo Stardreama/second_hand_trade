@@ -96,7 +96,7 @@
   </view>
 </template>
 
-<script>
+<script> 
 export default {
   data() {
     return {
@@ -252,11 +252,13 @@ export default {
         }
       });
     },
-    confirmOrder() {
+    confirmOrder(productId) {
+      console.log("Product ID:", this.product.product_id);  // 检查 product.id 的值
       uni.navigateTo({
-        url: '/pages/home/order_detail/order_detail'
+        url: `/pages/home/order_detail/order_detail?product_id=${this.product.product_id}`
       });
     },
+
     // 拼接图片完整 URL 的方法
     getImageUrl(imagePath) {
       if (!imagePath) return ""; // 防空处理
