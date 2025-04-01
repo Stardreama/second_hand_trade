@@ -198,12 +198,16 @@ export default {
     // 请求付款码信息
     fetchPaymentCode(sellerId) {
       uni.request({
-        url: `http://localhost:3000/api/my/my_pay-noToken?seller_id=${sellerId}`, // 根据 seller_id 获取付款码
+        url: `http://localhost:3000/api/my/my_pay-noToken?seller_id=${sellerId}`,
         method: 'GET',
         success: (res) => {
-          if (res.data && res.data.qrCode) { // 修改为res.data.qrCode
-            this.orderDetails.payment_code = res.data.qrCode; // 保存付款码 URL
-            console.log('付款码：', this.orderDetails.payment_code);
+          if (res.data && res.data.qrCode) {
+            // 移除开头的斜杠 "/"
+            this.orderDetails.payment_code = res.data.qrCode.startsWith('/')
+              ? res.data.qrCode.substring(1)
+              : res.data.qrCode;
+
+            console.log('付款码路径：', this.orderDetails.payment_code);
           } else {
             uni.showToast({
               title: '获取付款码失败',
@@ -224,12 +228,15 @@ export default {
 
     // 拼接图片完整 URL 的方法
     getImageUrl(imagePath) {
-      if (!imagePath) return ""; // 防空处理
+      if (!imagePath) return ""; // 防空
+
+      // 如果已经是完整 URL，直接返回
       if (/^https?:\/\//.test(imagePath)) {
         return imagePath;
       }
+
+      // 否则把反斜杠替换成斜杠并拼接服务器地址
       const formattedPath = imagePath.replace(/\\/g, "/");
-      console.log('图片 URL:', formattedPath);  // 打印最终拼接的 URL
       return `http://localhost:3000/${formattedPath}`;
     },
     // 跳转到联系卖家聊天页面

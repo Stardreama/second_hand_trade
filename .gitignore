@@ -20,7 +20,7 @@ dist
 *.sln
 *.sw?
 *.jpg
-# *.png
+*.png
 *.webp
 *.jpeg
 *.ico
