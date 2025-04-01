@@ -4,11 +4,11 @@
 		<view class="cu-bar bg-white solid-bottom nav-bar">
 			<view class="flex padding-sm text-center text-xl tab-container">
 				<view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 0 }" @tap="switchTab(0)">
-					<TagsOutlined class="tab-icon" />
+					<uni-icons type="shop" size="44" color="#1890ff" class="tab-icon"></uni-icons>
 					<text>出售</text>
 				</view>
 				<view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 1 }" @tap="switchTab(1)">
-					<ShoppingCartOutlined class="tab-icon" />
+					<uni-icons type="cart" size="44" color="#1890ff" class="tab-icon"></uni-icons>
 					<text>求购</text>
 				</view>
 			</view>
@@ -18,7 +18,7 @@
 			<!-- 标题 -->
 			<view class="cu-form-group margin-top form-item" :class="{ 'error-field': titleError }">
 				<view class="title">
-					<FileTextOutlined class="form-icon" />
+					<uni-icons type="compose" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text>标题</text>
 				</view>
 				<input type="text" v-model="title" name="title" placeholder="品类品牌型号都是买家喜欢搜索的"
@@ -35,7 +35,7 @@
 			<!-- 图片 -->
 			<view class="cu-bar bg-white margin-top image-upload-bar">
 				<view class="action">
-					<UploadOutlined class="form-icon" />
+					<uni-icons type="upload" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text class="section-title">图片上传</text>
 				</view>
 				<view class="action">
@@ -48,11 +48,11 @@
 						:data-url="imgList[index]">
 						<image :src="imgList[index]" mode='aspectFill'></image>
 						<view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index">
-							<CloseOutlined />
+							<uni-icons type="close" size="24" color="#ffffff"></uni-icons>
 						</view>
 					</view>
 					<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
-						<CameraOutlined class="upload-icon" />
+						<uni-icons type="plus-filled" size="60" color="#1890ff" class="upload-icon"></uni-icons>
 						<text class="upload-text">添加图片</text>
 					</view>
 				</view>
@@ -62,13 +62,13 @@
 			<!-- 地址选择 -->
 			<view class="cu-form-group form-item">
 				<view class="title">
-					<EnvironmentOutlined class="form-icon" />
+					<uni-icons type="location" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text>地址选择</text>
 				</view>
 				<picker mode="multiSelector" @change="MultiChange" @columnchange="MultiColumnChange" :value="multiIndex"
 					:range="multiArray">
 					<view class="picker">
-						{{ multiArray[0][multiIndex[0]] }}，{{ multiArray[1][multiIndex[1]] }}，{{
+						{{ multiArray[0][multiIndex[0]] }},{{ multiArray[1][multiIndex[1]] }},{{
 							multiArray[2][multiIndex[2]] }}
 					</view>
 				</picker>
@@ -78,14 +78,14 @@
 			<!-- 价钱 -->
 			<view class="cu-form-group margin-top price-group" v-if="tabIndex === 0">
 				<view class="title price-label">
-					<DollarOutlined class="form-icon" />
+					<uni-icons type="wallet" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text>出售价:</text>
 				</view>
 				<input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7' name="newPrice"
 					:class="{ 'error-input': sellPriceError }"></input>
 
 				<view class="title price-label">
-					<DollarOutlined class="form-icon" />
+					<uni-icons type="wallet" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text>原价:</text>
 				</view>
 				<input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价" maxlength='7'
@@ -96,7 +96,7 @@
 			<!-- 选择分类 -->
 			<view class="cu-form-group">
 				<view class="title">
-					<AppstoreOutlined class="form-icon" />
+					<uni-icons type="list" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text>分类:</text>
 				</view>
 				<input disabled="true" name="classify" :value='classify' class="category-input"></input>
@@ -108,7 +108,7 @@
 			<!-- 新旧 -->
 			<view class="cu-form-group" v-if="tabIndex === 0">
 				<view class="title">
-					<StarOutlined class="form-icon" />
+					<uni-icons type="star" size="36" color="#1890ff" class="form-icon"></uni-icons>
 					<text>新旧:</text>
 				</view>
 				<input ref="status" disabled="true" name="itemLists" :value='itemLists[itemListsIndex]'
@@ -121,7 +121,7 @@
 			<!-- 交易方式 -->
 			<view class="cu-form-group trade-method">
 				<view class="title">
-					<SwapOutlined class="form-icon" />
+					<uni-icons type="loop" size="34" color="#1890ff" class="form-icon"></uni-icons>
 					<text>交易方式</text>
 				</view>
 				<checkbox-group name="means" @change="checkboxChange" class="checkbox-group">
@@ -147,7 +147,7 @@
 			<!-- 确定发布 -->
 			<view class="padding flex flex-direction">
 				<button class="cu-btn submit-btn margin-tb-sm lg" form-type="submit">
-					<SendOutlined class="submit-icon" />
+					<uni-icons type="paperplane" size="28" color="#ffffff" class="submit-icon"></uni-icons>
 					{{ tabIndex === 0 ? '发布出售' : '发布求购' }}
 				</button>
 			</view>
@@ -176,38 +176,12 @@
 </template>
 
 <script>
-import {
-	TagsOutlined,
-	ShoppingCartOutlined,
-	FileTextOutlined,
-	UploadOutlined,
-	EnvironmentOutlined,
-	DollarOutlined,
-	AppstoreOutlined,
-	StarOutlined,
-	SwapOutlined,
-	SendOutlined,
-	PlusOutlined,
-	CloseOutlined,
-	CameraOutlined
-} from '@ant-design/icons-vue';
+import uniIcons from '@dcloudio/uni-ui/lib/uni-icons/uni-icons.vue';
 import allSchool from "../../common/allSchool.js";
 export default {
 	// 注册图标组件
 	components: {
-		TagsOutlined,
-		ShoppingCartOutlined,
-		FileTextOutlined,
-		UploadOutlined,
-		EnvironmentOutlined,
-		DollarOutlined,
-		AppstoreOutlined,
-		StarOutlined,
-		SwapOutlined,
-		SendOutlined,
-		PlusOutlined,
-		CloseOutlined,
-		CameraOutlined
+		uniIcons
 	},
 	data() {
 		return {
@@ -771,8 +745,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
   background-color: #fafafa;
+  padding: 30rpx 0; 
 }
 
 .upload-box:active {
@@ -782,7 +757,7 @@ export default {
 .upload-icon {
   font-size: 60rpx;
   color: #1890ff;
-  margin-bottom: 10rpx;
+  /* margin-bottom: 30rpx; */
 }
 
 .upload-text {

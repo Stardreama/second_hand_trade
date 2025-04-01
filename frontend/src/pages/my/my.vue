@@ -33,7 +33,7 @@
 
     <view class="stats-card">
       <view class="stat-item" @tap="toPraise">
-        <uni-icons type="heart" size="48" color="#f56a00" class="stat-icon"></uni-icons>
+        <uni-icons type="hand-up-filled" size="48" color="#f56a00" class="stat-icon"></uni-icons>
         <view class="stat-number">{{ totalLikes }}</view>
         <view class="stat-label">超赞</view>
       </view>
@@ -43,7 +43,7 @@
         <view class="stat-label">关注数</view>
       </view>
       <view class="stat-item" @tap="toFans">
-        <uni-icons type="person" size="48" color="#52c41a" class="stat-icon"></uni-icons>
+        <uni-icons type="person-filled" size="48" color="#52c41a" class="stat-icon"></uni-icons>
         <view class="stat-number">0</view>
         <view class="stat-label">粉丝数</view>
       </view>
@@ -492,7 +492,7 @@ export default {
 
 /* 用户信息部分 */
 .user-center-bg {
-  background: url('@/static/img/dzq.png') center center no-repeat;
+  background: url('/static/img/dzq.png') center center no-repeat;
   background-size: cover; /* 确保图片覆盖整个区域 */
   height: 400rpx;
   display: flex;
