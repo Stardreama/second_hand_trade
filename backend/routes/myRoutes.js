@@ -15,6 +15,8 @@ router.get(
   productController.getUserLikeAmount
 );
 router.get("/my_pay", jwtService.authMiddleware, userController.getQRCode);
+router.get("/my_pay-noToken", userController.getQRCodeNoToken);
+
 router.post(
   "/my_pay/update",
   jwtService.authMiddleware,

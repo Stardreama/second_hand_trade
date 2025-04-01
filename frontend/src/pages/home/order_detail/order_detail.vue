@@ -64,9 +64,11 @@
     <!-- end -->
 
     <!-- 显示付款码 -->
+    <!-- 显示付款码 -->
     <view class='shopping bg-white'>
       <view class="payment-code-container">
-        <image :src="getImageUrl(orderDetails.payment_code)" alt="付款码" class="payment-code-image" />
+        <!-- 添加调试信息和mode属性 -->
+        <image :src="getImageUrl(orderDetails.payment_code)" mode="aspectFit" style="width: 300rpx; height: 300rpx;" />
       </view>
     </view>
 
@@ -193,14 +195,14 @@ export default {
     },
 
     // 请求付款码信息
+    // 请求付款码信息
     fetchPaymentCode(sellerId) {
-      console.log("寻找付款码")
       uni.request({
-        url: `http://localhost:3000/api/payment-code?seller_id=${sellerId}`,  // 根据 seller_id 获取付款码
+        url: `http://localhost:3000/api/my/my_pay-noToken?seller_id=${sellerId}`, // 根据 seller_id 获取付款码
         method: 'GET',
         success: (res) => {
-          if (res.data && res.data.payment_code) {
-            this.orderDetails.payment_code = res.data.payment_code; // 将付款码 URL 保存到 orderDetails 中
+          if (res.data && res.data.qrCode) { // 修改为res.data.qrCode
+            this.orderDetails.payment_code = res.data.qrCode; // 保存付款码 URL
             console.log('付款码：', this.orderDetails.payment_code);
           } else {
             uni.showToast({
@@ -219,6 +221,7 @@ export default {
     },
 
 
+
     // 拼接图片完整 URL 的方法
     getImageUrl(imagePath) {
       if (!imagePath) return ""; // 防空处理
@@ -226,6 +229,7 @@ export default {
         return imagePath;
       }
       const formattedPath = imagePath.replace(/\\/g, "/");
+      console.log('图片 URL:', formattedPath);  // 打印最终拼接的 URL
       return `http://localhost:3000/${formattedPath}`;
     },
     // 跳转到联系卖家聊天页面
@@ -386,7 +390,12 @@ export default {
 /* 交易信息 */
 .shopping {
   padding: 30rpx;
-  height: 235rpx;
+  min-height: 400rpx;
+  /* 确保最小高度足够 */
+  position: relative;
+  /* 防止子元素溢出 */
+  overflow: visible;
+  /* 允许内容显示 */
 }
 
 .shopping_desc {
@@ -419,19 +428,24 @@ export default {
 
 
 /* 付款码图片容器 */
+
+
+/* 付款码图片样式 */
 .payment-code-container {
   display: flex;
+  flex-direction: column;
+  /* 垂直排列调试信息和图片 */
   justify-content: center;
   align-items: center;
   padding: 20rpx;
-}
-
-/* 付款码图片样式 */
-.payment-code-image {
-  width: 80%;
-  max-width: 300rpx;
-  /* 设置最大宽度 */
   height: auto;
-  border-radius: 10rpx;
+  /* 高度自适应 */
+  min-height: 300rpx;
+  /* 设置最小高度 */
+  background: #ffffff;
+  /* 白色背景 */
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  /* 可选：添加阴影增强可视性 */
 }
 </style>
