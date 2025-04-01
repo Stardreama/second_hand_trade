@@ -99,7 +99,9 @@
         <view class="model-title_desc">
           <view class="model-title_desc-1">
             <image
-              src="https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg"
+            :src="currentProduct && currentProduct.images && currentProduct.images.length > 0 
+          ? currentProduct.images[0] 
+          : 'https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'"
             ></image>
           </view>
           <view class="model-title_desc-2">
@@ -181,31 +183,30 @@ export default {
           method: "GET",
           header: { Authorization: "Bearer " + token },
         });
-
         if (res.code === 200) {
-          this.productList = res.data.map((item) => ({
-            ...item,
-            images: item.image // 直接使用后端返回的数组
-              .slice(0, 3) // 最多取3张
-              .map(
-                (
-                  img // 转换图片路径
-                ) => `${this.baseUrl}${img.replace(/\\/g, "/")}`
-              ),
-          }));
+      this.productList = res.data.map((item) => {
+        // 确保每个商品对象有图片数组
+        const processedItem = {
+          ...item,
+          images: Array.isArray(item.image) 
+            ? item.image.map(img => `${this.baseUrl}${img.replace(/\\/g, "/")}`) 
+            : []
+        };
+        
+        // 如果处理后的images为空，但商品有封面图，则使用封面图
+        if (processedItem.images.length === 0 && item.image) {
+          processedItem.images.push(`${this.baseUrl}${item.image.replace(/\\/g, "/")}`);
         }
-      } catch (error) {
-        console.error("数据加载失败:", error);
-        uni.showToast({ title: "数据加载失败", icon: "none" });
-      }
-    },
-    // 跳转到编辑页面
-    toIssue: function (item) {
-      console.log("编辑商品:", item.product_id);
-      uni.navigateTo({
-        url: `/pages/issue/issue_edit/issue_edit?product_id=${item.product_id}`,
+        
+        console.log("处理后的商品图片:", processedItem.images);
+        return processedItem;
       });
-    },
+    }
+  } catch (error) {
+    console.error("数据加载失败:", error);
+    uni.showToast({ title: "数据加载失败", icon: "none" });
+  }
+},
 
     // 新增方法 - 跳转到发布页面
     toPublish() {
@@ -256,7 +257,7 @@ export default {
     // 点击显示 降价弹窗
     show_model: function (item) {
       var that = this;
-      
+      console.log("当前商品图片:", item.images); // 添加调试信息
       // 保存当前操作的商品
       this.currentProduct = item;
       
@@ -264,7 +265,7 @@ export default {
       const originalPrice = item.price;
       for (let i = 0; i < that.re_price.length; i++) {
         // 根据折扣计算价格并四舍五入到整数
-        that.re_price[i].price = Math.round(originalPrice * that.re_price[i].discount);
+        that.re_price[i].price = parseFloat((originalPrice * that.re_price[i].discount).toFixed(2));
         
         // 默认选中第一个
         if (i === 0) {
