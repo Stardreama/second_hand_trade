@@ -3,6 +3,8 @@ const router = express.Router();
 const productController = require("../controllers/productController");
 const jwtService = require("../services/jwtService");
 const userController = require("../controllers/userController");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 // 我的出售商品路由
 router.get("/sale", productController.getMySaleProducts);
 
@@ -12,9 +14,11 @@ router.get(
   jwtService.authMiddleware,
   productController.getUserLikeAmount
 );
-// 获取用户的 QRCode
 router.get("/my_pay", jwtService.authMiddleware, userController.getQRCode);
-
-// 更新用户的 QRCode
-router.post("/my_pay", jwtService.authMiddleware, userController.updateQRCode);
+router.post(
+  "/my_pay/update",
+  jwtService.authMiddleware,
+  upload.single("file"),
+  userController.updateQRCode
+);
 module.exports = router;

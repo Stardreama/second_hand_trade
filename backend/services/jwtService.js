@@ -10,20 +10,18 @@ const generateToken = (user) => {
 const verifyToken = (token, callback) => {
   try {
     // 如果提供了回调函数，则使用回调方式
-    if (typeof callback === 'function') {
+    if (typeof callback === "function") {
       console.log("verifyToken使用回调方式");
       const decoded = jwt.verify(token, config.jwt.secret);
       callback(null, decoded);
       return;
-    }
-    
-    else{
+    } else {
       // 否则直接返回结果(保持向后兼容)
       console.log("verifyToken直接返回结果");
       return jwt.verify(token, config.jwt.secret);
     }
   } catch (error) {
-    if (typeof callback === 'function') {
+    if (typeof callback === "function") {
       callback(error, null);
       return;
     }

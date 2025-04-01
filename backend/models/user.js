@@ -51,22 +51,19 @@ const User = {
     const query = "UPDATE users SET username = ? WHERE student_id = ?";
     db.query(query, [nickname, student_id], callback);
   },
-  // 获取用户的 QRCode
-  getQRCode: async (userId) => {
+  getUserQRCode: async (student_id) => {
     const result = await query(
       "SELECT QRCode FROM users WHERE student_id = ?",
-      [userId]
+      [student_id]
     );
-    return result.length > 0 ? result[0].QRCode : null;
+    return result.length ? result[0].QRCode : null;
   },
 
-  // 更新用户的 QRCode
-  updateQRCode: async (userId, QRCode) => {
-    const result = await query(
-      "UPDATE users SET QRCode = ? WHERE student_id = ?",
-      [QRCode, userId]
-    );
-    return result.affectedRows > 0;
+  updateUserQRCode: async (student_id, qrCode) => {
+    return await query("UPDATE users SET QRCode = ? WHERE student_id = ?", [
+      qrCode,
+      student_id,
+    ]);
   },
 };
 
