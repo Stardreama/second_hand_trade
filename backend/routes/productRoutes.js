@@ -126,6 +126,8 @@ router.get("/search", productController.searchProduct);
 // 获取单个商品详细信息
 router.get("/:product_id", productController.getProductById);
 router.post("/like", jwtService.authMiddleware, productController.toggleLike); // 点赞或取消点赞
+// 更新商品价格
+router.post('/updatePrice', jwtService.authMiddleware, productController.updatePrice);
 router.get(
   "/like/:productId",
   jwtService.authMiddleware,

@@ -63,7 +63,7 @@
           </view>
 
           <view class="container-compile">
-            <view class="cu-tag line-yellow" @tap="show_model">降价</view>
+            <view class="cu-tag line-yellow" @tap="show_model(item)">降价</view>
             <view class="cu-tag line-yellow" @tap="toIssue(item)">编辑</view>
             <view class="cu-tag line-yellow" @tap="actionSheetTap">更多</view>
           </view>
@@ -103,12 +103,12 @@
             ></image>
           </view>
           <view class="model-title_desc-2">
-            <view class="model-title_desc-2_1"
-              ><text class="model-title_desc-2_1_text">现价</text
-              ><text class="text-price text-red" style="font-weight: 600"
-                >2000</text
-              ></view
-            >
+            <view class="model-title_desc-2_1">
+                <text class="model-title_desc-2_1_text">现价</text>
+                <text class="text-price text-red" style="font-weight: 600">
+                      {{ currentProduct ? currentProduct.price : 0 }}
+                </text>
+            </view>
             <view class="model-title_desc-2_2"
               ><text class="model-title_desc-2_2_1_text">降价至</text
               ><text class="text-price model-title_desc-2_2_text">{{
@@ -136,7 +136,7 @@
             </view>
           </view>
 
-          <button class="cu-btn bg-green button-confirm">确定</button>
+          <button class="cu-btn bg-green button-confirm" @tap="confirmPriceChange">确定</button>
         </view>
       </view>
       <!-- end -->
@@ -161,12 +161,13 @@ export default {
       url: "https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg",
       //降价Model状态
       show_model_state: false,
+      currentProduct: null, // 添加当前操作的商品
       // 降价选择数据
       re_price: [
-        { id: 0, price: 186, desc: "打1折极速卖" },
-        { id: 1, price: 168, desc: "打3折出手快" },
-        { id: 2, price: 888, desc: "打5折有竞争力" },
-        { id: 3, price: 6688, desc: "打8折" },
+        { id: 0, price: 0, desc: "打1折极速卖" ,discount: 0.1 },
+        { id: 1, price: 0, desc: "打3折出手快" ,discount: 0.3 },
+        { id: 2, price: 0, desc: "打5折有竞争力" ,discount: 0.5},
+        { id: 3, price: 0, desc: "打8折" ,discount: 0.8},
       ],
       dep_price: "",
     };
@@ -218,8 +219,6 @@ export default {
     // 拦截弹窗 滚动
     model_page: function (e) {},
 
-    // end
-
     // 点击选择
     select_price: function (e) {
       var that = this;
@@ -228,12 +227,13 @@ export default {
       for (var i = 0; i < re_priceList.length; i++) {
         if (re_priceList[i].id == id) {
           re_priceList[i].checked = true;
+          // 设置选中的价格
+          this.dep_price = re_priceList[i].price;
         } else {
           re_priceList[i].checked = false;
         }
       }
-      (this.re_price = re_priceList),
-        (this.dep_price = e.currentTarget.dataset.price);
+      this.re_price = re_priceList;
     },
 
     // 关闭降价Model
@@ -252,16 +252,32 @@ export default {
 
       this.re_price = re_priceList;
     },
-    // end
 
     // 点击显示 降价弹窗
-    show_model: function (e) {
+    show_model: function (item) {
       var that = this;
-
-      (this.re_price = that.re_price),
-        (this.dep_price = that.re_price[0].price);
-      //end
-
+      
+      // 保存当前操作的商品
+      this.currentProduct = item;
+      
+      // 根据商品的当前价格计算不同折扣的价格
+      const originalPrice = item.price;
+      for (let i = 0; i < that.re_price.length; i++) {
+        // 根据折扣计算价格并四舍五入到整数
+        that.re_price[i].price = Math.round(originalPrice * that.re_price[i].discount);
+        
+        // 默认选中第一个
+        if (i === 0) {
+          that.re_price[i].checked = true;
+        } else {
+          that.re_price[i].checked = false;
+        }
+      }
+      
+      // 设置默认选中价格
+      this.dep_price = that.re_price[0].price;
+      
+      // 显示弹窗
       this.show_model_state = true;
     },
 
@@ -274,13 +290,65 @@ export default {
         },
       });
     },
+    
+    // 确认价格修改
+    async confirmPriceChange() {
+  if (!this.currentProduct || !this.dep_price) {
+    uni.showToast({
+      title: '请选择一个价格',
+      icon: 'none'
+    });
+    return;
+  }
+  
+  try {
+    const token = uni.getStorageSync('token');
+    const { data: res } = await uni.request({
+      url: `${this.baseUrl}api/products/updatePrice`, // 路径是正确的，保持products而不是product
+      method: 'POST',
+      header: { 
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json' 
+      },
+      data: {
+        productId: this.currentProduct.product_id,
+        newPrice: this.dep_price
+      }
+    });
+    
+    if (res.code === 200) {
+      uni.showToast({
+        title: '价格修改成功',
+        icon: 'success'
+      });
+      
+      // 关闭弹窗
+      this.close_Model();
+      
+      // 重新加载数据
+      this.loadSalesData();
+    } else {
+      uni.showToast({
+        title: res.message || '价格修改失败',
+        icon: 'none'
+      });
+    }
+  } catch (error) {
+    console.error('价格修改失败:', error);
+    uni.showToast({
+      title: '价格修改失败，请稍后重试',
+      icon: 'none'
+    });
+  }
+}
   },
+  
   onLoad(optins) {
     this.loadSalesData();
     var that = this;
     //降价选择第一个
     that.re_price[0].checked = true;
-  },
+  }
 };
 </script>
 

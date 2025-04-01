@@ -128,6 +128,14 @@ const Product = {
       [productId]
     );
   },
+
+  // 在Product对象中添加更新价格的方法
+  updatePrice: async (productId, newPrice) => {
+    return await query(
+      "UPDATE products SET price = ? WHERE product_id = ?",
+      [newPrice, productId]
+    );
+  },
 };
 
 module.exports = Product;

@@ -390,7 +390,7 @@ const updateProduct = async (req, res) => {
                     .json({ message: "提交事务失败", error: err.message });
                 });
               }
-              
+
               connection.release(); // 释放连接
               res.status(200).json({ message: "商品更新成功", product_id });
             });
@@ -479,7 +479,61 @@ const getUserLikeAmount = async (req, res) => {
     res.status(500).json({ code: 500, message: "服务器错误" });
   }
 };
+// 更新商品价格
+const updatePrice = async (req, res) => {
+  try {
+    const { productId, newPrice } = req.body;
+    const userId = req.user.student_id; // 从JWT中获取用户ID
 
+    // 验证参数
+    if (!productId || !newPrice) {
+      return res.status(400).json({ code: 400, message: "缺少必要参数" });
+    }
+
+    // 验证价格格式
+    if (isNaN(newPrice) || newPrice < 0) {
+      return res.status(400).json({ code: 400, message: "价格格式不正确" });
+    }
+
+    // 验证商品所有权 - 使用回调方式而不是await
+    db.query(
+      "SELECT * FROM products WHERE product_id = ? AND seller_id = ?",
+      [productId, userId],
+      (err, products) => {
+        if (err) {
+          console.error("查询商品失败:", err);
+          return res.status(500).json({ code: 500, message: "服务器错误，查询商品失败" });
+        }
+
+        if (products.length === 0) {
+          return res.status(403).json({ code: 403, message: "您没有权限修改此商品" });
+        }
+
+        // 更新商品价格 - 使用回调方式
+        db.query(
+          "UPDATE products SET price = ? WHERE product_id = ?",
+          [newPrice, productId],
+          (err, result) => {
+            if (err) {
+              console.error("更新价格失败:", err);
+              return res.status(500).json({ code: 500, message: "服务器错误，更新价格失败" });
+            }
+
+            // 返回成功响应
+            res.json({
+              code: 200,
+              message: "价格更新成功",
+              data: { productId, newPrice }
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    console.error("更新商品价格失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误，更新价格失败" });
+  }
+};
 module.exports = {
   createProduct,
   searchProduct,
@@ -491,4 +545,5 @@ module.exports = {
   toggleLike,
   getProductLike,
   getUserLikeAmount,
+  updatePrice,
 };
