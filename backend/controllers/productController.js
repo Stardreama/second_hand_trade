@@ -29,11 +29,13 @@ const createProduct = (req, res) => {
 
   // 根据产品类型设置默认图片
   let coverImage;
+  let isDefaultImage = false; // 添加标记是否使用默认图片
   if (files.length > 0) {
     // 如果上传了图片，使用第一张作为封面
     coverImage = files[0].path;
   } else {
     // 没有上传图片，使用默认图片
+    isDefaultImage = true; // 标记为默认图片
     coverImage =
       product_type === "buy"
         ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png" // 求购默认图片
@@ -74,17 +76,42 @@ const createProduct = (req, res) => {
 
       const productId = result.insertId;
       console.log("产品插入成功，product_id:", productId);
-      const insertPromises = files.map((file) => {
-        return new Promise((resolve, reject) => {
-          Product.addImage(productId, file.path, (err, result) => {
-            if (err) {
-              console.error("图片插入失败", err);
-              return reject(err);
-            }
-            resolve(result);
+      // 准备插入所有图片的Promise数组
+      let insertPromises = [];
+      // 如果使用了默认图片，将其添加到product_images表
+      if (isDefaultImage) {
+        insertPromises.push(
+          new Promise((resolve, reject) => {
+            Product.addImage(productId, coverImage, isDefaultImage ? 1 : 0, (err, result) => {
+              // 添加isDefault参数
+              if (err) {
+                console.error("默认图片插入失败", err);
+                return reject(err);
+              }
+              resolve(result);
+            });
+          })
+        );
+      }
+
+      // 添加用户上传的图片
+      if (files.length > 0) {
+        const filePromises = files.map((file, index) => {
+          return new Promise((resolve, reject) => {
+            // 第一张图片已作为封面，标记为false
+            const isDefault = !isDefaultImage && index === 0 ? 1 : 0;
+            Product.addImage(productId, file.path, isDefault, (err, result) => {
+              if (err) {
+                console.error(`图片${index}插入失败`, err);
+                return reject(err);
+              }
+              resolve(result);
+            });
           });
         });
-      });
+
+        insertPromises = insertPromises.concat(filePromises);
+      }
 
       // 等待所有额外图片插入完成
       Promise.all(insertPromises)
@@ -200,26 +227,28 @@ const getProductById = (req, res) => {
       // 为商品添加 seller_name 和 avatar（头像）
       product.seller_name = seller.username;
       product.seller_avatar =
-        seller.avatar || "../../../static/img/default-avatar.jpg"; // 默认头像好像没必要，先不动他
+        seller.avatar || "../../../static/img/avatar.jpg"; // 默认头像好像没必要，先不动他
       console.log(product.seller_avatar);
       console.log(product.seller_name);
 
       // 获取商品的所有图片
       const imageQuery =
-        "SELECT image_url FROM product_images WHERE product_id = ?";
-      db.query(imageQuery, [product_id], (err, imageResult) => {
-        if (err) {
-          return res.status(500).json({ message: "服务器错误" });
-        }
-
-        product.images = imageResult.map((img) => img.image_url);
-        //console.log(product.images);
-        // 返回完整的商品信息
-        // ✅ status 已经在 product 对象里
-        // console.log("Returning product with status:", product.status);
-        console.log("Returning product with op:", product.original_price);
-
-        res.json(product);
+        "SELECT image_url, is_default FROM product_images WHERE product_id = ?";
+        db.query(imageQuery, [product_id], (err, imageResult) => {
+          if (err) {
+            return res.status(500).json({ message: "服务器错误" });
+          }
+  
+          // 使用图片表中的数据，而不是product表的image字段
+          product.images = imageResult.map((img) => img.image_url);
+          
+          // 添加默认图片标记，用于前端判断
+          product.default_images = imageResult
+            .filter(img => img.is_default)
+            .map(img => img.image_url);
+          
+          // 返回完整的商品信息
+          res.json(product);
       });
     });
   });
@@ -347,8 +376,31 @@ const updateProduct = async (req, res) => {
             if (deleted_images) {
               const imagesToDelete = JSON.parse(deleted_images);
               if (imagesToDelete.length > 0) {
+                // 先检查这些图片中是否有默认图片
+                const checkDefaultQuery = 
+                  "SELECT COUNT(*) as count FROM product_images WHERE product_id = ? AND image_url IN (?) AND is_default = TRUE";
+                
+                await new Promise((resolve, reject) => {
+                  connection.query(
+                    checkDefaultQuery,
+                    [product_id, imagesToDelete],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else {
+                        // 如果尝试删除默认图片，拒绝操作
+                        if (result[0].count > 0) {
+                          reject(new Error("不能删除默认图片"));
+                        } else {
+                          resolve();
+                        }
+                      }
+                    }
+                  );
+                });
+                
+                // 执行删除操作
                 const deleteImageQuery =
-                  "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?)";
+                  "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?) AND is_default = FALSE";
                 await new Promise((resolve, reject) => {
                   connection.query(
                     deleteImageQuery,
@@ -502,11 +554,15 @@ const updatePrice = async (req, res) => {
       (err, products) => {
         if (err) {
           console.error("查询商品失败:", err);
-          return res.status(500).json({ code: 500, message: "服务器错误，查询商品失败" });
+          return res
+            .status(500)
+            .json({ code: 500, message: "服务器错误，查询商品失败" });
         }
 
         if (products.length === 0) {
-          return res.status(403).json({ code: 403, message: "您没有权限修改此商品" });
+          return res
+            .status(403)
+            .json({ code: 403, message: "您没有权限修改此商品" });
         }
 
         // 更新商品价格 - 使用回调方式
@@ -516,14 +572,16 @@ const updatePrice = async (req, res) => {
           (err, result) => {
             if (err) {
               console.error("更新价格失败:", err);
-              return res.status(500).json({ code: 500, message: "服务器错误，更新价格失败" });
+              return res
+                .status(500)
+                .json({ code: 500, message: "服务器错误，更新价格失败" });
             }
 
             // 返回成功响应
             res.json({
               code: 200,
               message: "价格更新成功",
-              data: { productId, newPrice }
+              data: { productId, newPrice },
             });
           }
         );

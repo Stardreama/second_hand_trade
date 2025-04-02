@@ -46,6 +46,7 @@ CREATE TABLE `product_images`  (
   `product_id` int NOT NULL,
   `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_default` BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `product_images_fk` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE RESTRICT

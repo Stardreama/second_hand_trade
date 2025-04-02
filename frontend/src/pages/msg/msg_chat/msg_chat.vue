@@ -34,7 +34,7 @@
 
             <!-- 文本消息 -->
             <view class="content" v-else
-              :style="{ 'background-color': msg.sender_id === userInfo.student_id ? '#0081ff' : '' }">
+              :style="{ 'background-color': msg.sender_id === userInfo.student_id ? '#0081ff' : '#e2e7f4' }">
               <text>{{ msg.content }}</text>
 
               <!-- 添加已读状态图标 - 仅对自己发送的消息显示 -->

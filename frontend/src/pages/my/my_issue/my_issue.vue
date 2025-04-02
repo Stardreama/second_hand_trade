@@ -4,37 +4,19 @@
     <view class="pa">
       <!-- 有商品时显示商品列表 -->
       <view v-if="productList && productList.length > 0">
-        <view
-          class="contianer shadow-warp bg-white padding-sm"
-          v-for="(item, index) in productList"
-          :key="item.product_id"
-        >
+        <view class="contianer shadow-warp bg-white padding-sm" v-for="(item, index) in productList"
+          :key="item.product_id">
           <view class="contianer-title">
-            <view class="contianer-title_1 text-cut"
-              ><text class="text-cut">{{ item.product_title }}</text></view
-            >
+            <view class="contianer-title_1 text-cut"><text class="text-cut">{{ item.product_title }}</text></view>
           </view>
 
-          <view class="item-inline-1_1"
-            ><text decode="true"
-              >&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;</text
-            ></view
-          >
-          <scroll-view
-            scroll-x="true"
-            style="white-space: nowrap; display: flex"
-            class="top-20"
-          >
-            <block
-              v-for="(img, imgIndex) in item.images.slice(0, 3)"
-              :key="imgIndex"
-            >
+          <view class="item-inline-1_1"><text decode="true">&ensp;&ensp;&ensp;&ensp;&ensp;&ensp;</text></view>
+          <scroll-view scroll-x="true" style="white-space: nowrap; display: flex" class="top-20">
+            <block v-for="(img, imgIndex) in item.images.slice(0, 3)" :key="imgIndex">
               <view class="item-inlines">
                 <navigator url="" hover-class="none">
-                  <view
-                    class="item-inline bg-img padding-top-xl flex align-end"
-                    :style="'background-image: url(' + img + ');'"
-                  >
+                  <view class="item-inline bg-img padding-top-xl flex align-end"
+                    :style="'background-image: url(' + img + ');'">
                   </view>
                 </navigator>
               </view>
@@ -86,11 +68,7 @@
     </view>
 
     <!-- 自定义弹窗 -->
-    <view
-      class="showModel bg-white"
-      @touchmove.stop="pageModel"
-      v-if="show_model_state"
-    >
+    <view class="showModel bg-white" @touchmove.stop="pageModel" v-if="show_model_state">
       <view class="model" @touchmove.stop="model_page">
         <view class="model-close" @tap="close_Model">
           <text class="cuIcon-roundclose text-df text-gray"></text>
@@ -98,38 +76,30 @@
 
         <view class="model-title_desc">
           <view class="model-title_desc-1">
-            <image
-            :src="currentProduct && currentProduct.images && currentProduct.images.length > 0 
-          ? currentProduct.images[0] 
-          : 'https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'"
-            ></image>
+            <image :src="currentProduct &&
+              currentProduct.images &&
+              currentProduct.images.length > 0
+              ? currentProduct.images[0]
+              : 'https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg'
+              "></image>
           </view>
           <view class="model-title_desc-2">
             <view class="model-title_desc-2_1">
-                <text class="model-title_desc-2_1_text">现价</text>
-                <text class="text-price text-red" style="font-weight: 600">
-                      {{ currentProduct ? currentProduct.price : 0 }}
-                </text>
+              <text class="model-title_desc-2_1_text">现价</text>
+              <text class="text-price text-red" style="font-weight: 600">
+                {{ currentProduct ? currentProduct.price : 0 }}
+              </text>
             </view>
-            <view class="model-title_desc-2_2"
-              ><text class="model-title_desc-2_2_1_text">降价至</text
-              ><text class="text-price model-title_desc-2_2_text">{{
-                dep_price
-              }}</text></view
-            >
+            <view class="model-title_desc-2_2"><text class="model-title_desc-2_2_1_text">降价至</text><text
+                class="text-price model-title_desc-2_2_text">{{
+                  dep_price
+                }}</text></view>
           </view>
         </view>
 
         <view class="slect_model">
-          <view
-            class="modle-select"
-            :class="item.checked ? 'select_state' : ''"
-            v-for="(item, index) in re_price"
-            :key="index"
-            @tap="select_price"
-            :data-price="item.price"
-            :data-id="index"
-          >
+          <view class="modle-select" :class="item.checked ? 'select_state' : ''" v-for="(item, index) in re_price"
+            :key="index" @tap="select_price" :data-price="item.price" :data-id="index">
             <view class="modle-select-1">
               <view class="cu-tag bg-red">{{ item.price }}元</view>
             </view>
@@ -138,7 +108,9 @@
             </view>
           </view>
 
-          <button class="cu-btn bg-green button-confirm" @tap="confirmPriceChange">确定</button>
+          <button class="cu-btn bg-green button-confirm" @tap="confirmPriceChange">
+            确定
+          </button>
         </view>
       </view>
       <!-- end -->
@@ -166,10 +138,10 @@ export default {
       currentProduct: null, // 添加当前操作的商品
       // 降价选择数据
       re_price: [
-        { id: 0, price: 0, desc: "打1折极速卖" ,discount: 0.1 },
-        { id: 1, price: 0, desc: "打3折出手快" ,discount: 0.3 },
-        { id: 2, price: 0, desc: "打5折有竞争力" ,discount: 0.5},
-        { id: 3, price: 0, desc: "打8折" ,discount: 0.8},
+        { id: 0, price: 0, desc: "打1折极速卖", discount: 0.1 },
+        { id: 1, price: 0, desc: "打3折出手快", discount: 0.3 },
+        { id: 2, price: 0, desc: "打5折有竞争力", discount: 0.5 },
+        { id: 3, price: 0, desc: "打8折", discount: 0.8 },
       ],
       dep_price: "",
     };
@@ -183,32 +155,55 @@ export default {
           method: "GET",
           header: { Authorization: "Bearer " + token },
         });
+
         if (res.code === 200) {
-      this.productList = res.data.map((item) => {
-        // 确保每个商品对象有图片数组
-        const processedItem = {
-          ...item,
-          images: Array.isArray(item.image) 
-            ? item.image.map(img => `${this.baseUrl}${img.replace(/\\/g, "/")}`) 
-            : []
-        };
-        
-        // 如果处理后的images为空，但商品有封面图，则使用封面图
-        if (processedItem.images.length === 0 && item.image) {
-          console.log("商品没有图片，使用封面图:", item.image);
-          
-          processedItem.images.push(`${this.baseUrl}${item.image.replace(/\\/g, "/")}`);
+          // 后端已经处理好了图片数组，直接使用即可
+          this.productList = res.data.map((item) => {
+            // 处理图片路径
+            const processedImages = Array.isArray(item.images)
+              ? item.images.map((img) => {
+                // 如果已经是完整URL，直接返回
+                if (img.startsWith("http")) {
+                  return img;
+                }
+                // 否则拼接完整URL
+                return `${this.baseUrl}${img.replace(/\\/g, "/")}`;
+              })
+              : [];
+
+            return {
+              ...item,
+              images: processedImages,
+            };
+          });
+
+          console.log("处理后的商品列表:", this.productList);
+        } else {
+          uni.showToast({
+            title: res.message || "获取商品列表失败",
+            icon: "none",
+          });
         }
-        
-        console.log("处理后的商品图片:", processedItem.images);
-        return processedItem;
+      } catch (error) {
+        console.error("数据加载失败:", error);
+        uni.showToast({ title: "数据加载失败", icon: "none" });
+      }
+    },
+
+    toIssue(item) {
+      if (!item || !item.product_id) {
+        uni.showToast({
+          title: '商品信息不完整',
+          icon: 'none'
+        });
+        return;
+      }
+
+      // 跳转到编辑页面
+      uni.navigateTo({
+        url: `/pages/issue/issue_edit/issue_edit?product_id=${item.product_id}`
       });
-    }
-  } catch (error) {
-    console.error("数据加载失败:", error);
-    uni.showToast({ title: "数据加载失败", icon: "none" });
-  }
-},
+    },
 
     // 新增方法 - 跳转到发布页面
     toPublish() {
@@ -218,9 +213,9 @@ export default {
     },
 
     // 拦截弹窗 滚动
-    pageModel: function (e) {},
+    pageModel: function (e) { },
     // 拦截弹窗 滚动
-    model_page: function (e) {},
+    model_page: function (e) { },
 
     // 点击选择
     select_price: function (e) {
@@ -259,16 +254,19 @@ export default {
     // 点击显示 降价弹窗
     show_model: function (item) {
       var that = this;
-      console.log("当前商品图片:", item.images); // 添加调试信息
+      console.log("当前商品:", item);
+
       // 保存当前操作的商品
       this.currentProduct = item;
-      
+
       // 根据商品的当前价格计算不同折扣的价格
       const originalPrice = item.price;
       for (let i = 0; i < that.re_price.length; i++) {
         // 根据折扣计算价格并四舍五入到整数
-        that.re_price[i].price = parseFloat((originalPrice * that.re_price[i].discount).toFixed(2));
-        
+        that.re_price[i].price = parseFloat(
+          (originalPrice * that.re_price[i].discount).toFixed(2)
+        );
+
         // 默认选中第一个
         if (i === 0) {
           that.re_price[i].checked = true;
@@ -276,10 +274,10 @@ export default {
           that.re_price[i].checked = false;
         }
       }
-      
+
       // 设置默认选中价格
       this.dep_price = that.re_price[0].price;
-      
+
       // 显示弹窗
       this.show_model_state = true;
     },
@@ -293,65 +291,78 @@ export default {
         },
       });
     },
-    
+
     // 确认价格修改
     async confirmPriceChange() {
-  if (!this.currentProduct || !this.dep_price) {
-    uni.showToast({
-      title: '请选择一个价格',
-      icon: 'none'
-    });
-    return;
-  }
-  
-  try {
-    const token = uni.getStorageSync('token');
-    const { data: res } = await uni.request({
-      url: `${this.baseUrl}api/products/updatePrice`, // 路径是正确的，保持products而不是product
-      method: 'POST',
-      header: { 
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json' 
-      },
-      data: {
-        productId: this.currentProduct.product_id,
-        newPrice: this.dep_price
+      if (!this.currentProduct || !this.dep_price) {
+        uni.showToast({
+          title: "请选择一个价格",
+          icon: "none",
+        });
+        return;
       }
-    });
-    
-    if (res.code === 200) {
-      uni.showToast({
-        title: '价格修改成功',
-        icon: 'success'
-      });
-      
-      // 关闭弹窗
-      this.close_Model();
-      
-      // 重新加载数据
-      this.loadSalesData();
-    } else {
-      uni.showToast({
-        title: res.message || '价格修改失败',
-        icon: 'none'
-      });
-    }
-  } catch (error) {
-    console.error('价格修改失败:', error);
-    uni.showToast({
-      title: '价格修改失败，请稍后重试',
-      icon: 'none'
-    });
-  }
-}
+
+      try {
+        const token = uni.getStorageSync("token");
+        const { data: res } = await uni.request({
+          url: `${this.baseUrl}api/products/updatePrice`, // 路径是正确的，保持products而不是product
+          method: "POST",
+          header: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+          data: {
+            productId: this.currentProduct.product_id,
+            newPrice: this.dep_price,
+          },
+        });
+
+        if (res.code === 200) {
+          uni.showToast({
+            title: "价格修改成功",
+            icon: "success",
+          });
+
+          // 关闭弹窗
+          this.close_Model();
+
+          // 重新加载数据
+          this.loadSalesData();
+        } else {
+          uni.showToast({
+            title: res.message || "价格修改失败",
+            icon: "none",
+          });
+        }
+      } catch (error) {
+        console.error("价格修改失败:", error);
+        uni.showToast({
+          title: "价格修改失败，请稍后重试",
+          icon: "none",
+        });
+      }
+    },
+
+    // 获取图片URL的辅助方法
+    getImageUrl(url) {
+      if (!url) return "";
+
+      // 如果已经是完整URL，直接返回
+      if (url.startsWith("http")) {
+        return url;
+      }
+
+      // 否则拼接完整URL
+      return `${this.baseUrl}${url.replace(/\\/g, "/")}`;
+    },
   },
-  
+
   onLoad(optins) {
     this.loadSalesData();
     var that = this;
     //降价选择第一个
     that.re_price[0].checked = true;
-  }
+  },
 };
 </script>
 
