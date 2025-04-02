@@ -82,14 +82,19 @@ const createProduct = (req, res) => {
       if (isDefaultImage) {
         insertPromises.push(
           new Promise((resolve, reject) => {
-            Product.addImage(productId, coverImage, isDefaultImage ? 1 : 0, (err, result) => {
-              // 添加isDefault参数
-              if (err) {
-                console.error("默认图片插入失败", err);
-                return reject(err);
+            Product.addImage(
+              productId,
+              coverImage,
+              isDefaultImage ? 1 : 0,
+              (err, result) => {
+                // 添加isDefault参数
+                if (err) {
+                  console.error("默认图片插入失败", err);
+                  return reject(err);
+                }
+                resolve(result);
               }
-              resolve(result);
-            });
+            );
           })
         );
       }
@@ -226,29 +231,28 @@ const getProductById = (req, res) => {
 
       // 为商品添加 seller_name 和 avatar（头像）
       product.seller_name = seller.username;
-      product.seller_avatar =
-        seller.avatar || "../../../static/img/avatar.jpg"; // 默认头像好像没必要，先不动他
+      product.seller_avatar = seller.avatar || "../../../static/img/avatar.jpg"; // 默认头像好像没必要，先不动他
       console.log(product.seller_avatar);
       console.log(product.seller_name);
 
       // 获取商品的所有图片
       const imageQuery =
         "SELECT image_url, is_default FROM product_images WHERE product_id = ?";
-        db.query(imageQuery, [product_id], (err, imageResult) => {
-          if (err) {
-            return res.status(500).json({ message: "服务器错误" });
-          }
-  
-          // 使用图片表中的数据，而不是product表的image字段
-          product.images = imageResult.map((img) => img.image_url);
-          
-          // 添加默认图片标记，用于前端判断
-          product.default_images = imageResult
-            .filter(img => img.is_default)
-            .map(img => img.image_url);
-          
-          // 返回完整的商品信息
-          res.json(product);
+      db.query(imageQuery, [product_id], (err, imageResult) => {
+        if (err) {
+          return res.status(500).json({ message: "服务器错误" });
+        }
+
+        // 使用图片表中的数据，而不是product表的image字段
+        product.images = imageResult.map((img) => img.image_url);
+
+        // 添加默认图片标记，用于前端判断
+        product.default_images = imageResult
+          .filter((img) => img.is_default)
+          .map((img) => img.image_url);
+
+        // 返回完整的商品信息
+        res.json(product);
       });
     });
   });
@@ -335,23 +339,21 @@ const updateProduct = async (req, res) => {
 
           try {
             // 1. 更新商品基本信息
-            let coverImage = results[0].image; // 默认保持原来的封面图片
+            // 这部分需要修改，不要立即设置封面图片，先处理所有图片操作后再确定封面
 
-            // 如果有新上传的图片，使用第一张作为新的封面
-            if (files.length > 0) {
-              coverImage = files[0].path;
-            }
+            // 先不更新image字段，创建一个单独的变量跟踪最终的封面图片
+            let finalCoverImage = results[0].image; // 默认保持原来的封面图片
 
-            const updateQuery = `
+            const updateQueryWithoutImage = `
               UPDATE products 
               SET product_title = ?, description = ?, price = ?, original_price = ?,
-                  product_status = ?, product_class = ?, status = ?, product_type = ?, image = ?
+                  product_status = ?, product_class = ?, status = ?, product_type = ?
               WHERE product_id = ? AND seller_id = ?
             `;
 
             await new Promise((resolve, reject) => {
               connection.query(
-                updateQuery,
+                updateQueryWithoutImage,
                 [
                   title,
                   description,
@@ -361,7 +363,6 @@ const updateProduct = async (req, res) => {
                   product_class,
                   status || "",
                   product_type,
-                  coverImage,
                   product_id,
                   seller_id,
                 ],
@@ -373,54 +374,142 @@ const updateProduct = async (req, res) => {
             });
 
             // 2. 处理删除的图片
+            console.log("000后端：需要删除Images:", deleted_images);
+
             if (deleted_images) {
-              const imagesToDelete = JSON.parse(deleted_images);
-              if (imagesToDelete.length > 0) {
-                // 先检查这些图片中是否有默认图片
-                const checkDefaultQuery = 
-                  "SELECT COUNT(*) as count FROM product_images WHERE product_id = ? AND image_url IN (?) AND is_default = TRUE";
-                
-                await new Promise((resolve, reject) => {
-                  connection.query(
-                    checkDefaultQuery,
-                    [product_id, imagesToDelete],
-                    (err, result) => {
-                      if (err) reject(err);
-                      else {
-                        // 如果尝试删除默认图片，拒绝操作
-                        if (result[0].count > 0) {
-                          reject(new Error("不能删除默认图片"));
-                        } else {
-                          resolve();
-                        }
-                      }
+              
+              try {
+                // 检查deleted_images是否已经是数组
+                if (Array.isArray(deleted_images)) {
+                  imagesToDelete = deleted_images;
+                } else {
+                  // 尝试解析JSON字符串
+                  try {
+                    imagesToDelete = JSON.parse(deleted_images);
+                  } catch (jsonError) {
+                    console.error("JSON解析失败，尝试其他方法:", jsonError);
+                    
+                    // 如果JSON解析失败，尝试按逗号分隔
+                    if (typeof deleted_images === 'string') {
+                      imagesToDelete = deleted_images.split(',');
+                      console.log("按逗号分隔后:", imagesToDelete);
                     }
-                  );
-                });
-                
+                  }
+                }
+              } catch (error) {
+                console.error("处理删除图片列表失败:", error);
+                // 出错时设为空数组
+                imagesToDelete = [];
+              }
+              console.log("111后端：需要删除Images:", imagesToDelete);
+
+              if (imagesToDelete.length > 0) {
+                // 为每个图片创建一个占位符
+                const placeholders = imagesToDelete.map(() => "?").join(",");
+
                 // 执行删除操作
-                const deleteImageQuery =
-                  "DELETE FROM product_images WHERE product_id = ? AND image_url IN (?) AND is_default = FALSE";
+                const deleteImageQuery = `DELETE FROM product_images WHERE product_id = ? AND image_url IN (${placeholders})`;
+
+                // 准备参数数组
+                const queryParams = [product_id, ...imagesToDelete];
+
                 await new Promise((resolve, reject) => {
                   connection.query(
                     deleteImageQuery,
-                    [product_id, imagesToDelete],
+                    queryParams,
                     (err, result) => {
-                      if (err) reject(err);
-                      else resolve(result);
+                      if (err) {
+                        console.error("删除图片错误:", err);
+                        reject(err);
+                      } else resolve(result);
                     }
                   );
                 });
+
+                console.log("删除图片成功，继续处理...");
+
+                // 添加：在删除后检查是否还有图片
+                const checkRemainingImagesQuery =
+                  "SELECT COUNT(*) as count FROM product_images WHERE product_id = ?";
+
+                const remainingImagesResult = await new Promise(
+                  (resolve, reject) => {
+                    connection.query(
+                      checkRemainingImagesQuery,
+                      [product_id],
+                      (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                      }
+                    );
+                  }
+                );
+
+                // 如果没有剩余图片，添加默认图片
+                if (remainingImagesResult[0].count === 0) {
+                  // 获取产品类型以确定使用哪个默认图片
+                  const productTypeQuery =
+                    "SELECT product_type FROM products WHERE product_id = ?";
+                  const productTypeResult = await new Promise(
+                    (resolve, reject) => {
+                      connection.query(
+                        productTypeQuery,
+                        [product_id],
+                        (err, result) => {
+                          if (err) reject(err);
+                          else resolve(result);
+                        }
+                      );
+                    }
+                  );
+
+                  const productType = productTypeResult[0].product_type;
+                  const defaultImage =
+                    productType === "buy"
+                      ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png" // 求购默认图片
+                      : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png"; // 出售默认图片
+
+                  // 添加默认图片到 product_images 表
+                  await new Promise((resolve, reject) => {
+                    connection.query(
+                      "INSERT INTO product_images (product_id, image_url, is_default) VALUES (?, ?, 1)",
+                      [product_id, defaultImage],
+                      (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                      }
+                    );
+                  });
+
+                  // 更新 products 表的 image 字段
+                  await new Promise((resolve, reject) => {
+                    connection.query(
+                      "UPDATE products SET image = ? WHERE product_id = ?",
+                      [defaultImage, product_id],
+                      (err, result) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                      }
+                    );
+                  });
+                }
               }
             }
 
             // 3. 添加新图片
             if (files.length > 0) {
-              const insertImagePromises = files.map((file) => {
+              // 如果有新上传的图片，将第一张标记为is_default=1
+              const insertImagePromises = files.map((file, index) => {
+                const isDefault = index === 0 ? 1 : 0; // 第一张图片设为默认
+                if (index === 0) {
+                  // 如果是第一张图片，将其设为封面图片
+                  finalCoverImage = file.path;
+                }
+
                 return new Promise((resolve, reject) => {
                   connection.query(
-                    "INSERT INTO product_images (product_id, image_url) VALUES (?, ?)",
-                    [product_id, file.path],
+                    "INSERT INTO product_images (product_id, image_url, is_default) VALUES (?, ?, ?)",
+                    [product_id, file.path, isDefault],
                     (err, result) => {
                       if (err) reject(err);
                       else resolve(result);
@@ -431,6 +520,67 @@ const updateProduct = async (req, res) => {
 
               await Promise.all(insertImagePromises);
             }
+
+            // 4. 在所有图片操作完成后，重新确定封面图片
+            // 如果没有上传新图片，需要从现有图片中选择新的封面（第一张图片）
+            if (files.length === 0) {
+              // 查询该产品现有的所有图片
+              const remainingImagesQuery =
+                "SELECT image_url FROM product_images WHERE product_id = ? ORDER BY is_default DESC, id ASC LIMIT 1";
+
+              const remainingImages = await new Promise((resolve, reject) => {
+                connection.query(
+                  remainingImagesQuery,
+                  [product_id],
+                  (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result);
+                  }
+                );
+              });
+
+              // 如果有图片，使用第一张作为封面
+              if (remainingImages.length > 0) {
+                finalCoverImage = remainingImages[0].image_url;
+                console.log("Final Cover Image:", finalCoverImage);
+
+                // 更新该图片为默认图片
+                await new Promise((resolve, reject) => {
+                  connection.query(
+                    "UPDATE product_images SET is_default = 1 WHERE product_id = ? AND image_url = ?",
+                    [product_id, finalCoverImage],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                });
+
+                // 清除其他图片的默认标记
+                await new Promise((resolve, reject) => {
+                  connection.query(
+                    "UPDATE product_images SET is_default = 0 WHERE product_id = ? AND image_url != ?",
+                    [product_id, finalCoverImage],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                });
+              }
+            }
+
+            // 5. 最后更新products表中的image字段
+            await new Promise((resolve, reject) => {
+              connection.query(
+                "UPDATE products SET image = ? WHERE product_id = ?",
+                [finalCoverImage, product_id],
+                (err, result) => {
+                  if (err) reject(err);
+                  else resolve(result);
+                }
+              );
+            });
 
             // 提交事务
             connection.commit((err) => {

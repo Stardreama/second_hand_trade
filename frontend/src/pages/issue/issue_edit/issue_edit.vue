@@ -48,8 +48,7 @@
 					<view class="bg-img" v-for="(item, index) in imgList" :key="index" @tap="ViewImage"
 						:data-url="imgList[index]">
 						<image :src="imgList[index]" mode='aspectFill'></image>
-						<view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index"
-							v-if="!defaultImages.includes(imgList[index])">
+						<view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index">
 							<CloseOutlined />
 						</view>
 					</view>
@@ -328,23 +327,12 @@ export default {
 			if (this.isEdit) {
 				formData.product_id = this.product_id;
 
-				const imagesToDelete = this.deletedImages.filter(img => {
-					// 处理图片URL，移除可能的域名前缀以便进行比较
-					const normalizedImgUrl = img.includes("localhost:3000")
-						? img.replace(`http://localhost:3000/`, '')
-						: img;
+				formData.deleted_images = this.deletedImages; // 添加要删除的图片
 
-					// 检查是否为默认图片URL
-					return !this.defaultImages.some(defaultImg =>
-						normalizedImgUrl === defaultImg || // 完全匹配
-						normalizedImgUrl.includes(defaultImg.split('/').pop()) // 文件名匹配
-					);
-				});
-
-				console.log('要删除的图片:', imagesToDelete);
+				console.log('要删除的图片:', this.deletedImages);
 				console.log('默认图片(不删除):', this.defaultImages);
 
-				formData.deleted_images = JSON.stringify(imagesToDelete);
+				
 			}
 
 			// 根据是否有新图片决定使用哪种提交方式
@@ -568,20 +556,6 @@ export default {
 			const index = e.currentTarget.dataset.index;
 			const imageToDelete = this.imgList[index];
 
-			// 检查是否为默认图片
-			const isDefaultImage = this.defaultImages.some(defaultImg =>
-				imageToDelete === defaultImg ||
-				imageToDelete.includes(defaultImg.split('/').pop())
-			);
-
-			if (isDefaultImage) {
-				uni.showToast({
-					title: '默认图片不能删除',
-					icon: 'none'
-				});
-				return;
-			}
-
 			uni.showModal({
 				title: '提示',
 				content: '确定要删除这个照片吗？',
@@ -594,7 +568,26 @@ export default {
 							this.deletedImages.push(this.originalImageUrls[index]);
 						}
 
+						// 删除图片
 						this.imgList.splice(index, 1);
+
+						// 检查是否删除所有图片，如果是，添加默认图片
+						if (this.imgList.length === 0) {
+							// 根据当前标签页选择默认图片
+							const defaultImage = this.tabIndex === 0
+								? "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png" // 出售默认图片
+								: "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"; // 求购默认图片
+
+							// 添加默认图片
+							this.imgList.push(defaultImage);
+
+							// 显示提示
+							uni.showToast({
+								title: '已自动添加默认图片',
+								icon: 'none',
+								duration: 1500
+							});
+						}
 					}
 				}
 			});
@@ -689,7 +682,8 @@ export default {
 
 				if (response.statusCode === 200) {
 					const product = response.data;
-
+					console.log('商品详情:', product);
+					
 					// 设置表单数据
 					this.title = product.product_title;
 					this.content = product.description;
@@ -712,9 +706,8 @@ export default {
 						});
 					}
 
-					// 保存默认图片信息
-					this.defaultImages = product.default_images || [];
-					console.log('默认图片:', this.defaultImages);
+					// 保存原有图片信息
+					console.log('原有图片:', product.default_images);
 
 					// 加载图片
 					if (product.images && product.images.length > 0) {
