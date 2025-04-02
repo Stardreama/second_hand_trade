@@ -262,11 +262,8 @@ export default {
       // 根据商品的当前价格计算不同折扣的价格
       const originalPrice = item.price;
       for (let i = 0; i < that.re_price.length; i++) {
-        // 根据折扣计算价格并四舍五入到整数
-        that.re_price[i].price = parseFloat(
-          (originalPrice * that.re_price[i].discount).toFixed(2)
-        );
-
+        that.re_price[i].price = parseFloat((originalPrice * that.re_price[i].discount).toFixed(2));
+        
         // 默认选中第一个
         if (i === 0) {
           that.re_price[i].checked = true;

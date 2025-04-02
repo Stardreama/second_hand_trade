@@ -38,11 +38,13 @@
       </view>
       <!-- end -->
       <!-- 图片位置 -->
-      <block v-for="(item, index) in images" :key="index">
-        <image class="img" :src="getImageUrl(item)"></image>
-      </block>
-      <!--图片位置end  -->
-
+<block v-for="(item, index) in images" :key="index">
+  <image 
+    class="img" 
+    :src="getImageUrl(item)" 
+    mode="widthFix"
+    @tap="previewImage(index)"></image>
+</block>
       <view class="browse">
         <view>
           <text></text>
@@ -57,33 +59,42 @@
     <!-- end -->
 
     <!-- 操作选项卡 -->
-    <view class="cu-bar bg-white tabbar border shop fixation">
-      <view class="action-buttons padding-sm">
-        <!-- 仅当商品不是自己发布的时候显示聊一聊按钮 -->
-        <button class="cu-btn bg-blue lg shadow" @tap="chatWithSeller"
-          v-if="productDetail.seller_id !== userInfo.student_id">
-          <text class="cuIcon-message"></text> 聊一聊
-        </button>
+<view class="action-bar-container">
+  <view class="action-bar-wrapper bg-white">
+    <!-- 左侧按钮区域 -->
+    <view class="action-left">
+      <!-- 收藏按钮 -->
+      <view class="action-icon" @tap="toggleLike">
+        <view :class="['cuIcon-appreciatefill text-xl', liked ? 'text-orange' : 'text-gray']"></view>
+        <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
       </view>
-      <view class="action" @tap="toggleLike">
-        <view :class="[
-          'cuIcon-appreciatefill',
-          liked ? 'text-orange' : 'text-gray',
-        ]"></view>
-        点赞
-      </view>
-      <!-- <view class="bg-red submit margin-rigth-20" @tap="buy">立即结算</view> -->
-      <!-- 条件渲染：如果是自己发布的商品，显示“编辑商品”按钮；否则显示“立即结算”按钮 -->
-      <view v-if="productDetail.seller_id === userInfo.student_id" class="bg-red submit margin-rigth-20"
-        @tap="editProduct">
-        编辑商品
-      </view>
-      <view v-else class="bg-red submit margin-rigth-20" @tap="buy">
-        立即结算
+      
+      <!-- 聊一聊按钮 -->
+      <view class="action-icon" @tap="chatWithSeller" v-if="productDetail.seller_id !== userInfo.student_id">
+        <view class="cuIcon-message text-blue text-xl"></view>
+        <text class="action-text text-blue">聊一聊</text>
       </view>
     </view>
-    <!-- end -->
+    
+    <!-- 右侧主操作按钮 -->
+    <view class="action-right">
+      <button 
+        v-if="productDetail.seller_id === userInfo.student_id" 
+        class="cu-btn action-button edit-button" 
+        @tap="editProduct">
+        编辑商品
+      </button>
+      <button 
+        v-else 
+        class="cu-btn action-button buy-button" 
+        @tap="buy">
+        立即购买
+      </button>
+    </view>
   </view>
+</view>
+<!-- end -->
+ </view>
 </template>
 
 <script>
@@ -168,6 +179,16 @@ export default {
         },
       });
     },
+    // 添加到methods中
+previewImage(index) {
+  const urls = this.images.map(item => this.getImageUrl(item));
+  uni.previewImage({
+    current: index,
+    urls: urls,
+    indicator: "number",
+    loop: true
+  });
+},
     // 获取商品图片和头像的完整 URL
     getImageUrl(imagePath) {
       if (!imagePath) return ""; // 防空
@@ -263,7 +284,75 @@ export default {
   justify-content: space-around;
   margin-top: 20rpx;
 }
+/* 优化后的底部操作栏样式 */
+.action-bar-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 10rpx 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 99;
+}
 
+.action-bar-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 30rpx;
+  height: 100rpx;
+}
+
+.action-left {
+  display: flex;
+  align-items: center;
+}
+
+.action-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 40rpx;
+  position: relative;
+}
+
+.action-text {
+  font-size: 24rpx;
+  margin-top: 6rpx;
+}
+
+.action-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-button {
+  min-width: 220rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.buy-button {
+  background: linear-gradient(135deg, #ff6b6b, #ff3030);
+  color: white;
+}
+
+.edit-button {
+  background: linear-gradient(135deg, #4e7df7, #2e5cf7);
+  color: white;
+}
+
+/* 修改page-wrapper底部内边距，保证内容不被底部栏遮挡 */
+.page-wrapper {
+  padding-bottom: 120rpx;
+}
 /* 商家信息 */
 
 .padding-name {
@@ -323,11 +412,14 @@ text-title-size {
   color: black;
   font-size: 35rpx;
 }
-
+/* 修改图片样式，保持原比例 */
 .img {
-  margin-top: 10rpx;
+  margin-top: 20rpx;
   width: 100%;
-  height: 800rpx;
+  object-fit: contain; /* 保持图片原比例 */
+  max-height: 800rpx;
+  border-radius: 12rpx; /* 添加圆角美化效果 */
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05); /* 轻微阴影增加层次感 */
 }
 
 .cu-tag {

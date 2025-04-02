@@ -1,14 +1,18 @@
 <template>
   <view>
     <!-- 用户信息 -->
-    <view class="user-center-bg" @tap="toMy_detail">
-      <!-- 使用动态绑定 src，并给图片绑定点击事件 -->
-      <image :src="avatar" class="avatar-image" @tap.stop="changeAvatar"></image>
-      <view class="nickname-container" @tap.stop="editNickname">
-        <text>{{ nickname || "Amibition" }}</text>
-        <uni-icons type="compose" size="24" color="#ffffff" class="edit-icon"></uni-icons>
+    <view class="user-center-container">
+      <image src="/static/img/dzq.png" class="bg-image" mode="aspectFill"></image>
+      <view class="user-center-content">
+        <!-- 头像和昵称放在这里 -->
+        <image :src="avatar" class="avatar-image" @tap.stop="changeAvatar"></image>
+        <view class="nickname-container" @tap.stop="editNickname">
+          <text>{{ nickname || "Amibition" }}</text>
+          <uni-icons type="compose" size="24" color="#ffffff" class="edit-icon"></uni-icons>
+        </view>
       </view>
     </view>
+    
     
     <!-- 修改昵称弹框 -->
     <view v-if="isNicknameModalVisible" class="nickname-modal">
@@ -500,6 +504,32 @@ export default {
   padding-top: 60rpx;
   overflow: hidden;
   position: relative;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  font-weight: 300;
+}
+.user-center-container {
+  position: relative;
+  height: 400rpx;
+  overflow: hidden;
+}
+
+.bg-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.user-center-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 60rpx;
   flex-direction: column;
   align-items: center;
   color: #fff;
