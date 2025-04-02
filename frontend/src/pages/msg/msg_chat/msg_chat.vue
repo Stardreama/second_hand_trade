@@ -28,7 +28,8 @@
             <!-- 图片消息 -->
             <view class="content bg-img" v-if="msg.image_url" @tap="previewImage(msg.image_url)"
               :class="{ 'self-image': msg.sender_id === userInfo.student_id }">
-              <image :src="getFullImageUrl(msg.image_url)" mode="widthFix"></image>
+              <image v-if="msg.localImage" :src="msg.image_url" mode="widthFix"></image>
+              <image v-else :src="getFullImageUrl(msg.image_url)" mode="widthFix"></image>
             </view>
 
             <!-- 文本消息 -->
@@ -150,7 +151,7 @@ export default {
     }
 
     // 设置自动检查已读状态
-    this.setupReadStatusCheck();
+    //this.setupReadStatusCheck();
 
     // 通知服务器用户正在查看会话
     if (this.socket && this.socket.connected) {
@@ -173,6 +174,13 @@ export default {
     // 关闭Socket.io连接
     if (this.socket) {
       this.socket.disconnect();
+    }
+  },
+  onHide() {
+    // 清除计时器
+    if (this.readCheckTimer) {
+      clearInterval(this.readCheckTimer);
+      this.readCheckTimer = null;
     }
   },
 
@@ -311,10 +319,7 @@ export default {
       // 清空输入框
       this.messageText = '';
 
-      // 滚动到底部
-      this.$nextTick(() => {
-        this.scrollToBottom();
-      });
+      this.scrollToBottom();
     },
 
     // 选择图片
@@ -325,18 +330,23 @@ export default {
         sourceType: ['album', 'camera'],
         success: (res) => {
           const tempFilePath = res.tempFilePaths[0];
+          console.log('选择的图片:', tempFilePath);
 
-          // 添加临时图片消息
+          // 生成一个唯一的临时ID
           const tempId = Date.now().toString();
+
+          // 添加临时图片消息 - 使用本地文件路径而不是blob URL
           const tempMessage = {
-            message_id: 'temp_' + tempId, // 修改ID格式以匹配后续处理
+            message_id: 'temp_' + tempId,
             conversation_id: this.conversationId,
             sender_id: this.userInfo.student_id,
-            image_url: tempFilePath,
+            image_url: tempFilePath, // 使用本地文件路径显示临时图片
             created_at: new Date().toISOString(),
             is_read: false,
-            temp: true
+            temp: true,
+            localImage: true // 标记为本地图片
           };
+          console.log('临时图片消息:', tempMessage);
 
           this.messages.push(tempMessage);
 
@@ -354,19 +364,39 @@ export default {
               'Authorization': `Bearer ${uni.getStorageSync('token')}`
             },
             success: (uploadRes) => {
-              const data = JSON.parse(uploadRes.data);
-              if (uploadRes.statusCode === 200) {
-                // 使用Socket.io发送图片消息，而非HTTP请求
-                this.socket.emit('send_message', {
-                  conversationId: this.conversationId,
-                  image_url: data.imageUrl,
-                  tempId: tempId // 添加临时ID用于关联
-                });
-              } else {
-                this.markMessageAsFailed(tempId);
+              try {
+                const data = JSON.parse(uploadRes.data);
+                if (uploadRes.statusCode === 200) {
+                  console.log('图片上传成功，服务器返回:', data);
+
+                  // 使用Socket.io发送图片消息
+                  this.socket.emit('send_message', {
+                    conversationId: this.conversationId,
+                    image_url: data.imageUrl,
+                    tempId: tempId
+                  });
+
+                  // 立即更新临时消息中的图片URL为服务器URL
+                  const msgIndex = this.messages.findIndex(msg => msg.message_id === 'temp_' + tempId);
+                  if (msgIndex !== -1) {
+                    // 创建新对象以确保Vue检测到变化
+                    const updatedMsg = { ...this.messages[msgIndex] };
+                    updatedMsg.image_url = data.imageUrl;
+                    updatedMsg.localImage = false; // 不再是本地图片
+                    this.messages.splice(msgIndex, 1, updatedMsg);
+                    console.log('已更新临时图片URL为服务器URL:', data.imageUrl);
+                  }
+                } else {
+                  this.markMessageAsFailed('temp_' + tempId);
+                  console.error('图片上传失败:', data);
+                }
+              } catch (e) {
+                console.error('解析上传响应失败:', e, uploadRes.data);
+                this.markMessageAsFailed('temp_' + tempId);
               }
             },
-            fail: () => {
+            fail: (err) => {
+              console.error('图片上传请求失败:', err);
               this.markMessageAsFailed('temp_' + tempId);
             }
           });
@@ -397,7 +427,13 @@ export default {
     // 获取完整图片URL
     getFullImageUrl(url) {
       if (!url) return '../../static/img/default-avatar.png';
+
+      // 处理不同类型的URL
       if (url.startsWith('http')) return url;
+      if (url.startsWith('blob:')) return url; // Blob URL直接返回
+      if (url.startsWith('/')) return `http://localhost:3000${url}`; // 处理以/开头的路径
+
+      // 处理相对路径
       return `http://localhost:3000/${url.replace(/\\/g, '/')}`;
     },
 
@@ -535,32 +571,25 @@ export default {
 
     // 添加自动检查已读状态的方法
     setupReadStatusCheck() {
-      // 清除现有计时器
-      if (this.readCheckTimer) {
-        clearInterval(this.readCheckTimer);
-      }
-
-      // 设置新的计时器
-      this.readCheckTimer = setInterval(() => {
-        // 如果有新发送的消息且足够时间已过去，检查是否已读
-        const now = Date.now();
-        if (now - this.lastReadCheckTime > 3000) { // 每3秒最多检查一次
+      console.log('自动检查已读状态的方法');
+      
+      setInterval(() => {
+        const currentTime = Date.now();
+        if (currentTime - this.lastReadCheckTime > 5000) {
           this.markMessagesAsRead();
-          this.lastReadCheckTime = now;
+          this.lastReadCheckTime = currentTime;
         }
-      }, 3000);
+      }, 5000); 
     },
-
-    // 滚动到底部
     scrollToBottom() {
-      this.$nextTick(() => {
-        let query = uni.createSelectorQuery().in(this);
-        query.select('.chat-container').boundingClientRect(data => {
-          if (data) {
-            this.scrollTop = 9999999;
-          }
-        }).exec();
-      });
+      setTimeout(() => {
+        const systemInfo = uni.getSystemInfoSync();
+        const scrollHeight = systemInfo.windowHeight + document.body.scrollHeight;
+        uni.pageScrollTo({
+          scrollTop: scrollHeight,
+          duration: 100,
+        });
+      }, 200);
     },
 
     // 处理输入框焦点

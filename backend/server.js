@@ -132,12 +132,12 @@ io.use((socket, next) => {
         tempId: tempId,
       });
 
-      // 检查接收者是否在同一会话，如果是则立即标记为已读
-      checkAndMarkMessageAsRead(
-        receiverId,
-        conversationId,
-        savedMessage.message_id
-      );
+      // // 检查接收者是否在同一会话，如果是则立即标记为已读
+      // checkAndMarkMessageAsRead(
+      //   receiverId,
+      //   conversationId,
+      //   savedMessage.message_id
+      // );
 
       console.log(`消息已发送到房间 ${roomName} 和用户 ${receiverId}`);
     } catch (error) {
@@ -202,7 +202,8 @@ io.use((socket, next) => {
       } else {
         await Conversation.resetUnreadCount(conversationId, "seller");
       }
-
+      console.log(`用户 ${userId} 标记消息为已读`, messagesMarked);
+      
       // 通知发送者其消息已被阅读
       if (messagesMarked.length > 0) {
         const senderSocket = connectedUsers.get(senderId);

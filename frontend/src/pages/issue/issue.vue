@@ -53,7 +53,7 @@
 					</view>
 					<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
 						<uni-icons type="plus-filled" size="60" color="#1890ff" class="upload-icon"></uni-icons>
-						<text class="upload-text">添加图片</text>
+						<!-- <text class="upload-text">添加图片</text> -->
 					</view>
 				</view>
 			</view>

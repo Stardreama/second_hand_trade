@@ -195,6 +195,8 @@ export default {
         
         // 如果处理后的images为空，但商品有封面图，则使用封面图
         if (processedItem.images.length === 0 && item.image) {
+          console.log("商品没有图片，使用封面图:", item.image);
+          
           processedItem.images.push(`${this.baseUrl}${item.image.replace(/\\/g, "/")}`);
         }
         
