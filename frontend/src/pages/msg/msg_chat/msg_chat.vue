@@ -579,7 +579,7 @@ export default {
           this.markMessagesAsRead();
           this.lastReadCheckTime = currentTime;
         }
-      }, 5000); 
+      }, 1000); 
     },
     scrollToBottom() {
       setTimeout(() => {

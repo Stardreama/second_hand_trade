@@ -45,17 +45,32 @@
 </template>
 
 <script>
+// 引入Socket.io客户端
+import io from "socket.io-client";
+
 export default {
   data() {
     return {
       conversations: [],
       refreshing: false,
       refreshTimer: null,
+      socket: null, // 添加socket变量
     };
   },
+
+  onLoad() {
+    // 连接Socket.io
+    this.connectSocket();
+  },
+
   onShow() {
     console.log("消息页面显示，加载会话");
     this.loadConversations();
+
+    // 检查并重新连接Socket (如果断开)
+    if (!this.socket || !this.socket.connected) {
+      this.connectSocket();
+    }
 
     // 设置定时刷新会话列表
     if (this.refreshTimer) {
@@ -73,16 +88,82 @@ export default {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
+
+    // 不要在onHide中断开Socket连接，保持消息接收
   },
 
   onUnload() {
-    // 页面卸载时清除定时器
+    // 页面卸载时清除定时器和Socket连接
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
     }
+
+    // 断开Socket连接
+    if (this.socket) {
+      this.socket.disconnect();
+    }
   },
+
   methods: {
+    // 添加Socket.io连接方法
+    connectSocket() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+
+      // 如果已有连接，先断开
+      if (this.socket) {
+        this.socket.disconnect();
+      }
+
+      // 创建Socket.io连接
+      this.socket = io("http://localhost:3000", {
+        auth: {
+          token: token,
+        },
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
+
+      // 连接成功事件
+      this.socket.on("connect", () => {
+        console.log("msg页面: Socket.io连接成功");
+      });
+
+      // 接收消息事件 - 关键部分！
+      this.socket.on('receive_message', (data) => {
+        console.log('msg页面: 收到新消息通知:', data);
+
+        // 立即更新会话列表
+        this.loadConversations();
+
+        // 添加提示音效
+        const innerAudioContext = uni.createInnerAudioContext();
+        innerAudioContext.autoplay = true;
+        innerAudioContext.src = '/static/sound/message.mp3'; // 添加提示音文件
+
+        // 震动提示
+        uni.vibrateShort({
+          success: function () {
+            console.log('震动成功');
+          }
+        });
+
+        // 显示消息提示
+        uni.showToast({
+          title: '收到新消息',
+          icon: 'none',
+          position: 'top'
+        });
+      });
+
+      // 断开连接事件
+      this.socket.on("disconnect", () => {
+        console.log("msg页面: Socket.io断开连接");
+      });
+    },
+
     loadConversations() {
       return new Promise((resolve) => {
         const token = uni.getStorageSync("token");
@@ -128,7 +209,8 @@ export default {
       console.log("item", item);
       uni.navigateTo({
         url: `/pages/msg/msg_chat/msg_chat?conversation_id=${item.conversation_id
-          }&user_id=${item.otherUser.id}&product_id=${item.product_id || ""}&otherUserName=${item.otherUser.name}`,
+          }&user_id=${item.otherUser.id}&product_id=${item.product_id || ""
+          }&otherUserName=${item.otherUser.name}`,
       });
     },
     getAvatarUrl(avatar) {

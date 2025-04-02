@@ -113,18 +113,25 @@ io.use((socket, next) => {
       );
 
       // 两种方式发送消息，提高可靠性
-      // 1. 通过用户房间
-      io.to(`user_${receiverId}`).emit("receive_message", {
-        type: "message",
-        message: savedMessage,
-      });
+      // 1. 通过用户房间 - 总是发送，确保无论在哪个页面都能收到
+    io.to(`user_${receiverId}`).emit("receive_message", {
+      type: "message",
+      message: savedMessage,
+    });
 
-      // 2. 通过会话房间
-      const roomName = `conversation_${conversationId}`;
-      io.to(roomName).emit("receive_message", {
-        type: "message",
-        message: savedMessage,
-      });
+    // 2. 通过会话房间 - 针对聊天页面
+    const roomName = `conversation_${conversationId}`;
+    io.to(roomName).emit("receive_message", {
+      type: "message",
+      message: savedMessage,
+    });
+    
+    // 添加：通知接收者有新消息，可用于消息列表页面更新
+    io.to(`user_${receiverId}`).emit("new_message_notification", {
+      conversationId,
+      senderId: userId,
+      message: savedMessage
+    });
 
       // 通知发送者消息已发送成功，包含临时ID以便更新UI
       socket.emit("message_sent", {
