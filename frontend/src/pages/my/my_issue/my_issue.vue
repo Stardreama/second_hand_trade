@@ -207,7 +207,13 @@ export default {
     uni.showToast({ title: "数据加载失败", icon: "none" });
   }
 },
-
+ // 跳转到编辑页面
+ toIssue: function (item) {
+      console.log("编辑商品:", item.product_id);
+      uni.navigateTo({
+        url: `/pages/issue/issue_edit/issue_edit?product_id=${item.product_id}`,
+      });
+    },
     // 新增方法 - 跳转到发布页面
     toPublish() {
       uni.switchTab({
@@ -264,7 +270,6 @@ export default {
       // 根据商品的当前价格计算不同折扣的价格
       const originalPrice = item.price;
       for (let i = 0; i < that.re_price.length; i++) {
-        // 根据折扣计算价格并四舍五入到整数
         that.re_price[i].price = parseFloat((originalPrice * that.re_price[i].discount).toFixed(2));
         
         // 默认选中第一个
