@@ -113,18 +113,25 @@ io.use((socket, next) => {
       );
 
       // 两种方式发送消息，提高可靠性
-      // 1. 通过用户房间
-      io.to(`user_${receiverId}`).emit("receive_message", {
-        type: "message",
-        message: savedMessage,
-      });
+      // 1. 通过用户房间 - 总是发送，确保无论在哪个页面都能收到
+    io.to(`user_${receiverId}`).emit("receive_message", {
+      type: "message",
+      message: savedMessage,
+    });
 
-      // 2. 通过会话房间
-      const roomName = `conversation_${conversationId}`;
-      io.to(roomName).emit("receive_message", {
-        type: "message",
-        message: savedMessage,
-      });
+    // 2. 通过会话房间 - 针对聊天页面
+    const roomName = `conversation_${conversationId}`;
+    io.to(roomName).emit("receive_message", {
+      type: "message",
+      message: savedMessage,
+    });
+    
+    // 添加：通知接收者有新消息，可用于消息列表页面更新
+    io.to(`user_${receiverId}`).emit("new_message_notification", {
+      conversationId,
+      senderId: userId,
+      message: savedMessage
+    });
 
       // 通知发送者消息已发送成功，包含临时ID以便更新UI
       socket.emit("message_sent", {
@@ -132,12 +139,12 @@ io.use((socket, next) => {
         tempId: tempId,
       });
 
-      // 检查接收者是否在同一会话，如果是则立即标记为已读
-      checkAndMarkMessageAsRead(
-        receiverId,
-        conversationId,
-        savedMessage.message_id
-      );
+      // // 检查接收者是否在同一会话，如果是则立即标记为已读
+      // checkAndMarkMessageAsRead(
+      //   receiverId,
+      //   conversationId,
+      //   savedMessage.message_id
+      // );
 
       console.log(`消息已发送到房间 ${roomName} 和用户 ${receiverId}`);
     } catch (error) {
@@ -202,7 +209,8 @@ io.use((socket, next) => {
       } else {
         await Conversation.resetUnreadCount(conversationId, "seller");
       }
-
+      console.log(`用户 ${userId} 标记消息为已读`, messagesMarked);
+      
       // 通知发送者其消息已被阅读
       if (messagesMarked.length > 0) {
         const senderSocket = connectedUsers.get(senderId);

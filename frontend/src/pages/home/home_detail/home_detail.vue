@@ -7,8 +7,6 @@
     <view class="bg-white">
       <view class="cf padding-sm">
         <view class="radius fl padding-sm">
-          <!-- <image src="../../../static/img/avatar.jpg"></image> -->
-          <!-- <image :src="productDetail.seller_avatar || '../../../static/img/avatar.jpg'"></image> -->
           <image :src="getImageUrl(productDetail.seller_avatar) ||
             '../../../static/img/avatar.jpg'
             "></image>
@@ -32,24 +30,14 @@
       </view>
 
       <view class="bg-white top-20 font-size">
-        <!-- <text>
-          123百度图片-发现多彩世界百度图片 - 百度快照 -
-          745条评价先锋图片百度图片使用世界前沿的人工智能技术，为用户甄选海量的高清美图，用更流畅、更快捷、更精准的搜索体验，带你去发现多彩的世界。
-        </text> -->
         <text>{{ productDetail.description }}</text>
       </view>
 
       <!-- 交易方式 -->
       <view class="hint">
-        <!-- <text>本交易仅支持自提、当面交易、邮寄</text> -->
-        <!-- <text>{{ productDetail.status || '本交易仅支持自提、当面交易、邮寄' }}</text> -->
       </view>
       <!-- end -->
-
       <!-- 图片位置 -->
-      <!-- <block v-for="(item, index) in 6" :key="index">
-        <image class="img" src="../../../static/img/qiu.jpeg"></image>
-      </block> -->
       <block v-for="(item, index) in images" :key="index">
         <image class="img" :src="getImageUrl(item)"></image>
       </block>
@@ -59,14 +47,6 @@
         <view>
           <text></text>
         </view>
-        <!-- <view class="text-gray text-sm text-right padding-browse">
-          <text class="cuIcon-attentionfill margin-lr-xs"></text>
-          {{ productDetail.attention_count || 0 }}
-          <text class="cuIcon-appreciatefill margin-lr-xs"></text>
-          {{ productDetail.like_amount || 0 }}
-          <text class="cuIcon-messagefill margin-lr-xs"></text>
-          {{ productDetail.message_count || 0 }}
-        </view> -->
       </view>
     </view>
     <!-- 商品内容end -->
@@ -107,8 +87,6 @@
 </template>
 
 <script>
-import axios from "axios"; // 确保导入 axios
-
 export default {
   data() {
     return {
@@ -129,14 +107,13 @@ export default {
   methods: {
     fetchProductDetail(productId) {
       uni.request({
-        url: `http://localhost:3000/api/products/${productId}`, // API endpoint
+        url: `http://localhost:3000/api/products/${productId}`,
         method: "GET",
         success: (res) => {
           if (res.statusCode === 200) {
             this.productDetail = res.data;
-            console.log("original_price:", this.productDetail.original_price);
-            this.images = this.productDetail.images || []; // 商品的图片数据
-            console.log(this.images);
+            // 直接使用返回的images数组，包含所有图片（默认图片和用户上传图片）
+            this.images = this.productDetail.images || [];
           } else {
             console.error("获取商品详情失败:", res);
           }

@@ -43,10 +43,12 @@ const Product = {
       callback
     );
   },
-  addImage: (productId, imagePath, callback) => {
+  addImage: (productId, imagePath, isDefault = 0, callback) => {
+    // 确保isDefault是数值类型 0 或 1
+    const isDefaultValue = isDefault ? 1 : 0;
     const sql =
-      "INSERT INTO product_images (product_id, image_url) VALUES (?, ?)";
-    db.query(sql, [productId, imagePath], callback);
+      "INSERT INTO product_images (product_id, image_url, is_default) VALUES (?, ?, ?)";
+    db.query(sql, [productId, imagePath, isDefaultValue], callback);
   },
   // 根据关键词搜索商品
   search: (keyword, callback) => {
@@ -82,11 +84,11 @@ const Product = {
                   }
                 );
               });
-
-              // 替换image字段为数组
+  
+              // 返回包含图片数组的商品对象
               return {
                 ...product,
-                image: images,
+                images: images, // 使用从product_images表获取的图片
               };
             })
           );
@@ -131,10 +133,10 @@ const Product = {
 
   // 在Product对象中添加更新价格的方法
   updatePrice: async (productId, newPrice) => {
-    return await query(
-      "UPDATE products SET price = ? WHERE product_id = ?",
-      [newPrice, productId]
-    );
+    return await query("UPDATE products SET price = ? WHERE product_id = ?", [
+      newPrice,
+      productId,
+    ]);
   },
 };
 
