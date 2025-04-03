@@ -28,7 +28,6 @@ const createProduct = (req, res) => {
   const seller_id = req.seller_id;
   const files = req.files || []; // 可能没有文件
 
-
   // 处理求购商品的默认值
   const finalProductStatus = product_type === "buy" ? "求购" : product_status;
 
@@ -62,19 +61,19 @@ const createProduct = (req, res) => {
         });
       }
       console.log("插入产品结果:", result);
-      
+
       const productId = result.insertId;
       console.log("产品插入成功，product_id:", productId);
       // 准备插入所有图片的Promise数组
       let insertPromises = [];
-      
+
       // 如果没有上传图片，使用默认图片
       if (files.length === 0) {
         const defaultImage =
           product_type === "buy"
             ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png" // 求购默认图片
             : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png"; // 出售默认图片
-            
+
         insertPromises.push(
           new Promise((resolve, reject) => {
             Product.addImage(
@@ -172,20 +171,21 @@ const searchProduct = (req, res) => {
     WHERE p.description LIKE ? OR p.product_title LIKE ?
     ORDER BY p.created_at DESC
   `;
-  
+
   const searchPattern = `%${keyword}%`; // 模糊匹配
-  
+
   db.query(query, [searchPattern, searchPattern], (err, results) => {
     if (err) {
       return res.status(500).json({ message: "数据库错误" });
     }
 
     // 为没有默认图片的商品设置默认图片
-    results.forEach(product => {
+    results.forEach((product) => {
       if (!product.image) {
-        product.image = product.product_type === "buy"
-          ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
-          : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
+        product.image =
+          product.product_type === "buy"
+            ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
+            : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
       }
     });
 
@@ -205,22 +205,23 @@ const getAllProducts = async (req, res) => {
       FROM products p 
       ORDER BY p.created_at DESC
     `;
-    
+
     db.query(query, (err, results) => {
       if (err) {
         console.error("查询商品出错:", err);
         return res.status(500).json({ message: "服务器错误" });
       }
-      
+
       // 为没有默认图片的商品设置默认图片
-      results.forEach(product => {
+      results.forEach((product) => {
         if (!product.image) {
-          product.image = product.product_type === "buy"
-            ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
-            : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
+          product.image =
+            product.product_type === "buy"
+              ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
+              : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
         }
       });
-      
+
       res.json(results);
     });
   } catch (error) {
@@ -343,10 +344,11 @@ const updateProduct = async (req, res) => {
             console.log("000后端：需要删除Images:", deleted_images);
 
             if (deleted_images) {
-
               try {
                 // 检查deleted_images是否已经是数组
                 if (Array.isArray(deleted_images)) {
+                  console.log("deleted_images已经是数组:", deleted_images);
+
                   imagesToDelete = deleted_images;
                 } else {
                   // 尝试解析JSON字符串
@@ -356,8 +358,8 @@ const updateProduct = async (req, res) => {
                     console.error("JSON解析失败，尝试其他方法:", jsonError);
 
                     // 如果JSON解析失败，尝试按逗号分隔
-                    if (typeof deleted_images === 'string') {
-                      imagesToDelete = deleted_images.split(',');
+                    if (typeof deleted_images === "string") {
+                      imagesToDelete = deleted_images.split(",");
                       console.log("按逗号分隔后:", imagesToDelete);
                     }
                   }
@@ -414,6 +416,8 @@ const updateProduct = async (req, res) => {
                 // 如果没有剩余图片，添加默认图片
                 if (remainingImagesResult[0].count === 0) {
                   // 获取产品类型以确定使用哪个默认图片
+                  console.log("没有剩余图片，添加默认图片。");
+
                   const productTypeQuery =
                     "SELECT product_type FROM products WHERE product_id = ?";
                   const productTypeResult = await new Promise(
@@ -447,17 +451,20 @@ const updateProduct = async (req, res) => {
                     );
                   });
 
-                  // 更新 products 表的 image 字段
-                  await new Promise((resolve, reject) => {
-                    connection.query(
-                      "UPDATE products SET image = ? WHERE product_id = ?",
-                      [defaultImage, product_id],
-                      (err, result) => {
-                        if (err) reject(err);
-                        else resolve(result);
-                      }
-                    );
-                  });
+                  // // 更新 products 表的 image 字段
+                  // await new Promise((resolve, reject) => {
+                  //   connection.query(
+                  //     "UPDATE products SET image = ? WHERE product_id = ?",
+                  //     [defaultImage, product_id],
+                  //     (err, result) => {
+                  //       if (err) reject(err);
+                  //       else resolve(result);
+                  //     }
+                  //   );
+                  // });
+                  console.log("添加默认图片结束");
+                } else {
+                  console.log("删除图片后仍有剩余图片，无需添加默认图片。");
                 }
               }
             }
@@ -465,23 +472,25 @@ const updateProduct = async (req, res) => {
             // 3. 添加新图片
             if (files.length > 0) {
               // 如果有新上传的图片, 查询当前是否有默认图片
-              const existingDefaultQuery = 
+              const existingDefaultQuery =
                 "SELECT COUNT(*) as count FROM product_images WHERE product_id = ? AND is_default = 1";
-                
-              const existingDefaultResult = await new Promise((resolve, reject) => {
-                connection.query(
-                  existingDefaultQuery,
-                  [product_id],
-                  (err, result) => {
-                    if (err) reject(err);
-                    else resolve(result);
-                  }
-                );
-              });
-              
+
+              const existingDefaultResult = await new Promise(
+                (resolve, reject) => {
+                  connection.query(
+                    existingDefaultQuery,
+                    [product_id],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                }
+              );
+
               // 仅当没有默认图片时，将第一张新图片设为默认
               const hasExistingDefault = existingDefaultResult[0].count > 0;
-              
+
               const insertImagePromises = files.map((file, index) => {
                 // 如果没有现有默认图片，第一张设为默认
                 const isDefault = !hasExistingDefault && index === 0 ? 1 : 0;
@@ -502,9 +511,9 @@ const updateProduct = async (req, res) => {
             }
 
             // 4. 确保至少有一张默认图片
-            const checkDefaultImageQuery = 
+            const checkDefaultImageQuery =
               "SELECT COUNT(*) as count FROM product_images WHERE product_id = ? AND is_default = 1";
-              
+
             const defaultImageResult = await new Promise((resolve, reject) => {
               connection.query(
                 checkDefaultImageQuery,
@@ -515,13 +524,13 @@ const updateProduct = async (req, res) => {
                 }
               );
             });
-            
+
             // 如果没有默认图片，选择第一张作为默认图片
             if (defaultImageResult[0].count === 0) {
               // 查找第一张图片
-              const findFirstImageQuery = 
+              const findFirstImageQuery =
                 "SELECT id FROM product_images WHERE product_id = ? ORDER BY id ASC LIMIT 1";
-                
+
               const firstImageResult = await new Promise((resolve, reject) => {
                 connection.query(
                   findFirstImageQuery,
@@ -532,7 +541,7 @@ const updateProduct = async (req, res) => {
                   }
                 );
               });
-              
+
               // 如果找到了图片，设为默认
               if (firstImageResult && firstImageResult.length > 0) {
                 await new Promise((resolve, reject) => {
@@ -551,7 +560,7 @@ const updateProduct = async (req, res) => {
                   product_type === "buy"
                     ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
                     : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
-                    
+
                 await new Promise((resolve, reject) => {
                   connection.query(
                     "INSERT INTO product_images (product_id, image_url, is_default) VALUES (?, ?, 1)",
@@ -762,7 +771,7 @@ const updateProductStatus = async (req, res) => {
     res.json({
       code: 200,
       message: isOffShelf ? "商品已下架" : "商品已上架",
-      data: { productId, status: isOffShelf ? "off_shelf" : "on_sale" }
+      data: { productId, status: isOffShelf ? "off_shelf" : "on_sale" },
     });
   } catch (error) {
     console.error("更新商品状态失败:", error);
@@ -812,21 +821,22 @@ const getProductById = (req, res) => {
         }
 
         product.images = imageResult.map((img) => img.image_url);
-        
+
         // 找出默认图片用于前端显示封面
         product.default_images = imageResult
           .filter((img) => img.is_default === 1)
           .map((img) => img.image_url);
-          
+
         // 为兼容现有前端代码，增加一个 image 属性，指向默认图片的第一张
         if (product.default_images && product.default_images.length > 0) {
           product.image = product.default_images[0];
         } else if (product.images && product.images.length > 0) {
           product.image = product.images[0];
         } else {
-          product.image = product.product_type === "buy"
-            ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
-            : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
+          product.image =
+            product.product_type === "buy"
+              ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
+              : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
         }
 
         // 返回完整的商品信息，包括下架状态

@@ -330,7 +330,7 @@ export default {
 				formData.deleted_images = this.deletedImages; // 添加要删除的图片
 
 				console.log('要删除的图片:', this.deletedImages);
-				console.log('默认图片(不删除):', this.defaultImages);
+				// console.log('默认图片(不删除):', this.defaultImages);
 
 
 			}
@@ -338,28 +338,32 @@ export default {
 			// 根据是否有新图片决定使用哪种提交方式
 			if (this.imgList.length > 0 && (this.isEdit ? this.imgList.some(img => !img.startsWith('http')) : true)) {
 				// 有新上传的图片，使用uploadFile
-				const newImagePath = this.imgList.find(img => !img.startsWith('http')) || this.imgList[0];
-				console.log("有新图片");
+				const newImagePath = this.imgList.filter(img => !img.startsWith('http') && !img.startsWith('https')) || this.imgList[0];
+				console.log("新增图片后的总imgList", this.imgList);
 
-				uni.uploadFile({
-					url: this.isEdit ? 'http://localhost:3000/api/products/update' : 'http://localhost:3000/api/products/create',
-					filePath: newImagePath,
-					name: 'image',
-					formData: formData,
-					header: { 'Authorization': `Bearer ${token}` },
-					success: (res) => {
-						console.log("isue_edit有图片更新商品中");
+				console.log("有图片", newImagePath);
 
-						this.handleUploadSuccess(res, token);
-						console.log("isue_edit有图片更新商品完成");
-						setTimeout(() => {
-							uni.switchTab({
-								url: '/pages/my/my'
-							});
-						}, 1000);
-					},
-					fail: this.handleUploadFail
-				});
+				newImagePath.forEach(filePath => {
+					uni.uploadFile({
+						url: this.isEdit ? 'http://localhost:3000/api/products/update' : 'http://localhost:3000/api/products/create',
+						filePath: filePath,
+						name: 'image',
+						formData: formData,
+						header: { 'Authorization': `Bearer ${token}` },
+						success: (res) => {
+							console.log("isue_edit有图片更新商品中");
+
+							this.handleUploadSuccess(res, token);
+							console.log("isue_edit有图片更新商品完成");
+						},
+						fail: this.handleUploadFail
+					});
+				})
+				setTimeout(() => {
+					uni.switchTab({
+						url: '/pages/my/my'
+					});
+				}, 1000);
 			} else {
 				// 无新图片，使用普通请求
 				console.log("无新图片");
@@ -404,7 +408,7 @@ export default {
 				const productId = data.product_id;
 				console.log('封面图片上传成功，product_id:', productId);
 				console.log("更新商品，imglist", this.imgList);
-				
+
 				// 上传其他图片（非封面图片）
 				this.imgList.slice(1).forEach((filePath, index) => {
 					uni.uploadFile({
@@ -564,7 +568,6 @@ export default {
 			});
 		},
 		// 删除照片
-		// 删除照片
 		DelImg(e) {
 			const index = e.currentTarget.dataset.index;
 			const imageToDelete = this.imgList[index];
@@ -580,10 +583,12 @@ export default {
 						if (this.isEdit && index < this.originalImageUrls.length) {
 							this.deletedImages.push(this.originalImageUrls[index]);
 						}
-
+						console.log('要删除的图片:', this.deletedImages);
+						
 						// 删除图片
 						this.imgList.splice(index, 1);
-
+						console.log('删除后的图片列表:', this.imgList);
+						
 						// 检查是否删除所有图片，如果是，添加默认图片
 						if (this.imgList.length === 0) {
 							// 根据当前标签页选择默认图片
@@ -735,6 +740,8 @@ export default {
 								return `http://localhost:3000/${url.replace(/\\/g, '/')}`;
 							}
 						});
+						console.log('初始化this.imgList', this.imgList);
+
 					}
 				} else {
 					uni.showToast({
