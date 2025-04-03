@@ -1,6 +1,10 @@
 <template>
   <!-- <view> -->
-  <view v-if="productDetail" class="page-wrapper">
+    <view v-if="productDetail" class="page-wrapper" :class="{'off-shelf-container': productDetail.is_off_shelf === 1}">
+    <!-- 下架遮罩层 -->
+    <view class="off-shelf-mask" v-if="productDetail.is_off_shelf === 1">
+      <view class="off-shelf-text">已下架</view>
+    </view>
     <!-- 仅在数据加载后渲染 -->
     <!-- 商家信息 -->
 
@@ -58,43 +62,50 @@
 
     <!-- end -->
 
-    <!-- 操作选项卡 -->
-<view class="action-bar-container">
-  <view class="action-bar-wrapper bg-white">
-    <!-- 左侧按钮区域 -->
-    <view class="action-left">
-      <!-- 收藏按钮 -->
-      <view class="action-icon" @tap="toggleLike">
-        <view :class="['cuIcon-appreciatefill text-xl', liked ? 'text-orange' : 'text-gray']"></view>
-        <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
+    <!-- 修改底部按钮区域，考虑下架状态 -->
+    <view class="action-bar-container">
+      <view class="action-bar-wrapper bg-white">
+        <!-- 左侧按钮区域 -->
+        <view class="action-left">
+          <!-- 收藏按钮 -->
+          <view class="action-icon" @tap="toggleLike">
+            <view :class="['cuIcon-appreciatefill text-xl', liked ? 'text-orange' : 'text-gray']"></view>
+            <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
+          </view>
+          
+          <!-- 聊一聊按钮 - 下架时禁用 -->
+          <view class="action-icon" 
+                @tap="chatWithSeller" 
+                v-if="productDetail.seller_id !== userInfo.student_id && productDetail.is_off_shelf !== 1">
+            <view class="cuIcon-message text-blue text-xl"></view>
+            <text class="action-text text-blue">聊一聊</text>
+          </view>
+        </view>
+        
+        <!-- 右侧主操作按钮 -->
+        <view class="action-right">
+          <button 
+            v-if="productDetail.seller_id === userInfo.student_id" 
+            class="cu-btn action-button edit-button" 
+            @tap="editProduct">
+            编辑商品
+          </button>
+          <button 
+            v-else-if="productDetail.is_off_shelf !== 1"
+            class="cu-btn action-button buy-button" 
+            @tap="buy">
+            立即购买
+          </button>
+          <button 
+            v-else
+            class="cu-btn action-button disabled-button"
+            disabled>
+            商品已下架
+          </button>
+        </view>
       </view>
-      
-      <!-- 聊一聊按钮 -->
-      <view class="action-icon" @tap="chatWithSeller" v-if="productDetail.seller_id !== userInfo.student_id">
-        <view class="cuIcon-message text-blue text-xl"></view>
-        <text class="action-text text-blue">聊一聊</text>
-      </view>
-    </view>
-    
-    <!-- 右侧主操作按钮 -->
-    <view class="action-right">
-      <button 
-        v-if="productDetail.seller_id === userInfo.student_id" 
-        class="cu-btn action-button edit-button" 
-        @tap="editProduct">
-        编辑商品
-      </button>
-      <button 
-        v-else 
-        class="cu-btn action-button buy-button" 
-        @tap="buy">
-        立即购买
-      </button>
     </view>
   </view>
-</view>
-<!-- end -->
- </view>
 </template>
 
 <script>
@@ -593,5 +604,42 @@ text-title-size {
   margin-right: 20rpx;
 }
 
+/* 添加下架相关样式 */
+.off-shelf-container {
+  position: relative;
+  filter: grayscale(80%);
+}
+
+.off-shelf-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.off-shelf-text {
+  font-size: 100rpx;
+  color: #ff0000;
+  font-weight: bold;
+  transform: rotate(-30deg);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 20rpx 60rpx;
+  border-radius: 20rpx;
+  border: 5rpx solid #ff0000;
+  text-shadow: 3rpx 3rpx 5rpx rgba(0, 0, 0, 0.3);
+}
+
+.disabled-button {
+  background: #cccccc !important;
+  color: #666666 !important;
+  cursor: not-allowed;
+}
 /* end */
 </style>

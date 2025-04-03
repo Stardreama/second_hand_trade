@@ -133,6 +133,7 @@ router.get(
   jwtService.authMiddleware,
   productController.getProductLike
 );
+router.post('/status', jwtService.authMiddleware, productController.updateProductStatus);
 //渲染数据库中的所有商品
 router.get("/", productController.getAllProducts);
 module.exports = router;

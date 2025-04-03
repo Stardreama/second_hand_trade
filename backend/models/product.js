@@ -21,6 +21,7 @@ const Product = {
     product_class,
     status,
     product_type,
+    is_off_shelf = 0,
     callback
   ) => {
     const query =
@@ -39,6 +40,7 @@ const Product = {
         product_class,
         status,
         product_type,
+        is_off_shelf,
       ],
       callback
     );
@@ -84,7 +86,7 @@ const Product = {
                   }
                 );
               });
-  
+
               // 返回包含图片数组的商品对象
               return {
                 ...product,
@@ -137,6 +139,22 @@ const Product = {
       newPrice,
       productId,
     ]);
+  },
+  // 更新商品上下架状态
+  updateProductStatus: async (productId, sellerId, isOffShelf) => {
+    return await query(
+      "UPDATE products SET is_off_shelf = ? WHERE product_id = ? AND seller_id = ?",
+      [isOffShelf, productId, sellerId]
+    );
+  },
+
+  // 获取商品状态
+  getProductStatus: async (productId) => {
+    const results = await query(
+      "SELECT is_off_shelf FROM products WHERE product_id = ?",
+      [productId]
+    );
+    return results.length > 0 ? results[0].is_off_shelf : null;
   },
 };
 
