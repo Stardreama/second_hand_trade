@@ -50,6 +50,11 @@
 						<view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index">
 							<uni-icons type="close" size="24" color="#ffffff"></uni-icons>
 						</view>
+						<view class="cu-tag bg-blue cover-icon" @tap.stop="SetAsCover" :data-index="index">
+							<uni-icons type="star" size="20" color="#ffffff"></uni-icons>
+							<!-- 显示封面标记 -->
+							<text v-if="coverIndex === index" class="cover-text">封面</text>
+						</view>
 					</view>
 					<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
 						<uni-icons type="plus-filled" size="60" color="#1890ff" class="upload-icon"></uni-icons>
@@ -215,6 +220,7 @@ export default {
 				{ value: "同城面交", checked: false },
 				{ value: "邮寄", checked: false },
 			],
+			coverIndex: 0, // 默认第一张图片为封面
 			// 错误状态变量
 			titleError: false,
 			contentError: false,
@@ -229,7 +235,18 @@ export default {
 			// 清空表单
 			this.resetForm();
 		},
+		// 设置封面图片
+		SetAsCover(e) {
+			const index = e.currentTarget.dataset.index;
+			this.coverIndex = index;
+			console.log("设置封面索引", this.coverIndex);
 
+			uni.showToast({
+				title: '已设为封面图片',
+				icon: 'success',
+				duration: 1500
+			});
+		},
 		// 重置表单
 		resetForm() {
 			this.title = '';
@@ -265,16 +282,6 @@ export default {
 				if (!this.validateField('orginalPrice')) {
 					isValid = false;
 				}
-
-				// // 验证图片
-				// if (this.imgList.length === 0) {
-				// 	uni.showToast({
-				// 		title: '出售商品请上传至少一张图片',
-				// 		icon: 'none',
-				// 		duration: 2000,
-				// 	});
-				// 	isValid = false;
-				// }
 			}
 			// 验证分类
 			if (!this.validateField('status')) {
@@ -303,13 +310,15 @@ export default {
 				token: token,
 				status: selectedMethods,
 				is_off_shelf: 0, // 默认上架
+				coverIndex: this.coverIndex, // 添加封面图片索引
 			};
+			console.log(this.coverIndex, "封面索引");
 
 			// 统一使用一个接口，但区分有无图片的处理方式
 			if (this.imgList.length > 0) {
 				// 有图片，使用uploadFile
-				console.log("有图片",this.imgList);
-				
+				console.log("有图片", this.imgList);
+
 				uni.uploadFile({
 					url: 'http://localhost:3000/api/products/create',
 					filePath: this.imgList[0],
@@ -363,41 +372,65 @@ export default {
 				console.log('封面图片上传成功，product_id:', productId);
 
 				// 上传其他图片（非封面图片）
-				this.imgList.slice(1).forEach((filePath, index) => {
-					uni.uploadFile({
-						url: 'http://localhost:3000/api/products/addImage',
-						filePath: filePath,
-						name: 'image',
-						formData: {
-							product_id: productId,
-						},
-						header: {
-							'Authorization': `Bearer ${token}`,
-						},
-						success: (res) => {
-							const data = JSON.parse(res.data);
-							if (res.statusCode === 200) {
-								console.log(`图片 ${index + 1} 上传成功`);
-							} else {
-								uni.showToast({
-									title: data.message || '上传失败，请重试',
-									icon: 'none',
-									duration: 2000,
+				const uploadRemainingImages = async () => {
+					// 遍历剩余图片，依次上传
+					for (let i = 1; i < this.imgList.length; i++) {
+						const filePath = this.imgList[i];
+						const isCover = i === this.coverIndex; // 判断该图片是否应该是封面
+
+						console.log(`上传图片 ${i}，是否封面:`, isCover);
+
+						try {
+							await new Promise((resolve, reject) => {
+								uni.uploadFile({
+									url: 'http://localhost:3000/api/products/addImage',
+									filePath: filePath,
+									name: 'image',
+									formData: {
+										product_id: productId,
+										is_cover: isCover ? "1" : "0" // 传递封面标记
+									},
+									header: {
+										'Authorization': `Bearer ${token}`
+									},
+									success: (res) => {
+										const data = JSON.parse(res.data);
+										if (res.statusCode === 200) {
+											console.log(`图片 ${i} 上传成功`);
+											resolve();
+										} else {
+											console.error(`图片 ${i} 上传失败:`, data.message);
+											reject(new Error(data.message));
+										}
+									},
+									fail: (err) => {
+										console.error(`图片 ${i} 上传失败:`, err);
+										reject(err);
+									}
 								});
-							}
-						},
-						fail: this.handleUploadFail
+							});
+						} catch (error) {
+							console.error(`图片 ${i} 上传出错:`, error);
+							// 继续上传其他图片，不中断
+						}
+					}
+
+					// 所有图片上传完成后的处理
+					this.resetForm();
+					uni.showToast({
+						title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
+						icon: 'success',
+						duration: 2000
 					});
-				});
-
-				// 重置表单
-				this.resetForm();
-
-				// 显示发布成功提示
-				uni.showToast({
-					title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
-					icon: 'success',
-					duration: 2000,
+				};
+				// 执行上传
+				uploadRemainingImages().then(() => {
+					// 上传完成后跳转
+					setTimeout(() => {
+						uni.switchTab({
+							url: '/pages/my/my'
+						});
+					}, 1500);
 				});
 			} else {
 				uni.showToast({
@@ -495,7 +528,8 @@ export default {
 					if (this.imgList.length != 0) {
 						this.imgList = this.imgList.concat(res.tempFilePaths)
 					} else {
-						this.imgList = res.tempFilePaths
+						this.imgList = res.tempFilePaths;
+						this.coverIndex = 0;
 					}
 				}
 			});
@@ -515,8 +549,18 @@ export default {
 				confirmText: '删除',
 				success: res => {
 					if (res.confirm) {
-						this.imgList.splice(e.currentTarget.dataset.index, 1);
-						this.imgList = this.imgList
+						const index = e.currentTarget.dataset.index;
+
+						// 处理删除后的封面索引逻辑
+						if (index === this.coverIndex) {
+							// 如果删除的是封面图片，重新设置封面为第一张
+							this.coverIndex = this.imgList.length > 1 ? 0 : -1;
+						} else if (index < this.coverIndex) {
+							// 如果删除的图片在封面前面，封面索引减1
+							this.coverIndex--;
+						}
+
+						this.imgList.splice(index, 1);
 					}
 				}
 			})
@@ -615,307 +659,344 @@ export default {
 
 <style>
 .rule {
-  display: flex;
-  justify-content: space-between;
+	display: flex;
+	justify-content: space-between;
 }
 
 .margin-top-xl-170 {
-  margin-top: 170rpx;
+	margin-top: 170rpx;
 }
 
 /* 导航栏样式 */
 .nav-bar {
-  border-radius: 16rpx;
-  margin: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  padding: 0;
+	border-radius: 16rpx;
+	margin: 20rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+	overflow: hidden;
+	padding: 0;
 }
 
 .tab-container {
-  width: 100%;
-  padding: 0;
-  background-color: #ffffff;
+	width: 100%;
+	padding: 0;
+	background-color: #ffffff;
 }
 
 .tab-item {
-  padding: 24rpx 0;
-  border-radius: 12rpx;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-weight: 600;
+	padding: 24rpx 0;
+	border-radius: 12rpx;
+	transition: all 0.3s ease;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	font-weight: 600;
 }
 
 .tab-icon {
-  margin-bottom: 10rpx;
-  font-size: 44rpx;
+	margin-bottom: 10rpx;
+	font-size: 44rpx;
 }
 
 .active-tab {
-  background-color: #e6f7ff;
-  color: #1890ff;
-  transform: translateY(-2rpx);
-  box-shadow: 0 2rpx 10rpx rgba(24, 144, 255, 0.15);
+	background-color: #e6f7ff;
+	color: #1890ff;
+	transform: translateY(-2rpx);
+	box-shadow: 0 2rpx 10rpx rgba(24, 144, 255, 0.15);
 }
 
 /* 表单项样式 */
 .form-item {
-  border-radius: 12rpx;
-  margin: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
-  background-color: white;
-  overflow: hidden;
+	border-radius: 12rpx;
+	margin: 20rpx;
+	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+	background-color: white;
+	overflow: hidden;
 }
 
 .form-icon {
-  margin-right: 12rpx;
-  color: #1890ff;
-  font-size: 36rpx;
-  vertical-align: middle;
+	margin-right: 12rpx;
+	color: #1890ff;
+	font-size: 36rpx;
+	vertical-align: middle;
 }
 
 .form-input {
-  padding: 12rpx;
-  height: 50rpx;
-  border-radius: 8rpx;
-  background-color: #f9f9f9;
+	padding: 12rpx;
+	height: 50rpx;
+	border-radius: 8rpx;
+	background-color: #f9f9f9;
 }
 
 /* 内容区域样式 */
 .content-area {
-  border-radius: 12rpx;
-  margin: 20rpx;
-  padding: 20rpx;
-  background-color: white;
+	border-radius: 12rpx;
+	margin: 20rpx;
+	padding: 20rpx;
+	background-color: white;
 }
 
 .content-area textarea {
-  min-height: 200rpx;
-  width: 100%;
-  padding: 16rpx;
-  border-radius: 8rpx;
-  background-color: #f9f9f9;
+	min-height: 200rpx;
+	width: 100%;
+	padding: 16rpx;
+	border-radius: 8rpx;
+	background-color: #f9f9f9;
 }
 
 /* 图片上传区域 */
 .image-upload-bar {
-  border-radius: 12rpx 12rpx 0 0;
-  margin: 20rpx 20rpx 0 20rpx;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.03);
-  background-color: white;
-  padding: 20rpx;
+	border-radius: 12rpx 12rpx 0 0;
+	margin: 20rpx 20rpx 0 20rpx;
+	box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.03);
+	background-color: white;
+	padding: 20rpx;
 }
 
 .image-upload-container {
-  border-radius: 0 0 12rpx 12rpx;
-  margin: 0 20rpx 20rpx 20rpx;
-  padding: 20rpx;
-  background-color: white;
+	border-radius: 0 0 12rpx 12rpx;
+	margin: 0 20rpx 20rpx 20rpx;
+	padding: 20rpx;
+	background-color: white;
 }
 
 .section-title {
-  font-weight: 600;
-  font-size: 28rpx;
-  color: #333;
-  margin-left: 12rpx;
+	font-weight: 600;
+	font-size: 28rpx;
+	color: #333;
+	margin-left: 12rpx;
 }
 
 .grid-square {
-  border-radius: 12rpx;
-  overflow: hidden;
-  background-color: #f8f8f8;
-  padding: 16rpx;
+	border-radius: 12rpx;
+	overflow: hidden;
+	background-color: #f8f8f8;
+	padding: 16rpx;
 }
 
 .bg-img {
-  overflow: hidden;
-  border-radius: 12rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
-  position: relative;
+	overflow: hidden;
+	border-radius: 12rpx;
+	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+	position: relative;
 }
 
 .delete-icon {
-  padding: 8rpx;
-  border-radius: 50%;
-  font-size: 24rpx;
+	padding: 8rpx;
+	border-radius: 50%;
+	font-size: 24rpx;
 }
 
 .upload-box {
-  border: 2rpx dashed #ddd;
-  border-radius: 12rpx;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* justify-content: center; */
-  background-color: #fafafa;
-  padding: 30rpx 0; 
+	border: 2rpx dashed #ddd;
+	border-radius: 12rpx;
+	transition: all 0.3s ease;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	/* justify-content: center; */
+	background-color: #fafafa;
+	padding: 30rpx 0;
 }
 
 .upload-box:active {
-  background-color: #f0f0f0;
+	background-color: #f0f0f0;
 }
 
 .upload-icon {
-  font-size: 60rpx;
-  color: #1890ff;
-  /* margin-bottom: 30rpx; */
+	font-size: 60rpx;
+	color: #1890ff;
+	/* margin-bottom: 30rpx; */
 }
 
 .upload-text {
-  font-size: 24rpx;
-  color: #999;
+	font-size: 24rpx;
+	color: #999;
 }
 
 /* 价格样式 */
 .price-group {
-  border-radius: 12rpx;
-  margin: 20rpx;
-  padding: 24rpx 20rpx;
-  display: flex;
-  align-items: center;
-  background-color: white;
+	border-radius: 12rpx;
+	margin: 20rpx;
+	padding: 24rpx 20rpx;
+	display: flex;
+	align-items: center;
+	background-color: white;
 }
 
 .price-label {
-  display: flex;
-  align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 /* 分类和状态输入框 */
-.category-input, .status-input {
-  background-color: #f9f9f9;
-  border-radius: 8rpx;
-  padding: 10rpx 16rpx;
-  height: auto;
+.category-input,
+.status-input {
+	background-color: #f9f9f9;
+	border-radius: 8rpx;
+	padding: 10rpx 16rpx;
+	height: auto;
 }
 
 .select-btn {
-  border-radius: 8rpx;
-  padding: 0 30rpx;
-  background: linear-gradient(135deg, #52c41a, #389e0d);
-  box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
-  height: 60rpx;
-  line-height: 60rpx;
-  margin-left: 20rpx;
-  font-size: 26rpx;
+	border-radius: 8rpx;
+	padding: 0 30rpx;
+	background: linear-gradient(135deg, #52c41a, #389e0d);
+	box-shadow: 0 4rpx 12rpx rgba(82, 196, 26, 0.2);
+	height: 60rpx;
+	line-height: 60rpx;
+	margin-left: 20rpx;
+	font-size: 26rpx;
 }
 
 /* 交易方式 */
 .trade-method {
-  border-radius: 12rpx;
-  margin: 20rpx;
-  padding: 24rpx 20rpx;
-  background-color: white;
+	border-radius: 12rpx;
+	margin: 20rpx;
+	padding: 24rpx 20rpx;
+	background-color: white;
 }
 
 .checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
+	display: flex;
+	flex-wrap: wrap;
 }
 
 .checkbox-item {
-  margin-right: 40rpx;
-  display: flex;
-  align-items: center;
-  padding: 10rpx 16rpx;
-  border-radius: 30rpx;
-  transition: all 0.3s ease;
+	margin-right: 40rpx;
+	display: flex;
+	align-items: center;
+	padding: 10rpx 16rpx;
+	border-radius: 30rpx;
+	transition: all 0.3s ease;
 }
 
 .checked-label {
-  background-color: #e6f7ff;
-  color: #1890ff;
+	background-color: #e6f7ff;
+	color: #1890ff;
 }
 
 /* 提交按钮 */
 .submit-btn {
-  background: linear-gradient(135deg, #1890ff, #096dd9);
-  box-shadow: 0 10rpx 20rpx rgba(24, 144, 255, 0.2);
-  border-radius: 50rpx;
-  font-size: 32rpx;
-  font-weight: bold;
-  letter-spacing: 4rpx;
-  transition: all 0.3s ease;
-  color: white;
-  padding: 0 80rpx;
-  height: 90rpx;
-  line-height: 90rpx;
+	background: linear-gradient(135deg, #1890ff, #096dd9);
+	box-shadow: 0 10rpx 20rpx rgba(24, 144, 255, 0.2);
+	border-radius: 50rpx;
+	font-size: 32rpx;
+	font-weight: bold;
+	letter-spacing: 4rpx;
+	transition: all 0.3s ease;
+	color: white;
+	padding: 0 80rpx;
+	height: 90rpx;
+	line-height: 90rpx;
 }
 
 .submit-btn:active {
-  transform: translateY(4rpx);
-  box-shadow: 0 4rpx 10rpx rgba(24, 144, 255, 0.2);
+	transform: translateY(4rpx);
+	box-shadow: 0 4rpx 10rpx rgba(24, 144, 255, 0.2);
 }
 
 .submit-icon {
-  margin-right: 12rpx;
-  font-size: 32rpx;
+	margin-right: 12rpx;
+	font-size: 32rpx;
 }
 
 /* 模态框样式 */
 .modal-content {
-  border-radius: 0 16rpx 16rpx 0;
-  overflow: hidden;
+	border-radius: 0 16rpx 16rpx 0;
+	overflow: hidden;
 }
 
 .modal-header {
-  padding: 30rpx 24rpx;
-  border-bottom: 2rpx solid #f0f0f0;
+	padding: 30rpx 24rpx;
+	border-bottom: 2rpx solid #f0f0f0;
 }
 
 .modal-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #333;
+	font-size: 32rpx;
+	font-weight: 600;
+	color: #333;
 }
 
 .category-item {
-  transition: all 0.2s ease;
-  border-radius: 8rpx;
-  margin: 0 10rpx;
+	transition: all 0.2s ease;
+	border-radius: 8rpx;
+	margin: 0 10rpx;
 }
 
 .category-item:active {
-  background-color: #e6f7ff;
+	background-color: #e6f7ff;
+}
+
+/* 封面标记图标样式 */
+.cover-icon {
+	position: absolute;
+	top: 8rpx;
+	right: 8rpx;
+	padding: 8rpx;
+	border-radius: 8rpx;
+	font-size: 24rpx;
+	z-index: 1;
+}
+
+.cover-text {
+	margin-left: 8rpx;
+	font-size: 22rpx;
+}
+
+/* 当图片既是封面又要删除时，调整位置 */
+.bg-img .delete-icon {
+	top: 8rpx;
+	left: 8rpx;
 }
 
 /* 验证动画 */
 @keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-5rpx);
-  }
-  20%, 40%, 60%, 80% {
-    transform: translateX(5rpx);
-  }
+
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+
+	10%,
+	30%,
+	50%,
+	70%,
+	90% {
+		transform: translateX(-5rpx);
+	}
+
+	20%,
+	40%,
+	60%,
+	80% {
+		transform: translateX(5rpx);
+	}
 }
 
 .shake-animation {
-  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
-  background-color: rgba(255, 73, 73, 0.05);
+	animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+	background-color: rgba(255, 73, 73, 0.05);
 }
 
 @keyframes flash {
-  0%, 100% {
-    background-color: transparent;
-  }
-  50% {
-    background-color: rgba(255, 73, 73, 0.2);
-  }
+
+	0%,
+	100% {
+		background-color: transparent;
+	}
+
+	50% {
+		background-color: rgba(255, 73, 73, 0.2);
+	}
 }
 
 .error-field {
-  animation: flash 0.5s ease;
-  border: 1rpx solid rgba(255, 73, 73, 0.5) !important;
+	animation: flash 0.5s ease;
+	border: 1rpx solid rgba(255, 73, 73, 0.5) !important;
 }
 
 .error-input {
-  animation: flash 0.5s ease;
-  background-color: rgba(255, 73, 73, 0.1);
+	animation: flash 0.5s ease;
+	background-color: rgba(255, 73, 73, 0.1);
 }
 </style>

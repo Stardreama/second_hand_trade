@@ -51,6 +51,10 @@
 						<view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index">
 							<CloseOutlined />
 						</view>
+						<view class="cu-tag bg-blue cover-icon" @tap.stop="SetAsCover" :data-index="index">
+							<StarOutlined />
+							<text v-if="coverIndex === index" class="cover-text">封面</text>
+						</view>
 					</view>
 
 					<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
@@ -242,6 +246,7 @@ export default {
 				{ value: "同城面交", checked: false },
 				{ value: "邮寄", checked: false },
 			],
+			coverIndex: 0, // 默认第一张图片为封面
 			// 错误状态变量
 			titleError: false,
 			contentError: false,
@@ -264,7 +269,16 @@ export default {
 			// 清空表单
 			this.resetForm();
 		},
-
+		// 设置封面图片
+		SetAsCover(e) {
+			const index = e.currentTarget.dataset.index;
+			this.coverIndex = index;
+			uni.showToast({
+				title: '已设为封面图片',
+				icon: 'success',
+				duration: 1500
+			});
+		},
 		// 重置表单
 		resetForm() {
 			this.title = '';
@@ -319,6 +333,7 @@ export default {
 				original_price: this.tabIndex === 0 ? this.newMoney : '0',
 				product_status: this.tabIndex === 0 ? this.itemLists[this.itemListsIndex] : '求购',
 				product_class: this.classify,
+				coverIndex: this.coverIndex, // 添加封面图片索引
 				product_type: this.tabIndex === 0 ? 'sell' : 'buy',
 				status: this.checkboxs.filter(i => i.checked).map(i => i.value).join('|'),
 			};
@@ -407,50 +422,68 @@ export default {
 			if (res.statusCode === 201) {
 				const productId = data.product_id;
 				console.log('封面图片上传成功，product_id:', productId);
-				console.log("更新商品，imglist", this.imgList);
 
 				// 上传其他图片（非封面图片）
-				this.imgList.slice(1).forEach((filePath, index) => {
-					uni.uploadFile({
-						url: 'http://localhost:3000/api/products/addImage',
-						filePath: filePath,
-						name: 'image',
-						formData: {
-							product_id: productId,
-						},
-						header: {
-							'Authorization': `Bearer ${token}`,
-						},
-						success: (res) => {
-							const data = JSON.parse(res.data);
-							if (res.statusCode === 200) {
-								console.log(`图片 ${index + 1} 上传成功`);
-							} else {
-								uni.showToast({
-									title: data.message || '上传失败，请重试',
-									icon: 'none',
-									duration: 2000,
+				const uploadRemainingImages = async () => {
+					// 遍历剩余图片，依次上传
+					for (let i = 1; i < this.imgList.length; i++) {
+						const filePath = this.imgList[i];
+						const isCover = i === this.coverIndex; // 判断该图片是否应该是封面
+
+						console.log(`上传图片 ${i}，是否封面:`, isCover);
+
+						try {
+							await new Promise((resolve, reject) => {
+								uni.uploadFile({
+									url: 'http://localhost:3000/api/products/addImage',
+									filePath: filePath,
+									name: 'image',
+									formData: {
+										product_id: productId,
+										is_cover: isCover ? "1" : "0" // 传递封面标记
+									},
+									header: {
+										'Authorization': `Bearer ${token}`
+									},
+									success: (res) => {
+										const data = JSON.parse(res.data);
+										if (res.statusCode === 200) {
+											console.log(`图片 ${i} 上传成功`);
+											resolve();
+										} else {
+											console.error(`图片 ${i} 上传失败:`, data.message);
+											reject(new Error(data.message));
+										}
+									},
+									fail: (err) => {
+										console.error(`图片 ${i} 上传失败:`, err);
+										reject(err);
+									}
 								});
-							}
-						},
-						fail: this.handleUploadFail
-					});
-				});
+							});
+						} catch (error) {
+							console.error(`图片 ${i} 上传出错:`, error);
+							// 继续上传其他图片，不中断
+						}
+					}
 
-				// 重置表单
-				this.resetForm();
-
-				// 显示发布成功提示
-				uni.showToast({
-					title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
-					icon: 'success',
-					duration: 2000,
-				});
-				setTimeout(() => {
-					uni.switchTab({
-						url: '/pages/my/my'
+					// 所有图片上传完成后的处理
+					this.resetForm();
+					uni.showToast({
+						title: this.tabIndex === 0 ? '商品发布成功' : '求购信息发布成功',
+						icon: 'success',
+						duration: 2000
 					});
-				}, 1500);
+				};
+				// 执行上传
+				uploadRemainingImages().then(() => {
+					// 上传完成后跳转
+					setTimeout(() => {
+						uni.switchTab({
+							url: '/pages/my/my'
+						});
+					}, 1500);
+				});
 			} else {
 				uni.showToast({
 					title: data.message || '发布失败，请重试',
@@ -459,6 +492,7 @@ export default {
 				});
 			}
 		},
+
 		getImageUrl(path) {
 			// 将Windows路径分隔符转换为URL标准分隔符
 			// 如果已经是完整 URL，直接返回
@@ -584,11 +618,11 @@ export default {
 							this.deletedImages.push(this.originalImageUrls[index]);
 						}
 						console.log('要删除的图片:', this.deletedImages);
-						
+
 						// 删除图片
 						this.imgList.splice(index, 1);
 						console.log('删除后的图片列表:', this.imgList);
-						
+
 						// 检查是否删除所有图片，如果是，添加默认图片
 						if (this.imgList.length === 0) {
 							// 根据当前标签页选择默认图片
@@ -734,13 +768,26 @@ export default {
 
 						// 转换图片URLs为可显示格式
 						this.imgList = product.images.map(url => {
-							if (url.startsWith('http')) {
+							if (url.startsWith('http') || url.startsWith('https')) {
 								return url;
 							} else {
 								return `http://localhost:3000/${url.replace(/\\/g, '/')}`;
 							}
 						});
+						// 找到默认图片的索引
+						if (product.default_images && product.default_images.length > 0) {
+							const defaultImageUrl = product.default_images[0];
+							const formattedDefaultUrl = defaultImageUrl.startsWith('http')
+								? defaultImageUrl
+								: `http://localhost:3000/${defaultImageUrl.replace(/\\/g, '/')}`;
+
+							// 查找这个URL在imgList中的索引
+							const defaultIndex = this.imgList.findIndex(url => url === formattedDefaultUrl);
+							this.coverIndex = defaultIndex >= 0 ? defaultIndex : 0;
+						}
+
 						console.log('初始化this.imgList', this.imgList);
+						console.log('封面图片索引:', this.coverIndex);
 
 					}
 				} else {
@@ -1054,6 +1101,28 @@ export default {
 
 .category-item:active {
 	background-color: #e6f7ff;
+}
+
+/* 封面标记图标样式 */
+.cover-icon {
+	position: absolute;
+	top: 8rpx;
+	right: 8rpx;
+	padding: 8rpx;
+	border-radius: 8rpx;
+	font-size: 24rpx;
+	z-index: 1;
+}
+
+.cover-text {
+	margin-left: 8rpx;
+	font-size: 22rpx;
+}
+
+/* 当图片既是封面又要删除时，调整位置 */
+.bg-img .delete-icon {
+	top: 8rpx;
+	left: 8rpx;
 }
 
 /* 验证动画 */

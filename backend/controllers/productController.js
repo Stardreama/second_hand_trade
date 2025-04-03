@@ -23,11 +23,13 @@ const createProduct = (req, res) => {
     product_class,
     product_type,
     is_off_shelf,
+    coverIndex, // 封面索引字段
   } = req.body;
+  console.log("后端收到封面索引:", coverIndex);
 
   const seller_id = req.seller_id;
   const files = req.files || []; // 可能没有文件
-
+  console.log("进入发布商品这里files.length:", files.length);
   // 处理求购商品的默认值
   const finalProductStatus = product_type === "buy" ? "求购" : product_status;
 
@@ -55,6 +57,8 @@ const createProduct = (req, res) => {
     is_off_shelf || 0, // 默认上架
     (err, result) => {
       if (err) {
+        console.log("插入产品错误:", err);
+
         return res.status(500).json({
           message: "数据库错误",
           error: err.message,
@@ -94,10 +98,43 @@ const createProduct = (req, res) => {
 
       // 添加用户上传的图片
       if (files.length > 0) {
+        // 验证封面索引是否有效
+        console.log("添加用户上传的图片这里files.length:", files.length);
+
+        const parsedCoverIndex = parseInt(coverIndex);
+        const isValidCoverIndex =
+          !isNaN(parsedCoverIndex) &&
+          parsedCoverIndex >= 0 &&
+          parsedCoverIndex < files.length;
+
+        console.log(
+          "封面索引验证:",
+          parsedCoverIndex,
+          "是否有效:",
+          isValidCoverIndex
+        );
+
+        // 首先清除默认标志
         const filePromises = files.map((file, index) => {
           return new Promise((resolve, reject) => {
-            // 第一张图片设为默认图片
-            const isDefault = index === 0 ? 1 : 0;
+            // 判断当前图片是否应该是封面
+            const isDefault = isValidCoverIndex
+              ? index === parsedCoverIndex
+                ? 1
+                : 0
+              : index === 0
+              ? 1
+              : 0;
+
+            console.log(
+              `处理图片 ${index}:`,
+              file.path,
+              "是否默认:",
+              isDefault,
+              "封面索引:",
+              parsedCoverIndex
+            );
+
             Product.addImage(productId, file.path, isDefault, (err, result) => {
               if (err) {
                 console.error(`图片${index}插入失败`, err);
@@ -136,21 +173,56 @@ const createProduct = (req, res) => {
 };
 
 const addImage = (req, res) => {
-  const { product_id } = req.body;
+  const { product_id, is_cover } = req.body;
   const file = req.file;
   if (!file) {
     return res.status(400).json({ message: "未上传图片" });
   }
 
-  // 调用模型方法插入图片记录
-  Product.addImage(product_id, file.path, (err, result) => {
-    if (err) {
+  // 如果设置为封面，先清除其他图片的封面标记
+  const handleImage = async () => {
+    try {
+      // 如果要设为封面，先清除其他图片的封面标记
+      if (is_cover === "1" || is_cover === true || is_cover === 1) {
+        await new Promise((resolve, reject) => {
+          db.query(
+            "UPDATE product_images SET is_default = 0 WHERE product_id = ?",
+            [product_id],
+            (err, result) => {
+              if (err) reject(err);
+              else resolve(result);
+            }
+          );
+        });
+        
+        // 添加新图片并设置为封面
+        Product.addImage(product_id, file.path, 1, (err, result) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ message: "图片上传失败", error: err.message });
+          }
+          res.status(200).json({ message: "封面图片上传成功" });
+        });
+      } else {
+        // 普通图片添加
+        Product.addImage(product_id, file.path, 0, (err, result) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({ message: "图片上传失败", error: err.message });
+          }
+          res.status(200).json({ message: "图片上传成功" });
+        });
+      }
+    } catch (error) {
       return res
         .status(500)
-        .json({ message: "图片上传失败", error: err.message });
+        .json({ message: "图片处理失败", error: error.message });
     }
-    res.status(200).json({ message: "图片上传成功" });
-  });
+  };
+
+  handleImage();
 };
 
 // 搜索商品
@@ -268,6 +340,7 @@ const updateProduct = async (req, res) => {
       status,
       product_type,
       deleted_images,
+      coverIndex, // 封面索引字段
     } = req.body;
 
     const seller_id = req.seller_id;
@@ -471,14 +544,20 @@ const updateProduct = async (req, res) => {
 
             // 3. 添加新图片
             if (files.length > 0) {
-              // 如果有新上传的图片, 查询当前是否有默认图片
-              const existingDefaultQuery =
-                "SELECT COUNT(*) as count FROM product_images WHERE product_id = ? AND is_default = 1";
+              // 解析封面索引
+              const parsedCoverIndex = parseInt(coverIndex);
+              const validCoverIndex =
+                !isNaN(parsedCoverIndex) &&
+                parsedCoverIndex >= 0 &&
+                parsedCoverIndex < files.length;
 
-              const existingDefaultResult = await new Promise(
+              // 获取现有图片数量，用于校正coverIndex
+              const existingImagesQuery =
+                "SELECT COUNT(*) as count FROM product_images WHERE product_id = ?";
+              const existingImagesResult = await new Promise(
                 (resolve, reject) => {
                   connection.query(
-                    existingDefaultQuery,
+                    existingImagesQuery,
                     [product_id],
                     (err, result) => {
                       if (err) reject(err);
@@ -488,12 +567,19 @@ const updateProduct = async (req, res) => {
                 }
               );
 
-              // 仅当没有默认图片时，将第一张新图片设为默认
-              const hasExistingDefault = existingDefaultResult[0].count > 0;
+              const existingCount = existingImagesResult[0].count;
 
               const insertImagePromises = files.map((file, index) => {
-                // 如果没有现有默认图片，第一张设为默认
-                const isDefault = !hasExistingDefault && index === 0 ? 1 : 0;
+                // 如果用户选择了封面且是在新上传的图片中
+                let isDefault = 0;
+                if (validCoverIndex && coverIndex === index) {
+                  isDefault = 1;
+                  // 清除其他图片的默认标记
+                  connection.query(
+                    "UPDATE product_images SET is_default = 0 WHERE product_id = ?",
+                    [product_id]
+                  );
+                }
 
                 return new Promise((resolve, reject) => {
                   connection.query(
@@ -509,7 +595,54 @@ const updateProduct = async (req, res) => {
 
               await Promise.all(insertImagePromises);
             }
+            // 更新现有图片中的封面图片
+            const parsedCoverIndex = parseInt(coverIndex);
 
+            // 如果封面是选择了现有图片中的一张（不是新上传的图片）
+            if (!isNaN(parsedCoverIndex) && parsedCoverIndex >= 0) {
+              const existingImagesQuery =
+                "SELECT id, image_url FROM product_images WHERE product_id = ? ORDER BY id ASC";
+              const existingImages = await new Promise((resolve, reject) => {
+                connection.query(
+                  existingImagesQuery,
+                  [product_id],
+                  (err, result) => {
+                    if (err) reject(err);
+                    else resolve(result);
+                  }
+                );
+              });
+
+              // 找到对应的图片ID
+              if (
+                existingImages.length > 0 &&
+                parsedCoverIndex < existingImages.length
+              ) {
+                // 先清除所有默认标记
+                await new Promise((resolve, reject) => {
+                  connection.query(
+                    "UPDATE product_images SET is_default = 0 WHERE product_id = ?",
+                    [product_id],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                });
+
+                // 设置新的默认图片
+                await new Promise((resolve, reject) => {
+                  connection.query(
+                    "UPDATE product_images SET is_default = 1 WHERE id = ?",
+                    [existingImages[parsedCoverIndex].id],
+                    (err, result) => {
+                      if (err) reject(err);
+                      else resolve(result);
+                    }
+                  );
+                });
+              }
+            }
             // 4. 确保至少有一张默认图片
             const checkDefaultImageQuery =
               "SELECT COUNT(*) as count FROM product_images WHERE product_id = ? AND is_default = 1";
