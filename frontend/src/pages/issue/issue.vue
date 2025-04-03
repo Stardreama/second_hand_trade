@@ -302,11 +302,14 @@ export default {
 				product_type: this.tabIndex === 0 ? 'sell' : 'buy', // 区分出售与求购
 				token: token,
 				status: selectedMethods,
+				is_off_shelf: 0, // 默认上架
 			};
 
 			// 统一使用一个接口，但区分有无图片的处理方式
 			if (this.imgList.length > 0) {
 				// 有图片，使用uploadFile
+				console.log("有图片",this.imgList);
+				
 				uni.uploadFile({
 					url: 'http://localhost:3000/api/products/create',
 					filePath: this.imgList[0],
@@ -322,6 +325,7 @@ export default {
 				});
 			} else {
 				// 无图片，使用普通请求
+				console.log("无图片");
 				uni.request({
 					url: 'http://localhost:3000/api/products/create',
 					method: 'POST',

@@ -332,13 +332,14 @@ export default {
 				console.log('要删除的图片:', this.deletedImages);
 				console.log('默认图片(不删除):', this.defaultImages);
 
-				
+
 			}
 
 			// 根据是否有新图片决定使用哪种提交方式
 			if (this.imgList.length > 0 && (this.isEdit ? this.imgList.some(img => !img.startsWith('http')) : true)) {
 				// 有新上传的图片，使用uploadFile
 				const newImagePath = this.imgList.find(img => !img.startsWith('http')) || this.imgList[0];
+				console.log("有新图片");
 
 				uni.uploadFile({
 					url: this.isEdit ? 'http://localhost:3000/api/products/update' : 'http://localhost:3000/api/products/create',
@@ -347,12 +348,21 @@ export default {
 					formData: formData,
 					header: { 'Authorization': `Bearer ${token}` },
 					success: (res) => {
+						console.log("isue_edit有图片更新商品中");
+
 						this.handleUploadSuccess(res, token);
+						console.log("isue_edit有图片更新商品完成");
+						setTimeout(() => {
+							uni.switchTab({
+								url: '/pages/my/my'
+							});
+						}, 1000);
 					},
 					fail: this.handleUploadFail
 				});
 			} else {
 				// 无新图片，使用普通请求
+				console.log("无新图片");
 				uni.request({
 					url: this.isEdit ? 'http://localhost:3000/api/products/update' : 'http://localhost:3000/api/products/create',
 					method: 'POST',
@@ -365,11 +375,13 @@ export default {
 								icon: 'success',
 								duration: 2000,
 								success: () => {
+									console.log("isue_edit无图片更新商品更新成功");
+
 									setTimeout(() => {
 										uni.switchTab({
 											url: '/pages/my/my'
 										});
-									}, 1500);
+									}, 1000);
 								}
 							});
 						} else {
@@ -391,7 +403,8 @@ export default {
 			if (res.statusCode === 201) {
 				const productId = data.product_id;
 				console.log('封面图片上传成功，product_id:', productId);
-
+				console.log("更新商品，imglist", this.imgList);
+				
 				// 上传其他图片（非封面图片）
 				this.imgList.slice(1).forEach((filePath, index) => {
 					uni.uploadFile({
@@ -683,7 +696,7 @@ export default {
 				if (response.statusCode === 200) {
 					const product = response.data;
 					console.log('商品详情:', product);
-					
+
 					// 设置表单数据
 					this.title = product.product_title;
 					this.content = product.description;

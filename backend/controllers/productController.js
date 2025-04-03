@@ -22,6 +22,7 @@ const createProduct = (req, res) => {
     status,
     product_class,
     product_type,
+    is_off_shelf,
   } = req.body;
 
   const seller_id = req.seller_id;
@@ -33,6 +34,8 @@ const createProduct = (req, res) => {
   if (files.length > 0) {
     // 如果上传了图片，使用第一张作为封面
     coverImage = files[0].path;
+    console.log("封面图片路径:", coverImage);
+    
   } else {
     // 没有上传图片，使用默认图片
     isDefaultImage = true; // 标记为默认图片
@@ -66,6 +69,7 @@ const createProduct = (req, res) => {
     product_class,
     status || "",
     product_type || "sell",
+    is_off_shelf || 0, // 默认上架
     (err, result) => {
       if (err) {
         return res.status(500).json({
@@ -73,7 +77,8 @@ const createProduct = (req, res) => {
           error: err.message,
         });
       }
-
+      console.log("插入产品结果:", result);
+      
       const productId = result.insertId;
       console.log("产品插入成功，product_id:", productId);
       // 准备插入所有图片的Promise数组
