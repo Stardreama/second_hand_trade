@@ -56,8 +56,12 @@ const Conversation = {
   
   getUserConversations: (userId) => {
     return new Promise((resolve, reject) => {
+      // 修改查询，使用子查询从product_images表获取默认图片
       const query = `
-        SELECT c.*, p.product_title, p.image as product_image
+        SELECT c.*, p.product_title, 
+          (SELECT pi.image_url FROM product_images pi 
+           WHERE pi.product_id = c.product_id AND pi.is_default = 1 
+           LIMIT 1) as product_image
         FROM conversations c
         LEFT JOIN products p ON c.product_id = p.product_id
         WHERE c.buyer_id = ? OR c.seller_id = ?
@@ -66,6 +70,15 @@ const Conversation = {
       
       db.query(query, [userId, userId], (err, results) => {
         if (err) return reject(err);
+        
+        // 为没有默认图片的商品添加一个默认图片
+        results.forEach(conversation => {
+          if (!conversation.product_image) {
+            // 使用默认图片
+            conversation.product_image = "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
+          }
+        });
+        
         resolve(results);
       });
     });
