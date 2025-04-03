@@ -194,7 +194,7 @@ const addImage = (req, res) => {
             }
           );
         });
-        
+
         // 添加新图片并设置为封面
         Product.addImage(product_id, file.path, 1, (err, result) => {
           if (err) {

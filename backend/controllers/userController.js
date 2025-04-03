@@ -17,9 +17,11 @@ updateQRCode = async (req, res) => {
 // 不使用 token，通过传递 seller_id 获取二维码
 getQRCodeNoToken = async (req, res) => {
   const { seller_id } = req.query; // 获取前端传递的 seller_id
-  
+
   if (!seller_id) {
-    return res.status(400).json({ success: false, message: "seller_id 参数缺失" });
+    return res
+      .status(400)
+      .json({ success: false, message: "seller_id 参数缺失" });
   }
 
   try {
@@ -33,7 +35,6 @@ getQRCodeNoToken = async (req, res) => {
     res.status(500).json({ success: false, message: "服务器错误" });
   }
 };
-
 
 module.exports = {
   getQRCode,

@@ -25,7 +25,7 @@ const Product = {
     callback
   ) => {
     const query =
-    "INSERT INTO products (seller_id, price, original_price, description, product_title, product_status, product_class, status, product_type, is_off_shelf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO products (seller_id, price, original_price, description, product_title, product_status, product_class, status, product_type, is_off_shelf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     db.query(
       query,

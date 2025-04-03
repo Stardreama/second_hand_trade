@@ -1,6 +1,6 @@
 <template>
   <!-- <view> -->
-    <view v-if="productDetail" class="page-wrapper" :class="{'off-shelf-container': productDetail.is_off_shelf === 1}">
+  <view v-if="productDetail" class="page-wrapper" :class="{ 'off-shelf-container': productDetail.is_off_shelf === 1 }">
     <!-- 下架遮罩层 -->
     <view class="off-shelf-mask" v-if="productDetail.is_off_shelf === 1">
       <view class="off-shelf-text">已下架</view>
@@ -42,13 +42,9 @@
       </view>
       <!-- end -->
       <!-- 图片位置 -->
-<block v-for="(item, index) in images" :key="index">
-  <image 
-    class="img" 
-    :src="getImageUrl(item)" 
-    mode="widthFix"
-    @tap="previewImage(index)"></image>
-</block>
+      <block v-for="(item, index) in images" :key="index">
+        <image class="img" :src="getImageUrl(item)" mode="widthFix" @tap="previewImage(index)"></image>
+      </block>
       <view class="browse">
         <view>
           <text></text>
@@ -72,34 +68,25 @@
             <view :class="['cuIcon-appreciatefill text-xl', liked ? 'text-orange' : 'text-gray']"></view>
             <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
           </view>
-          
+
           <!-- 聊一聊按钮 - 下架时禁用 -->
-          <view class="action-icon" 
-                @tap="chatWithSeller" 
-                v-if="productDetail.seller_id !== userInfo.student_id && productDetail.is_off_shelf !== 1">
+          <view class="action-icon" @tap="chatWithSeller"
+            v-if="productDetail.seller_id !== userInfo.student_id && productDetail.is_off_shelf !== 1">
             <view class="cuIcon-message text-blue text-xl"></view>
             <text class="action-text text-blue">聊一聊</text>
           </view>
         </view>
-        
+
         <!-- 右侧主操作按钮 -->
         <view class="action-right">
-          <button 
-            v-if="productDetail.seller_id === userInfo.student_id" 
-            class="cu-btn action-button edit-button" 
+          <button v-if="productDetail.seller_id === userInfo.student_id" class="cu-btn action-button edit-button"
             @tap="editProduct">
             编辑商品
           </button>
-          <button 
-            v-else-if="productDetail.is_off_shelf !== 1"
-            class="cu-btn action-button buy-button" 
-            @tap="buy">
+          <button v-else-if="productDetail.is_off_shelf !== 1" class="cu-btn action-button buy-button" @tap="buy">
             立即购买
           </button>
-          <button 
-            v-else
-            class="cu-btn action-button disabled-button"
-            disabled>
+          <button v-else class="cu-btn action-button disabled-button" disabled>
             商品已下架
           </button>
         </view>
@@ -191,15 +178,15 @@ export default {
       });
     },
     // 添加到methods中
-previewImage(index) {
-  const urls = this.images.map(item => this.getImageUrl(item));
-  uni.previewImage({
-    current: index,
-    urls: urls,
-    indicator: "number",
-    loop: true
-  });
-},
+    previewImage(index) {
+      const urls = this.images.map(item => this.getImageUrl(item));
+      uni.previewImage({
+        current: index,
+        urls: urls,
+        indicator: "number",
+        loop: true
+      });
+    },
     // 获取商品图片和头像的完整 URL
     getImageUrl(imagePath) {
       if (!imagePath) return ""; // 防空
@@ -295,6 +282,7 @@ previewImage(index) {
   justify-content: space-around;
   margin-top: 20rpx;
 }
+
 /* 优化后的底部操作栏样式 */
 .action-bar-container {
   position: fixed;
@@ -364,6 +352,7 @@ previewImage(index) {
 .page-wrapper {
   padding-bottom: 120rpx;
 }
+
 /* 商家信息 */
 
 .padding-name {
@@ -423,14 +412,18 @@ text-title-size {
   color: black;
   font-size: 35rpx;
 }
+
 /* 修改图片样式，保持原比例 */
 .img {
   margin-top: 20rpx;
   width: 100%;
-  object-fit: contain; /* 保持图片原比例 */
+  object-fit: contain;
+  /* 保持图片原比例 */
   max-height: 800rpx;
-  border-radius: 12rpx; /* 添加圆角美化效果 */
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05); /* 轻微阴影增加层次感 */
+  border-radius: 12rpx;
+  /* 添加圆角美化效果 */
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  /* 轻微阴影增加层次感 */
 }
 
 .cu-tag {
@@ -641,5 +634,6 @@ text-title-size {
   color: #666666 !important;
   cursor: not-allowed;
 }
+
 /* end */
 </style>

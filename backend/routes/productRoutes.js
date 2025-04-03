@@ -127,13 +127,21 @@ router.get("/search", productController.searchProduct);
 router.get("/:product_id", productController.getProductById);
 router.post("/like", jwtService.authMiddleware, productController.toggleLike); // 点赞或取消点赞
 // 更新商品价格
-router.post('/updatePrice', jwtService.authMiddleware, productController.updatePrice);
+router.post(
+  "/updatePrice",
+  jwtService.authMiddleware,
+  productController.updatePrice
+);
 router.get(
   "/like/:productId",
   jwtService.authMiddleware,
   productController.getProductLike
 );
-router.post('/status', jwtService.authMiddleware, productController.updateProductStatus);
+router.post(
+  "/status",
+  jwtService.authMiddleware,
+  productController.updateProductStatus
+);
 //渲染数据库中的所有商品
 router.get("/", productController.getAllProducts);
 module.exports = router;

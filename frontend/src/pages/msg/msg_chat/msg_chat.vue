@@ -572,14 +572,14 @@ export default {
     // 添加自动检查已读状态的方法
     setupReadStatusCheck() {
       console.log('自动检查已读状态的方法');
-      
+
       setInterval(() => {
         const currentTime = Date.now();
         if (currentTime - this.lastReadCheckTime > 5000) {
           this.markMessagesAsRead();
           this.lastReadCheckTime = currentTime;
         }
-      }, 1000); 
+      }, 1000);
     },
     scrollToBottom() {
       setTimeout(() => {

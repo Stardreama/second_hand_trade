@@ -5,11 +5,11 @@
       <view class="address-item" v-for="(item, index) in addressList" :key="item.address_id">
         <view class="address-info">
           <view class="user-info">
-            <text class="name">{{item.name}}</text>
-            <text class="phone">{{item.phone}}</text>
+            <text class="name">{{ item.name }}</text>
+            <text class="phone">{{ item.phone }}</text>
             <text class="default-tag" v-if="item.is_default">默认</text>
           </view>
-          <view class="address-detail">{{item.province}}{{item.city}}{{item.district}}{{item.address}}</view>
+          <view class="address-detail">{{ item.province }}{{ item.city }}{{ item.district }}{{ item.address }}</view>
         </view>
         <view class="operation">
           <view class="set-default" v-if="!item.is_default" @tap="setDefault(item.address_id)">设为默认</view>
@@ -18,7 +18,7 @@
         </view>
       </view>
     </view>
-    
+
     <!-- 空地址提示 -->
     <view class="empty-address" v-else>
       <text class="tips">暂无收货地址</text>
@@ -47,7 +47,7 @@ export default {
     getAddressList() {
       const userInfo = uni.getStorageSync('userInfo');
       const userId = userInfo ? userInfo.student_id : null;
-      
+
       if (!userId) {
         uni.showToast({
           title: '请先登录',
@@ -55,7 +55,7 @@ export default {
         });
         return;
       }
-      
+
       uni.request({
         url: 'http://localhost:3000/api/address',
         method: 'GET',
@@ -83,14 +83,14 @@ export default {
         }
       });
     },
-    
+
     // 添加新地址
     addNewAddress() {
       uni.navigateTo({
         url: '/pages/my/my_address/address_edit'
       });
     },
-    
+
     // 编辑地址
     editAddress(item) {
       // 将地址数据序列化后传递
@@ -98,13 +98,13 @@ export default {
         url: `/pages/my/my_address/address_edit?id=${item.address_id}`
       });
     },
-    
+
     // 删除地址
     deleteAddress(addressId, index) {
       // 获取用户ID
       const userInfo = uni.getStorageSync('userInfo');
       const userId = userInfo ? userInfo.student_id : null;
-      
+
       if (!userId) {
         uni.showToast({
           title: '请先登录',
@@ -112,7 +112,7 @@ export default {
         });
         return;
       }
-      
+
       uni.showModal({
         title: '提示',
         content: '确定要删除该地址吗？',
@@ -121,7 +121,7 @@ export default {
             uni.showLoading({
               title: '删除中...'
             });
-            
+
             uni.request({
               url: `http://localhost:3000/api/address/${addressId}`,
               method: 'DELETE',
@@ -158,13 +158,13 @@ export default {
         }
       });
     },
-    
+
     // 设置默认地址
     setDefault(addressId) {
       // 获取用户ID
       const userInfo = uni.getStorageSync('userInfo');
       const userId = userInfo ? userInfo.student_id : null;
-      
+
       if (!userId) {
         uni.showToast({
           title: '请先登录',
@@ -172,11 +172,11 @@ export default {
         });
         return;
       }
-      
+
       uni.showLoading({
         title: '设置中...'
       });
-      
+
       uni.request({
         url: `http://localhost:3000/api/address/${addressId}/default`,
         method: 'PUT',
@@ -221,19 +221,23 @@ export default {
   background: #f5f5f5;
   min-height: 100vh;
 }
+
 .address-item {
   background: #fff;
   padding: 30rpx;
   margin-bottom: 20rpx;
   border-radius: 12rpx;
 }
+
 .user-info {
   margin-bottom: 20rpx;
 }
+
 .name {
   margin-right: 20rpx;
   font-weight: bold;
 }
+
 .default-tag {
   background: #f56c6c;
   color: #fff;
@@ -242,28 +246,36 @@ export default {
   border-radius: 8rpx;
   margin-left: 10rpx;
 }
+
 .address-detail {
   color: #666;
   font-size: 28rpx;
 }
+
 .operation {
   display: flex;
   justify-content: flex-end;
   margin-top: 20rpx;
   font-size: 28rpx;
 }
-.edit, .delete, .set-default {
+
+.edit,
+.delete,
+.set-default {
   padding: 10rpx 20rpx;
   color: #666;
 }
+
 .set-default {
   color: #409EFF;
 }
+
 .empty-address {
   text-align: center;
   padding: 100rpx 0;
   color: #999;
 }
+
 .add-btn {
   position: fixed;
   bottom: 40rpx;

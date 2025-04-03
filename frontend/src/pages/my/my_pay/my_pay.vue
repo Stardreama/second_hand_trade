@@ -9,11 +9,7 @@
 
     <view class="upload-section">
       <view class="upload-container" @tap="uploadImage">
-        <image
-          v-if="wechatPayCode"
-          :src="wechatPayCode"
-          class="pay-code-img"
-        ></image>
+        <image v-if="wechatPayCode" :src="wechatPayCode" class="pay-code-img"></image>
         <view v-else class="upload-placeholder">
           <uni-icons type="image" size="80" color="#d3d3d3"></uni-icons>
           <text class="placeholder-text">请选择你的收款图片</text>
@@ -22,11 +18,7 @@
     </view>
 
     <view class="button-section">
-      <button
-        v-if="wechatPayCode"
-        class="cu-btn bg-blue margin-top"
-        @tap="uploadImage"
-      >
+      <button v-if="wechatPayCode" class="cu-btn bg-blue margin-top" @tap="uploadImage">
         <uni-icons type="image" size="26" color="#fff"></uni-icons> 修改图片
       </button>
     </view>
@@ -90,24 +82,28 @@ export default {
   background-color: #f0f0f0;
   min-height: 100vh;
 }
+
 .header {
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 20rpx;
 }
+
 .title {
   font-size: 55rpx;
   font-weight: bold;
   color: #333;
   margin-left: 10rpx;
 }
+
 .desc {
   font-size: 20rpx;
   color: #555;
   text-align: center;
   margin-bottom: 20rpx;
 }
+
 .upload-section {
   flex: 1;
   display: flex;
@@ -115,6 +111,7 @@ export default {
   justify-content: center;
   width: 100%;
 }
+
 .upload-container {
   width: 560rpx;
   height: 560rpx;
@@ -125,22 +122,26 @@ export default {
   justify-content: center;
   box-shadow: 0 5rpx 15rpx rgba(0, 0, 0, 0.1);
 }
+
 .pay-code-img {
   width: 100%;
   height: 100%;
   border-radius: 20rpx;
 }
+
 .upload-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
+
 .placeholder-text {
   font-size: 28rpx;
   color: #aaa;
   margin-top: 10rpx;
 }
+
 .tips {
   width: 90%;
   background-color: #fff;
@@ -149,16 +150,19 @@ export default {
   border-radius: 15rpx;
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
+
 .tip-title {
   font-size: 32rpx;
   font-weight: bold;
   color: #007aff;
 }
+
 .tip-text {
   font-size: 26rpx;
   color: #444;
   margin-top: 10rpx;
 }
+
 .button-section {
   width: 100%;
   display: flex;
@@ -166,6 +170,7 @@ export default {
   align-items: center;
   padding-bottom: 40rpx;
 }
+
 .cu-btn {
   width: 80%;
   height: 80rpx;
@@ -177,10 +182,12 @@ export default {
   align-items: center;
   justify-content: center;
 }
+
 .bg-blue {
   background-color: #007aff;
   color: #fff;
 }
+
 .margin-top {
   margin-top: 20rpx;
 }

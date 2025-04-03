@@ -4,10 +4,9 @@
 </template>
 
 <script>
-	export default{
-		name:'bar'
-	}
+export default {
+	name: 'bar'
+}
 </script>
 
-<style>
-</style>
+<style></style>

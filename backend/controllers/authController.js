@@ -188,7 +188,7 @@ const getUserInfo = (req, res) => {
     const userData = {
       student_id: result[0].student_id,
       username: result[0].username,
-      avatar: result[0].avatar
+      avatar: result[0].avatar,
     };
 
     res.status(200).json(userData);
@@ -197,9 +197,9 @@ const getUserInfo = (req, res) => {
 // 更新用户昵称
 const updateNickname = (req, res) => {
   const student_id = req.user.student_id; // 从JWT中获取用户ID
-  const { nickname } = req.body;  // 从请求体中获取新的昵称
+  const { nickname } = req.body; // 从请求体中获取新的昵称
 
-  if (!nickname || nickname.trim() === '') {
+  if (!nickname || nickname.trim() === "") {
     return res.status(400).json({ message: "昵称不能为空" });
   }
 
@@ -216,7 +216,7 @@ const updateNickname = (req, res) => {
 
 // 获取用户信息
 const getUserProfile = (req, res) => {
-  const student_id = req.user.student_id;  // 从JWT获取学生ID
+  const student_id = req.user.student_id; // 从JWT获取学生ID
 
   User.getUserProfile(student_id, (err, result) => {
     if (err) {
@@ -232,7 +232,6 @@ const getUserProfile = (req, res) => {
   });
 };
 
-
 module.exports = {
   register,
   login,
@@ -240,5 +239,5 @@ module.exports = {
   updateAvatar,
   getUserProfile,
   getUserInfo,
-  updateNickname
+  updateNickname,
 };

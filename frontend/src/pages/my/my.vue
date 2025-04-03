@@ -12,17 +12,13 @@
         </view>
       </view>
     </view>
-    
-    
+
+
     <!-- 修改昵称弹框 -->
     <view v-if="isNicknameModalVisible" class="nickname-modal">
       <view class="modal-content">
         <text>现在您可以修改自己的昵称啦~</text>
-        <input
-          v-model="newNickname"
-          placeholder="请输入新的昵称"
-          class="nickname-input"
-        />
+        <input v-model="newNickname" placeholder="请输入新的昵称" class="nickname-input" />
         <view class="modal-actions" @tap.stop>
           <button @tap="updateNickname" class="btn-confirm">
             <uni-icons type="checkbox" size="20" color="#ffffff"></uni-icons>确认
@@ -65,7 +61,7 @@
         </view>
         <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
       </view>
-      
+
       <view class="menu-item" @tap="toPay">
         <view class="menu-icon-container">
           <uni-icons type="wallet" size="40" color="#fa8c16" class="menu-icon"></uni-icons>
@@ -75,7 +71,7 @@
         </view>
         <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
       </view>
-      
+
       <view class="menu-item" @tap="toSale">
         <view class="menu-icon-container">
           <uni-icons type="paperplane" size="40" color="#52c41a" class="menu-icon"></uni-icons>
@@ -86,7 +82,7 @@
         </view>
         <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
       </view>
-      
+
       <view class="menu-item" @tap="toBuy">
         <view class="menu-icon-container">
           <uni-icons type="cart" size="40" color="#722ed1" class="menu-icon"></uni-icons>
@@ -97,7 +93,7 @@
         </view>
         <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
       </view>
-      
+
       <view class="menu-item" @tap="toAddress">
         <view class="menu-icon-container">
           <uni-icons type="location" size="40" color="#eb2f96" class="menu-icon"></uni-icons>
@@ -107,7 +103,7 @@
         </view>
         <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
       </view>
-      
+
       <view class="menu-item" @tap="toCollect">
         <view class="menu-icon-container">
           <uni-icons type="heart" size="40" color="#f5222d" class="menu-icon"></uni-icons>
@@ -118,7 +114,7 @@
         </view>
         <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
       </view>
-      
+
       <view class="menu-item" @tap="toFeedback">
         <view class="menu-icon-container">
           <uni-icons type="chat" size="40" color="#13c2c2" class="menu-icon"></uni-icons>
@@ -184,7 +180,7 @@ export default {
         },
       });
     },
-    
+
     // 退出登录
     logout() {
       uni.showModal({
@@ -203,7 +199,7 @@ export default {
         },
       });
     },
-    
+
     // 读取用户信息（昵称）
     fetchUserProfile() {
       const token = uni.getStorageSync("token");
@@ -245,8 +241,8 @@ export default {
       });
     },
 
-   // 修改昵称弹框
-   editNickname() {
+    // 修改昵称弹框
+    editNickname() {
       this.isNicknameModalVisible = true;
       this.newNickname = this.nickname; // 默认显示当前昵称
       console.log("editNickname triggered"); // 确保事件被触发
@@ -311,46 +307,46 @@ export default {
         url: "/pages/my/my_pay/my_pay",
       });
     },
-    
+
     // 我的发布跳转
     toIssue_page() {
       uni.navigateTo({
         url: "/pages/my/my_issue/my_issue",
       });
     },
-    
+
     toCollect() {
       uni.navigateTo({
         url: "/pages/my/my_collect/my_collect",
       });
     },
-    
+
     toAddress() {
       uni.navigateTo({
         url: "/pages/my/my_address/my_address",
       });
     },
-    
+
     toFeedback() {
       uni.navigateTo({
         url: "/pages/my/my_feedback/my_feedback",
       });
     },
-    
+
     toPraise() {
       uni.showToast({
         title: "暂未开放",
         icon: "none",
       });
     },
-    
+
     toAttention() {
       uni.showToast({
         title: "暂未开放",
         icon: "none",
       });
     },
-    
+
     toFans() {
       uni.showToast({
         title: "暂未开放",
@@ -362,14 +358,14 @@ export default {
         url: "/pages/my/my_sale/my_sale",
       });
     },
-    
+
     // 我买到的跳转
     toBuy() {
       uni.navigateTo({
         url: "/pages/my/my_buy/my_buy",
       });
     },
-    
+
     // 点击头像的事件，弹出预览或更换头像的选项
     changeAvatar() {
       uni.showActionSheet({
@@ -451,14 +447,14 @@ export default {
         },
       });
     },
-    
+
     // 跳转到个人详情
     toMy_detail() {
       uni.navigateTo({
         url: "/pages/my/my_detail/my_detail",
       });
     },
-    
+
     // 获取点赞总数
     fetchUserLikes() {
       const token = uni.getStorageSync("token");
@@ -497,7 +493,8 @@ export default {
 /* 用户信息部分 */
 .user-center-bg {
   background: url('/static/img/dzq.png') center center no-repeat;
-  background-size: cover; /* 确保图片覆盖整个区域 */
+  background-size: cover;
+  /* 确保图片覆盖整个区域 */
   height: 400rpx;
   display: flex;
   justify-content: center;
@@ -509,6 +506,7 @@ export default {
   color: #fff;
   font-weight: 300;
 }
+
 .user-center-container {
   position: relative;
   height: 400rpx;
@@ -753,6 +751,7 @@ export default {
   text-align: center;
   box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.15);
 }
+
 /* .nickname-input {
     width: 100%;
     margin-top: 20rpx;
@@ -760,7 +759,7 @@ export default {
     border: 1px solid #ccc;
     border-radius: 5rpx;
   } */
-  .nickname-input {
+.nickname-input {
   width: 100%;
   height: 80rpx;
   margin: 30rpx 0;
@@ -800,4 +799,3 @@ export default {
   border: 1px solid #d9d9d9;
 }
 </style>
-

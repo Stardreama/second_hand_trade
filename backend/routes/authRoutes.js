@@ -53,8 +53,8 @@ router.get(
 // 更新用户昵称
 router.post(
   "/user/update-nickname",
-  authController.authenticateJWT,  // 确保用户通过JWT认证
-  authController.updateNickname    // 调用更新昵称的方法
+  authController.authenticateJWT, // 确保用户通过JWT认证
+  authController.updateNickname // 调用更新昵称的方法
 );
 // 其他路由
 router.post(

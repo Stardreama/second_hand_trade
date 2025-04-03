@@ -5,8 +5,8 @@
  * @LastEditTime: 2025-04-01 20:49:20
  * @FilePath: \second_hand_trade\backend\routes\myRoutes.js
  * @Description: 李猴啊
- * 
- * Copyright (c) 2025 by FanZDStar , All Rights Reserved. 
+ *
+ * Copyright (c) 2025 by FanZDStar , All Rights Reserved.
  */
 const express = require("express");
 const router = express.Router();
