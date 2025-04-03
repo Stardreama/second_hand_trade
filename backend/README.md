@@ -67,6 +67,7 @@ CREATE TABLE `products` (
   `product_class` varchar(255) NOT NULL,
   `product_type` enum('sell','buy') NOT NULL DEFAULT 'sell',
   `like_amount` int NULL DEFAULT 0,
+  `is_off_shelf` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否下架：0-正常 1-已下架',
   PRIMARY KEY (`product_id`),
   INDEX `seller_id`(`seller_id`),
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users`(`student_id`)

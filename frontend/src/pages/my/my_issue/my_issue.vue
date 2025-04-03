@@ -4,8 +4,13 @@
     <view class="pa">
       <!-- 有商品时显示商品列表 -->
       <view v-if="productList && productList.length > 0">
-        <view class="contianer shadow-warp bg-white padding-sm" v-for="(item, index) in productList"
-          :key="item.product_id">
+        <view class="contianer shadow-warp bg-white padding-sm" 
+      v-for="(item, index) in productList"
+      :key="item.product_id"
+      :class="{'off-shelf-item': item.is_off_shelf === 1}">
+  
+  <!-- 添加下架标识 -->
+  <view class="off-shelf-badge" v-if="item.is_off_shelf === 1">已下架</view>
           <view class="contianer-title">
             <view class="contianer-title_1 text-cut"><text class="text-cut">{{ item.product_title }}</text></view>
           </view>
@@ -43,12 +48,18 @@
               <view class="cu-tag line-brown sm"> 23 </view>
             </view>
           </view>
-
           <view class="container-compile">
-            <view class="cu-tag line-yellow" @tap="show_model(item)">降价</view>
-            <view class="cu-tag line-yellow" @tap="toIssue(item)">编辑</view>
-            <view class="cu-tag line-yellow" @tap="actionSheetTap">更多</view>
-          </view>
+    <!-- 根据下架状态显示不同的操作按钮 -->
+    <block v-if="item.is_off_shelf === 1">
+      <view class="cu-tag line-blue" @tap="onShelfProduct(item.product_id)">重新上架</view>
+      <view class="cu-tag line-yellow" @tap="actionSheetTap(item)">更多</view>
+    </block>
+    <block v-else>
+      <view class="cu-tag line-yellow" @tap="show_model(item)">降价</view>
+      <view class="cu-tag line-yellow" @tap="toIssue(item)">编辑</view>
+      <view class="cu-tag line-yellow" @tap="actionSheetTap(item)">更多</view>
+    </block>
+  </view>
 
           <view class="container-line"></view>
         </view>
@@ -280,14 +291,156 @@ export default {
     },
 
     // 显示编辑
-    actionSheetTap() {
-      uni.showActionSheet({
-        itemList: ["分享", "下架", "删除"],
-        success(e) {
-          console.log(e.tapIndex);
-        },
-      });
+actionSheetTap(item) {
+  this.currentProduct = item; // 保存当前操作的商品
+  uni.showActionSheet({
+    itemList: ["分享", "下架", "删除"],
+    success: (e) => {
+      console.log(e.tapIndex);
+      if (e.tapIndex === 1) { // 下架操作
+        this.offShelfProduct(item.product_id);
+      } else if (e.tapIndex === 0) {
+        // 分享功能
+        uni.share({
+          provider: "weixin",
+          scene: "WXSceneSession",
+          type: 0,
+          title: item.product_title || "二手商品交易",
+          summary: item.description || "快来看看我发布的商品吧",
+          imageUrl: item.images[0] || "",
+          href: `pages/home/home_detail/home_detail?product_id=${item.product_id}`,
+          success: function(res) {
+            console.log("分享成功:", res);
+          },
+          fail: function(err) {
+            console.log("分享失败:", err);
+          }
+        });
+      } else if (e.tapIndex === 2) {
+        // 删除功能，可以在这里实现
+        this.deleteProduct(item.product_id);
+      }
     },
+  });
+},
+
+// 下架商品方法
+async offShelfProduct(productId) {
+  try {
+    const token = uni.getStorageSync("token");
+    const { data: res } = await uni.request({
+      url: "http://localhost:3000/api/products/status",
+      method: "POST",
+      header: {
+        Authorization: "Bearer " + token,
+      },
+      data: {
+        productId: productId,
+        status: "off_shelf" // 设置为下架状态
+      }
+    });
+
+    if (res.code === 200) {
+      uni.showToast({
+        title: "商品已下架",
+        icon: "success"
+      });
+      // 刷新数据
+      this.loadSalesData();
+    } else {
+      uni.showToast({
+        title: res.message || "操作失败",
+        icon: "none"
+      });
+    }
+  } catch (error) {
+    console.error("下架商品失败:", error);
+    uni.showToast({
+      title: "操作失败，请稍后重试",
+      icon: "none"
+    });
+  }
+},
+
+// 重新上架商品方法
+async onShelfProduct(productId) {
+  try {
+    const token = uni.getStorageSync("token");
+    const { data: res } = await uni.request({
+      url: "http://localhost:3000/api/products/status",
+      method: "POST",
+      header: {
+        Authorization: "Bearer " + token,
+      },
+      data: {
+        productId: productId,
+        status: "on_sale" // 设置为在售状态
+      }
+    });
+
+    if (res.code === 200) {
+      uni.showToast({
+        title: "商品已上架",
+        icon: "success"
+      });
+      // 刷新数据
+      this.loadSalesData();
+    } else {
+      uni.showToast({
+        title: res.message || "操作失败",
+        icon: "none"
+      });
+    }
+  } catch (error) {
+    console.error("上架商品失败:", error);
+    uni.showToast({
+      title: "操作失败，请稍后重试",
+      icon: "none"
+    });
+  }
+},
+
+// 删除商品方法
+async deleteProduct(productId) {
+  try {
+    uni.showModal({
+      title: '确认删除',
+      content: '确定要删除这个商品吗？此操作不可恢复。',
+      success: async (res) => {
+        if (res.confirm) {
+          const token = uni.getStorageSync("token");
+          const { data: res } = await uni.request({
+            url: `http://localhost:3000/api/products/${productId}`,
+            method: "DELETE",
+            header: {
+              Authorization: "Bearer " + token,
+            }
+          });
+
+          if (res.code === 200) {
+            uni.showToast({
+              title: "删除成功",
+              icon: "success"
+            });
+            // 刷新数据
+            this.loadSalesData();
+          } else {
+            uni.showToast({
+              title: res.message || "删除失败",
+              icon: "none"
+            });
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("删除商品失败:", error);
+    uni.showToast({
+      title: "删除失败，请稍后重试",
+      icon: "none"
+    });
+  }
+},
 
     // 确认价格修改
     async confirmPriceChange() {
@@ -596,5 +749,21 @@ export default {
   font-size: 28rpx;
   color: #999;
   margin-bottom: 40rpx;
+}
+
+.off-shelf-item {
+  background-color: #f0f0f0; /* 柔和的灰色背景 */
+}
+.off-shelf-badge {
+  position: absolute;
+  top: 15rpx;
+  right: 15rpx;
+  background-color: rgba(49, 47, 47, 0.8);
+  color: white;
+  padding: 6rpx 16rpx;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  z-index: 1;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 </style>
