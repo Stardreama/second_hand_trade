@@ -21,7 +21,12 @@ const upload = multer({ storage: storage });
 router.post(
   "/register",
   upload.single("student_card"),
-  authController.register
+  (req, res) => {
+    authController.register(req, res).catch(error => {
+      console.error("注册过程发生未捕获的错误:", error);
+      res.status(500).json({ message: "服务器错误，请稍后再试" });
+    });
+  }
 );
 router.post("/login", authController.login);
 

@@ -1,8 +1,11 @@
 const jwtService = require("../services/jwtService");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const ocrService = require('../services/ocrService');
+const fs = require('fs');
+
 // 注册
-const register = (req, res) => {
+const register = async (req, res) => {
   // 从 req.body 获取文本数据
   const { student_id, username, password } = req.body;
   // 从 req.file 获取上传的文件信息，如果有文件，则取其路径
@@ -13,6 +16,32 @@ const register = (req, res) => {
 
   console.log("注册请求数据：", req.body);
   console.log("上传的文件信息：", req.file);
+
+  // 检查是否上传了学生卡照片
+  if (!student_card) {
+    return res.status(400).json({ message: "请上传学生卡照片" });
+  }
+
+  // 读取学生卡照片并转换为Base64
+  const imageBuffer = fs.readFileSync(student_card);
+  const imageBase64 = imageBuffer.toString('base64');
+
+  // 进行OCR识别
+  const ocrResult = await ocrService.recognizeStudentCard(imageBase64);
+  console.log("OCR识别结果:", ocrResult);
+
+  // 从OCR结果中提取学号
+  const recognizedStudentId = ocrService.extractStudentId(ocrResult);
+  console.log("识别到的学号:", recognizedStudentId);
+
+  // 验证识别到的学号与用户输入的学号是否一致
+  if (!recognizedStudentId) {
+    return res.status(400).json({ message: "无法从学生卡照片中识别学号，请上传清晰的学生卡照片" });
+  }
+
+  if (recognizedStudentId !== student_id) {
+    return res.status(400).json({ message: "输入的学号与学生卡上的学号不一致，请重新输入" });
+  }
 
   // 首先检查 student_id 是否已存在
   User.findByStudentId(student_id, (err, result) => {
@@ -148,24 +177,6 @@ const updateAvatar = (req, res) => {
     });
   });
 };
-
-// // 获取用户资料
-// const getUserProfile = (req, res) => {
-//   const student_id = req.user.student_id;
-
-//   User.getUserProfile(student_id, (err, result) => {
-//     if (err) {
-//       console.error("获取用户信息失败：", err);
-//       return res.status(500).json({ message: "数据库错误" });
-//     }
-
-//     if (!result || result.length === 0) {
-//       return res.status(404).json({ message: "用户不存在" });
-//     }
-
-//     res.status(200).json({ user: result[0] });
-//   });
-// };
 
 //获取指定用户信息
 const getUserInfo = (req, res) => {
