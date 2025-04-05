@@ -10,6 +10,7 @@ const myRoutes = require("./routes/myRoutes");
 const Conversation = require("./models/conversation");
 const Message = require("./models/message");
 const addressRoutes = require("./routes/addressRoutes");
+const followRoutes = require("./routes/followRoutes");
 const cors = require("cors");
 const http = require("http");
 const server = http.createServer(app);
@@ -347,3 +348,4 @@ app.use("/api/address", addressRoutes);
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+app.use("/api/user", followRoutes);

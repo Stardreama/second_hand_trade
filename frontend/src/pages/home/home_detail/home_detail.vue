@@ -19,6 +19,14 @@
             <view>{{ productDetail.seller_name }}</view>
           </view>
         </view>
+        <!-- 新增关注按钮 -->
+        <!-- <button class="follow-btn" @tap="followSeller">
+          <uni-icons type="plus" size="24" color="#333"></uni-icons>
+          关注
+        </button> -->
+        <button v-if="showFollowButton" class="follow-btn" @tap="toggleFollow">
+          {{ isFollowing ? "已关注" : "关注" }}
+        </button>
       </view>
     </view>
 
@@ -102,6 +110,9 @@ export default {
       productDetail: null, // 商品详情数据
       images: [], // 商品的所有图片
       liked: false, // 是否点赞
+      isFollowing: false, // 当前用户是否已关注
+      showFollowButton: true, // 是否显示关注按钮（商品拥有者不显示）
+      userInfo: {}
     };
   },
   onLoad(query) {
@@ -111,6 +122,12 @@ export default {
     const userInfo = uni.getStorageSync("userInfo");
     if (userInfo) {
       this.userInfo = userInfo;
+    }
+  },
+  onShow() {
+    // 当页面显示时，若当前用户不是商品拥有者则重新检测关注状态
+    if (this.productDetail && this.userInfo.student_id !== this.productDetail.seller_id) {
+      this.checkFollowStatus();
     }
   },
   methods: {
@@ -123,6 +140,13 @@ export default {
             this.productDetail = res.data;
             // 直接使用返回的images数组，包含所有图片（默认图片和用户上传图片）
             this.images = this.productDetail.images || [];
+            // 若浏览者为商品拥有者，则不显示关注按钮
+            if (this.userInfo.student_id === this.productDetail.seller_id) {
+              this.showFollowButton = false;
+            } else {
+              this.showFollowButton = true;
+              this.checkFollowStatus();
+            }
           } else {
             console.error("获取商品详情失败:", res);
           }
@@ -131,6 +155,86 @@ export default {
           console.error("获取商品详情失败:", err);
         },
       });
+    },
+    // 检查当前用户是否关注了商品拥有者
+    checkFollowStatus() {
+      const token = uni.getStorageSync("token");
+      uni.request({
+        url: `http://localhost:3000/api/user/follow/status`,
+        method: "GET",
+        header: {
+          Authorization: `Bearer ${token}`
+        },
+        data: {
+          // follower_id: this.userInfo.student_id,
+          followee_id: this.productDetail.seller_id
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            // 返回 { followed: true } 或 { followed: false }
+            this.isFollowing = res.data.followed;
+          } else {
+            console.error("检查关注状态失败:", res);
+          }
+        },
+        fail: (err) => {
+          console.error("检查关注状态失败:", err);
+        }
+      });
+    },
+    // 根据当前状态执行关注或取消关注操作
+    toggleFollow() {
+      const token = uni.getStorageSync("token");
+      if (this.isFollowing) {
+        // 取消关注
+        uni.request({
+          url: `http://localhost:3000/api/user/follow`,
+          method: "DELETE",
+          header: {
+            Authorization: `Bearer ${token}`
+          },
+          data: {
+            // follower_id: this.userInfo.student_id,
+            followee_id: this.productDetail.seller_id
+          },
+          success: (res) => {
+            if (res.statusCode === 200) {
+              uni.showToast({ title: "取消关注成功", icon: "none" });
+              this.isFollowing = false;
+            } else {
+              uni.showToast({ title: "取消关注失败", icon: "none" });
+            }
+          },
+          fail: (err) => {
+            console.error("取消关注失败:", err);
+          }
+        });
+      } else {
+        // 关注
+        uni.request({
+          // url: `http://localhost:3000/api/follows`,
+          url: `http://localhost:3000/api/user/follow`,
+          method: "POST",
+          header: {
+            Authorization: `Bearer ${token}`
+          },
+          data: {
+            // follower_id: this.userInfo.student_id,
+            followee_id: this.productDetail.seller_id
+          },
+          success: (res) => {
+            if (res.statusCode === 201) {
+              uni.showToast({ title: "关注成功", icon: "none" });
+              this.isFollowing = true;
+            } else {
+              uni.showToast({ title: "关注失败", icon: "none" });
+            }
+          },
+          fail: (err) => {
+            console.error("关注失败:", err);
+          }
+        });
+      }
     },
     // 获取商品点赞状态
     fetchProductLike(productId) {
@@ -177,6 +281,54 @@ export default {
         },
       });
     },
+    // // 新增关注操作
+    // followSeller() {
+    //   const token = uni.getStorageSync("token");
+    //   if (!token) {
+    //     uni.showToast({
+    //       title: "请先登录",
+    //       icon: "none"
+    //     });
+    //     return;
+    //   }
+    //   // 如果关注对象是自己，则提示无法关注
+    //   if (this.productDetail.seller_id === this.userInfo.student_id) {
+    //     uni.showToast({
+    //       title: "不能关注自己",
+    //       icon: "none"
+    //     });
+    //     return;
+    //   }
+    //   uni.request({
+    //     url: "http://localhost:3000/api/user/follow",
+    //     method: "POST",
+    //     header: {
+    //       Authorization: `Bearer ${token}`
+    //     },
+    //     data: {
+    //       followee_id: this.productDetail.seller_id
+    //     },
+    //     success: (res) => {
+    //       if (res.statusCode === 201) {
+    //         uni.showToast({
+    //           title: res.data.message || "关注成功",
+    //           icon: "none"
+    //         });
+    //       } else {
+    //         uni.showToast({
+    //           title: res.data.message || "操作失败",
+    //           icon: "none"
+    //         });
+    //       }
+    //     },
+    //     fail: (err) => {
+    //       uni.showToast({
+    //         title: "网络错误",
+    //         icon: "none"
+    //       });
+    //     }
+    //   });
+    // },
     // 添加到methods中
     previewImage(index) {
       const urls = this.images.map(item => this.getImageUrl(item));
@@ -378,6 +530,19 @@ export default {
 text-title-size {
   font-size: 50rpx;
   color: gray;
+}
+
+/* 新增关注按钮样式 */
+.follow-btn {
+  float: right;
+  margin-top: 25rpx;
+  margin-right: 30rpx;
+  padding: 5rpx 20rpx;
+  font-size: 24rpx;
+  border: 2rpx solid #ccc;
+  border-radius: 5rpx;
+  background-color: #fff;
+  color: #333;
 }
 
 /* 商家信息end */
