@@ -39,12 +39,12 @@
       </view>
       <view class="stat-item" @tap="toAttention">
         <uni-icons type="star-filled" size="48" color="#1890ff" class="stat-icon"></uni-icons>
-        <view class="stat-number">5</view>
+        <view class="stat-number">{{ followCount }}</view>
         <view class="stat-label">关注数</view>
       </view>
       <view class="stat-item" @tap="toFans">
         <uni-icons type="person-filled" size="48" color="#52c41a" class="stat-icon"></uni-icons>
-        <view class="stat-number">0</view>
+        <view class="stat-number">{{ fansCount }}</view>
         <view class="stat-label">粉丝数</view>
       </view>
     </view>
@@ -151,6 +151,8 @@ export default {
       isNicknameModalVisible: false, // 控制弹框显示
       newNickname: "", // 新昵称的临时存储
       totalLikes: 0,
+      followCount: 0, // 当前用户关注的数量
+      fansCount: 0    // 当前用户的粉丝数量
     };
   },
   methods: {
@@ -199,7 +201,34 @@ export default {
         },
       });
     },
-
+    // 获取当前用户关注数和粉丝数
+    fetchFollowCounts() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+      uni.request({
+        url: "http://localhost:3000/api/user/follow/count",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.followCount = res.data.followCount;
+            this.fansCount = res.data.fansCount;
+          } else {
+            uni.showToast({
+              title: "获取关注数据失败",
+              icon: "none",
+            });
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: "网络错误，请重试",
+            icon: "none",
+          });
+        },
+      });
+    },
     // 读取用户信息（昵称）
     fetchUserProfile() {
       const token = uni.getStorageSync("token");
@@ -483,6 +512,7 @@ export default {
     this.isNicknameModalVisible = false;
     this.fetchUserProfile(); // 页面显示时获取用户信息
     this.fetchUserLikes(); // 页面显示时获取点赞总数
+    this.fetchFollowCounts(); // 获取关注和粉丝数据
   }
 };
 </script>

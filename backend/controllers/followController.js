@@ -74,4 +74,27 @@ const getFollowStatus = (req, res) => {
     });
 };
 
-module.exports = { followSeller, unfollowSeller, getFollowStatus };
+// 获取关注数和粉丝数接口
+const getFollowCounts = (req, res) => {
+    const student_id = req.user.student_id;
+    // 查询关注数：你关注的数量（follower_id = student_id）
+    const queryFollow = "SELECT COUNT(*) AS count FROM follows WHERE follower_id = ?";
+    // 查询粉丝数：关注你的数量（followee_id = student_id）
+    const queryFans = "SELECT COUNT(*) AS count FROM follows WHERE followee_id = ?";
+
+    db.query(queryFollow, [student_id], (err, followResults) => {
+        if (err) {
+            return res.status(500).json({ message: "数据库错误", error: err.message });
+        }
+        const followCount = followResults[0].count;
+        db.query(queryFans, [student_id], (err, fansResults) => {
+            if (err) {
+                return res.status(500).json({ message: "数据库错误", error: err.message });
+            }
+            const fansCount = fansResults[0].count;
+            return res.status(200).json({ followCount, fansCount });
+        });
+    });
+};
+
+module.exports = { followSeller, unfollowSeller, getFollowStatus, getFollowCounts };
