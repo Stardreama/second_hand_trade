@@ -164,6 +164,8 @@ DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=admin123
 DB_DATABASE=second_hand_trade
+BAIDU_OCR_AK="DoeM6YLmqZDOB9FTVOC6NsQE"
+BAIDU_OCR_SK="Ut9q9bvTw0LauqQMbc30PY0NJlx37FXb"
 ```
 
 ### 2. 运行项目
