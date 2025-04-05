@@ -1,41 +1,63 @@
 <template>
-  <view>
-    <!-- 内容 -->
-    <view class='pa'>
+  <view class="container">
+    <view class="content">
+      <!-- 有购买记录 -->
+      <view v-if="productList.length > 0">
+        <view
+          class="purchase-item"
+          v-for="item in productList"
+          :key="item.purchase_id"
+        >
+          <!-- 商品标题 -->
+          <view class="title">{{ item.product_title }}</view>
 
-      <view class='container bg-white shadow-warp' v-for="(item, index) in 6" :key="index">
+          <!-- 图片展示区域 -->
+          <scroll-view
+            scroll-x
+            class="image-scroll"
+            v-if="item.images.length > 0"
+          >
+            <view class="image-container">
+              <view
+                v-for="(img, index) in item.images"
+                :key="index"
+                class="image-wrapper"
+              >
+                <image
+                  :src="getImageUrl(img)"
+                  mode="aspectFill"
+                  class="product-image"
+                />
+              </view>
+            </view>
+          </scroll-view>
 
-        <view class='container-top'>
-          <view class='container-top-1'>
-            <image src='http://img2.imgtn.bdimg.com/it/u=2567503121,2981843773&fm=26&gp=0.jpg'></image>
+          <!-- 无图提示 -->
+          <view v-else class="no-image">
+            <text>暂无商品图片</text>
           </view>
-          <view class='container-top-2'>
-            <view class='container-top-2_1 text-cut'>
-              <text>99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本99新毕节本</text></view>
-            <view class='container-top-2_2'><text class='text-price text-sm text-red'>168</text></view>
-            <view><text class='cuIcon-time lg text-gray'></text><text class='text-xxm'>等待卖家发货</text></view>
+
+          <!-- 价格和时间 -->
+          <view class="info-row">
+            <text class="price">￥{{ item.price }}</text>
+            <text class="time">{{ formatTime(item.purchase_time) }}</text>
+          </view>
+
+          <!-- 操作按钮 -->
+          <view class="action-buttons">
+            <view class="btn contact">联系卖家</view>
+            <view class="btn delete">删除记录</view>
           </view>
         </view>
-
-        <view class='container-line'></view>
-
-        <view class='container-under'>
-          <view class='container-under-1'><text class='cuIcon-message font-size-lg text-black '></text><text
-              class='text-sm text-black'>联系买家</text></view>
-          <view class='container-under-2'>
-            <view class="cu-tag line-black padding">评价</view>
-          </view>
-          <view>
-            <view class="cu-tag line-black padding">…</view>
-          </view>
-        </view>
-
       </view>
 
+      <!-- 无购买记录 -->
+      <view v-else class="empty">
+        <text class="empty-icon">🛍️</text>
+        <text class="empty-text">还没有买过东西</text>
+        <text class="empty-tip">快去发现心仪好物吧～</text>
+      </view>
     </view>
-
-    <!-- end -->
-
   </view>
 </template>
 
@@ -43,97 +65,190 @@
 export default {
   data() {
     return {
-
-    }
+      productList: [],
+      baseUrl: "http://localhost:3000/",
+    };
   },
   methods: {
+    async loadData() {
+      try {
+        const token = uni.getStorageSync("token");
+        const res = await uni.request({
+          url: this.baseUrl + "api/my/purchases",
+          header: { Authorization: `Bearer ${token}` },
+        });
 
-  }
-}
+        if (res.data.code === 200) {
+          this.productList = res.data.data.map((item) => ({
+            ...item,
+            images: this.processImages(item.images),
+            purchase_time: this.formatTime(item.purchase_time),
+          }));
+        }
+      } catch (error) {
+        uni.showToast({ title: "加载失败", icon: "none" });
+      }
+    },
+
+    // 新增图片处理方法
+    processImages(images) {
+      if (!Array.isArray(images)) return [];
+      return images.map((img) => {
+        // 统一处理路径分隔符
+        const formattedPath = img.replace(/\\/g, "/");
+        // 判断是否需要添加baseUrl
+        return formattedPath.startsWith("http")
+          ? formattedPath
+          : `${this.baseUrl}${formattedPath}`;
+      });
+    },
+
+    // 图片路径处理方法
+    getImageUrl(img) {
+      // 添加默认图片处理
+      return img || `${this.baseUrl}images/default-product.png`;
+    },
+
+    formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return `${date.getFullYear()}-${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+    },
+  },
+  mounted() {
+    this.loadData();
+  },
+};
 </script>
-
 <style scoped>
-/* pages/my/my_sale/my_sale.wxss */
-
-.pa {
-  padding: 20rpx;
+.no-image {
+  height: 200rpx;
+  background: #f8f8f8;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 28rpx;
+  margin: 20rpx 0;
 }
 
-/* 内容 */
+/* 优化图片显示 */
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 确保图片填充 */
+}
 .container {
   padding: 20rpx;
-  height: 300rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.purchase-item {
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 24rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+.title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 24rpx;
+}
+
+.image-scroll {
+  height: 280rpx;
+  margin: 24rpx 0;
+}
+
+.image-container {
+  display: flex;
+  height: 100%;
+}
+
+.image-wrapper {
+  width: 280rpx;
+  height: 280rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.product-image {
   width: 100%;
-  margin-bottom: 20rpx;
+  height: 100%;
 }
 
-.container-top-2 {
-  margin-left: 20rpx;
-  width: 120%;
-
-}
-
-.container-top-1 image {
-  width: 150rpx;
-  height: 150rpx;
-}
-
-.container-top {
+.info-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-
+  margin: 24rpx 0;
 }
 
-.container-top-2_1 {
-  margin-bottom: 20rpx;
-  width: 50%;
+.price {
+  color: #e4393c;
+  font-size: 36rpx;
+  font-weight: bold;
 }
 
-.container-top-2_1 text {
-  font-weight: 600;
+.time {
+  color: #666;
+  font-size: 26rpx;
 }
 
-.container-top-2_2 {
-  margin-bottom: 20rpx;
-}
-
-.container-top-2_2 text {
-  font-size: 25rpx;
-  font-weight: 750;
-}
-
-.text-xxm {
-  font-size: 22rpx;
-  color: gray;
-  padding-left: 10rpx;
-}
-
-.container-line {
-  width: 95%;
-  height: 3rpx;
-  background: gainsboro;
-  margin-top: 25rpx;
-}
-
-.container-under {
+.action-buttons {
   display: flex;
-  margin-top: 25rpx;
-  align-items: center;
+  justify-content: flex-end;
+  gap: 24rpx;
+  border-top: 1rpx solid #eee;
+  padding-top: 24rpx;
 }
 
-.font-size-lg {
-  font-size: 35rpx;
-  padding-right: 10rpx;
-
+.btn {
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
 }
 
-.container-under-1 {
-  width: 65%;
+.contact {
+  background: #007aff;
+  color: white;
 }
 
-.container-under-2 {
-  margin-right: 20rpx;
+.delete {
+  background: #ff4444;
+  color: white;
 }
 
-/* end */
+.empty {
+  padding: 100rpx 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  display: block;
+  margin-bottom: 32rpx;
+  opacity: 0.8;
+}
+
+.empty-text {
+  display: block;
+  font-size: 34rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+}
+
+.empty-tip {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+}
 </style>
