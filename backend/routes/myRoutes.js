@@ -1,13 +1,3 @@
-/*
- * @Author: ourEDA MaMing
- * @Date: 2025-04-01 18:55:33
- * @LastEditors: ourEDA MaMing
- * @LastEditTime: 2025-04-01 20:49:20
- * @FilePath: \second_hand_trade\backend\routes\myRoutes.js
- * @Description: 李猴啊
- *
- * Copyright (c) 2025 by FanZDStar , All Rights Reserved.
- */
 const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/productController");
@@ -33,6 +23,12 @@ router.get(
   jwtService.authMiddleware,
   productController.getUserLikeAmount
 );
+
+// 新增：无需 Token 验证的公共 API，通过用户ID获取点赞总数
+router.get("/public/like/:userId", productController.getPublicUserLikeAmount);
+
+
+
 router.get("/my_pay", jwtService.authMiddleware, userController.getQRCode);
 router.get("/my_pay-noToken", userController.getQRCodeNoToken);
 

@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const jwtService = require("../services/jwtService");
-const { followSeller, unfollowSeller, getFollowStatus, getFollowCounts,getFolloweesList,getFansList } = require("../controllers/followController");
+const { followSeller, unfollowSeller, getFollowStatus, getFollowCounts,getFolloweesList,getFansList,getPublicFollowCounts } = require("../controllers/followController");
 
 // 关注接口：POST /api/user/follow
 router.post("/follow", jwtService.authMiddleware, followSeller);
@@ -21,5 +21,11 @@ router.get("/follow/list", jwtService.authMiddleware, getFolloweesList);
 
 // 新建：获取我的粉丝列表
 router.get('/fans/list', jwtService.authMiddleware, getFansList);
+
+
+// 新增：无需Token验证的公开API，通过用户ID获取关注数和粉丝数
+// GET /api/user/public/follow/count/:userId
+router.get('/public/follow/count/:userId', getPublicFollowCounts);
+
 
 module.exports = router;

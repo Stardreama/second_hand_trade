@@ -144,4 +144,6 @@ router.post(
 );
 //渲染数据库中的所有商品
 router.get("/", productController.getAllProducts);
+// 获取指定用户发布的商品
+router.get("/user/:userId", productController.getUserProducts);
 module.exports = router;

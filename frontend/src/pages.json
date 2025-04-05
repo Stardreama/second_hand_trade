@@ -191,6 +191,12 @@
       "style": {
         "navigationBarTitleText": "我的粉丝"
       }
+    },
+    {
+      "path": "pages/my/user_info/user_info",
+      "style": {
+        "navigationBarTitleText": "用户信息"
+      }
     }
   ],
   "globalStyle": {

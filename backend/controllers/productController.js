@@ -978,6 +978,79 @@ const getProductById = (req, res) => {
     });
   });
 };
+
+
+// 获取指定用户的点赞总数（无需 Token 验证的公共 API）
+const getPublicUserLikeAmount = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    if (!userId) {
+      return res.status(400).json({ code: 400, message: "缺少用户ID" });
+    }
+
+    // 查询该用户发布的所有商品的 like_amount 总和
+    const [rows] = await query(
+      "SELECT COALESCE(SUM(like_amount), 0) AS total_likes FROM products WHERE seller_id = ?",
+      [userId]
+    );
+
+    // 确保 rows 有值并且 total_likes 不为 undefined
+    const totalLikes = rows.total_likes || 0;
+    res.json({ code: 200, likeCount: totalLikes });
+  } catch (error) {
+    console.error("获取点赞总数失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
+  }
+};
+
+
+
+// 获取指定用户发布的商品
+const getUserProducts = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    if (!userId) {
+      return res.status(400).json({ message: "缺少用户ID" });
+    }
+    
+    // 查询指定用户发布的商品
+    const query = `
+      SELECT p.*, 
+        (SELECT pi.image_url FROM product_images pi 
+         WHERE pi.product_id = p.product_id AND pi.is_default = 1 
+         LIMIT 1) as image
+      FROM products p 
+      WHERE p.seller_id = ?
+      ORDER BY p.created_at DESC
+    `;
+    
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error("查询用户商品失败:", err);
+        return res.status(500).json({ message: "服务器错误" });
+      }
+      
+      // 为没有默认图片的商品设置默认图片
+      results.forEach(product => {
+        if (!product.image) {
+          product.image = product.product_type === "buy" 
+            ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png" 
+            : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
+        }
+      });
+      
+      res.status(200).json({ products: results });
+    });
+  } catch (error) {
+    console.error("获取用户商品失败:", error);
+    res.status(500).json({ message: "服务器错误" });
+  }
+};
+
+
+
 module.exports = {
   createProduct,
   searchProduct,
@@ -991,4 +1064,6 @@ module.exports = {
   getUserLikeAmount,
   updatePrice,
   updateProductStatus,
+  getPublicUserLikeAmount,
+  getUserProducts,
 };

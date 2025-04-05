@@ -2,7 +2,7 @@
     <view class="container">
         <scroll-view class="fans-list" :scroll-y="true">
             <block v-for="item in fans" :key="item.student_id">
-                <view class="fans-item">
+                <view class="fans-item" @tap="navigateToUserInfo(item.student_id)">
                     <image class="avatar" :src="getImageUrl(item.avatar)" mode="aspectFill"></image>
                     <text class="username">{{ item.username }}</text>
                 </view>
@@ -60,6 +60,25 @@ export default {
             // 否则替换反斜杠并拼接服务器地址
             const formattedPath = imagePath.replace(/\\/g, "/");
             return `http://localhost:3000/${formattedPath}`;
+        },
+        // 添加跳转到用户详情页并传递用户信息的方法
+        navigateToUserInfo(userId) {
+            // 查找当前用户的完整信息对象
+            const currentUser = this.fans.find(item => item.student_id === userId);
+
+            if (currentUser) {
+                // 将用户名和头像作为URL参数传递
+                const url = `/pages/my/user_info/user_info?id=${userId}&username=${encodeURIComponent(currentUser.username)}&avatar=${encodeURIComponent(this.getImageUrl(currentUser.avatar))}`;
+
+                uni.navigateTo({
+                    url: url
+                });
+            } else {
+                // 如果找不到用户数据，只传ID
+                uni.navigateTo({
+                    url: `/pages/my/user_info/user_info?id=${userId}`
+                });
+            }
         }
     }
 };
