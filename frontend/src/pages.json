@@ -179,6 +179,18 @@
       "style": {
         "navigationBarTitleText": "编辑地址"
       }
+    },
+    {
+      "path": "pages/my/my_follow/my_follow",
+      "style": {
+        "navigationBarTitleText": "我的关注"
+      }
+    },
+    {
+      "path": "pages/my/my_fans/my_fans",
+      "style": {
+        "navigationBarTitleText": "我的粉丝"
+      }
     }
   ],
   "globalStyle": {

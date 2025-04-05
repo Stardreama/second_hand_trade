@@ -37,12 +37,14 @@
         <view class="stat-number">{{ totalLikes }}</view>
         <view class="stat-label">超赞</view>
       </view>
-      <view class="stat-item" @tap="toAttention">
+      <!-- <view class="stat-item" @tap="toAttention"> -->
+      <view class="stat-item" @tap="goToFollowList">
         <uni-icons type="star-filled" size="48" color="#1890ff" class="stat-icon"></uni-icons>
         <view class="stat-number">{{ followCount }}</view>
         <view class="stat-label">关注数</view>
       </view>
-      <view class="stat-item" @tap="toFans">
+      <!-- <view class="stat-item" @tap="toFans"> -->
+      <view class="stat-item" @tap="goToFansList">
         <uni-icons type="person-filled" size="48" color="#52c41a" class="stat-icon"></uni-icons>
         <view class="stat-number">{{ fansCount }}</view>
         <view class="stat-label">粉丝数</view>
@@ -375,7 +377,19 @@ export default {
         icon: "none",
       });
     },
-
+    goToFollowList() {
+      // 使用 uni-app 的路由跳转到关注列表页面
+      uni.navigateTo({
+        url: '/pages/my/my_follow/my_follow'
+      });
+    },
+    goToFansList()
+    {
+      // 使用 uni-app 的路由跳转到粉丝列表页面
+      uni.navigateTo({
+        url: '/pages/my/my_fans/my_fans'
+      });
+    },
     toFans() {
       uni.showToast({
         title: "暂未开放",

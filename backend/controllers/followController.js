@@ -97,4 +97,43 @@ const getFollowCounts = (req, res) => {
     });
 };
 
-module.exports = { followSeller, unfollowSeller, getFollowStatus, getFollowCounts };
+// 获取关注对象列表接口：查询当前用户关注的所有 followee，并获取对应的用户信息
+const getFolloweesList = (req, res) => {
+    const student_id = req.user.student_id;
+    // 通过关联 users 表获取关注对象的头像和昵称等信息
+    const query = `
+    SELECT u.student_id, u.avatar, u.username 
+    FROM follows f 
+    JOIN users u ON f.followee_id = u.student_id 
+    WHERE f.follower_id = ?
+    ORDER BY f.created_at DESC
+  `;
+    db.query(query, [student_id], (err, results) => {
+        if (err) {
+            console.error("getFolloweesList error:", err);
+            return res.status(500).json({ message: "数据库错误", error: err.message });
+        }
+        console.log(results);
+        return res.status(200).json({ followees: results });
+    });
+};
+
+// 新建：获取我的粉丝列表
+const getFansList = (req, res) => {
+    const studentId = req.user.student_id;
+    const sql = `
+    SELECT u.student_id, u.avatar, u.username
+    FROM follows f
+    JOIN users u ON f.follower_id = u.student_id
+    WHERE f.followee_id = ?
+    ORDER BY f.created_at DESC
+  `;
+    db.query(sql, [studentId], (err, results) => {
+        if (err) {
+            console.error("getFansList error:", err);
+            return res.status(500).json({ message: "数据库错误", error: err.message });
+        }
+        res.status(200).json({ fans: results });
+    });
+};
+module.exports = { followSeller, unfollowSeller, getFollowStatus, getFollowCounts, getFolloweesList, getFansList };
