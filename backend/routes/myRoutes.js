@@ -28,8 +28,6 @@ router.get(
 // 新增：无需 Token 验证的公共 API，通过用户ID获取点赞总数
 router.get("/public/like/:userId", productController.getPublicUserLikeAmount);
 
-
-
 router.get("/my_pay", jwtService.authMiddleware, userController.getQRCode);
 router.get("/my_pay-noToken", userController.getQRCodeNoToken);
 
