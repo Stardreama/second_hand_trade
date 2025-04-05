@@ -2,26 +2,43 @@
   <view>
     <!-- 用户信息 -->
     <view class="user-center-container">
-      <image src="/static/img/dzq.png" class="bg-image" mode="aspectFill"></image>
+      <image
+        src="/static/img/dzq.png"
+        class="bg-image"
+        mode="aspectFill"
+      ></image>
       <view class="user-center-content">
         <!-- 头像和昵称放在这里 -->
-        <image :src="avatar" class="avatar-image" @tap.stop="changeAvatar"></image>
+        <image
+          :src="avatar"
+          class="avatar-image"
+          @tap.stop="changeAvatar"
+        ></image>
         <view class="nickname-container" @tap.stop="editNickname">
           <text>{{ nickname || "Amibition" }}</text>
-          <uni-icons type="compose" size="24" color="#ffffff" class="edit-icon"></uni-icons>
+          <uni-icons
+            type="compose"
+            size="24"
+            color="#ffffff"
+            class="edit-icon"
+          ></uni-icons>
         </view>
       </view>
     </view>
-
 
     <!-- 修改昵称弹框 -->
     <view v-if="isNicknameModalVisible" class="nickname-modal">
       <view class="modal-content">
         <text>现在您可以修改自己的昵称啦~</text>
-        <input v-model="newNickname" placeholder="请输入新的昵称" class="nickname-input" />
+        <input
+          v-model="newNickname"
+          placeholder="请输入新的昵称"
+          class="nickname-input"
+        />
         <view class="modal-actions" @tap.stop>
           <button @tap="updateNickname" class="btn-confirm">
-            <uni-icons type="checkbox" size="20" color="#ffffff"></uni-icons>确认
+            <uni-icons type="checkbox" size="20" color="#ffffff"></uni-icons
+            >确认
           </button>
           <button @tap="cancelNicknameUpdate" class="btn-cancel">
             <uni-icons type="close" size="20" color="#666666"></uni-icons>取消
@@ -33,19 +50,34 @@
 
     <view class="stats-card">
       <view class="stat-item" @tap="toPraise">
-        <uni-icons type="hand-up-filled" size="48" color="#f56a00" class="stat-icon"></uni-icons>
+        <uni-icons
+          type="hand-up-filled"
+          size="48"
+          color="#f56a00"
+          class="stat-icon"
+        ></uni-icons>
         <view class="stat-number">{{ totalLikes }}</view>
         <view class="stat-label">超赞</view>
       </view>
       <!-- <view class="stat-item" @tap="toAttention"> -->
       <view class="stat-item" @tap="goToFollowList">
-        <uni-icons type="star-filled" size="48" color="#1890ff" class="stat-icon"></uni-icons>
+        <uni-icons
+          type="star-filled"
+          size="48"
+          color="#1890ff"
+          class="stat-icon"
+        ></uni-icons>
         <view class="stat-number">{{ followCount }}</view>
         <view class="stat-label">关注数</view>
       </view>
       <!-- <view class="stat-item" @tap="toFans"> -->
       <view class="stat-item" @tap="goToFansList">
-        <uni-icons type="person-filled" size="48" color="#52c41a" class="stat-icon"></uni-icons>
+        <uni-icons
+          type="person-filled"
+          size="48"
+          color="#52c41a"
+          class="stat-icon"
+        ></uni-icons>
         <view class="stat-number">{{ fansCount }}</view>
         <view class="stat-label">粉丝数</view>
       </view>
@@ -55,82 +87,157 @@
     <view class="menu-card">
       <view class="menu-item" @tap="toIssue_page">
         <view class="menu-icon-container">
-          <uni-icons type="list" size="40" color="#1890ff" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="list"
+            size="40"
+            color="#1890ff"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>我的发布</text>
           <view class="menu-badge">19</view>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
 
       <view class="menu-item" @tap="toPay">
         <view class="menu-icon-container">
-          <uni-icons type="wallet" size="40" color="#fa8c16" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="wallet"
+            size="40"
+            color="#fa8c16"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>我的支付</text>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
 
       <view class="menu-item" @tap="toSale">
         <view class="menu-icon-container">
-          <uni-icons type="paperplane" size="40" color="#52c41a" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="paperplane"
+            size="40"
+            color="#52c41a"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>我的卖出</text>
           <view class="menu-badge">99</view>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
 
       <view class="menu-item" @tap="toBuy">
         <view class="menu-icon-container">
-          <uni-icons type="cart" size="40" color="#722ed1" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="cart"
+            size="40"
+            color="#722ed1"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>我买到的</text>
           <view class="menu-badge">1</view>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
 
       <view class="menu-item" @tap="toAddress">
         <view class="menu-icon-container">
-          <uni-icons type="location" size="40" color="#eb2f96" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="location"
+            size="40"
+            color="#eb2f96"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>收货地址</text>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
 
       <view class="menu-item" @tap="toCollect">
         <view class="menu-icon-container">
-          <uni-icons type="heart" size="40" color="#f5222d" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="heart"
+            size="40"
+            color="#f5222d"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>我的收藏</text>
           <view class="menu-badge">39</view>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
 
       <view class="menu-item" @tap="toFeedback">
         <view class="menu-icon-container">
-          <uni-icons type="chat" size="40" color="#13c2c2" class="menu-icon"></uni-icons>
+          <uni-icons
+            type="chat"
+            size="40"
+            color="#13c2c2"
+            class="menu-icon"
+          ></uni-icons>
         </view>
         <view class="menu-content">
           <text>意见反馈</text>
         </view>
-        <uni-icons type="right" size="28" color="#cccccc" class="menu-arrow"></uni-icons>
+        <uni-icons
+          type="right"
+          size="28"
+          color="#cccccc"
+          class="menu-arrow"
+        ></uni-icons>
       </view>
     </view>
 
     <!-- 退出按钮 -->
     <view class="logout-btn" @tap="logout">
-      <uni-icons type="redo" size="28" color="#f5222d" class="logout-icon"></uni-icons>
+      <uni-icons
+        type="redo"
+        size="28"
+        color="#f5222d"
+        class="logout-icon"
+      ></uni-icons>
       <text>退出登录</text>
     </view>
 
@@ -140,11 +247,11 @@
 </template>
 
 <script>
-import uniIcons from '@dcloudio/uni-ui/lib/uni-icons/uni-icons.vue'
+import uniIcons from "@dcloudio/uni-ui/lib/uni-icons/uni-icons.vue";
 export default {
-  name: 'MyPage',
+  name: "MyPage",
   components: {
-    uniIcons
+    uniIcons,
   },
   data() {
     return {
@@ -154,7 +261,7 @@ export default {
       newNickname: "", // 新昵称的临时存储
       totalLikes: 0,
       followCount: 0, // 当前用户关注的数量
-      fansCount: 0    // 当前用户的粉丝数量
+      fansCount: 0, // 当前用户的粉丝数量
     };
   },
   methods: {
@@ -380,14 +487,13 @@ export default {
     goToFollowList() {
       // 使用 uni-app 的路由跳转到关注列表页面
       uni.navigateTo({
-        url: '/pages/my/my_follow/my_follow'
+        url: "/pages/my/my_follow/my_follow",
       });
     },
-    goToFansList()
-    {
+    goToFansList() {
       // 使用 uni-app 的路由跳转到粉丝列表页面
       uni.navigateTo({
-        url: '/pages/my/my_fans/my_fans'
+        url: "/pages/my/my_fans/my_fans",
       });
     },
     toFans() {
@@ -527,7 +633,7 @@ export default {
     this.fetchUserProfile(); // 页面显示时获取用户信息
     this.fetchUserLikes(); // 页面显示时获取点赞总数
     this.fetchFollowCounts(); // 获取关注和粉丝数据
-  }
+  },
 };
 </script>
 
@@ -536,7 +642,7 @@ export default {
 
 /* 用户信息部分 */
 .user-center-bg {
-  background: url('/static/img/dzq.png') center center no-repeat;
+  background: url("/static/img/dzq.png") center center no-repeat;
   background-size: cover;
   /* 确保图片覆盖整个区域 */
   height: 400rpx;
@@ -675,7 +781,7 @@ export default {
 }
 
 .menu-item:after {
-  content: '';
+  content: "";
   position: absolute;
   left: 90rpx;
   right: 0;

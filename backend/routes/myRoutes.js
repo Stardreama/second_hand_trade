@@ -3,6 +3,7 @@ const router = express.Router();
 const productController = require("../controllers/productController");
 const jwtService = require("../services/jwtService");
 const userController = require("../controllers/userController");
+const orderController = require("../controllers/orderController");
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -37,5 +38,10 @@ router.post(
   jwtService.authMiddleware,
   upload.single("file"),
   userController.updateQRCode
+);
+router.get(
+  "/purchases",
+  jwtService.authMiddleware,
+  orderController.getMyPurchases
 );
 module.exports = router;
