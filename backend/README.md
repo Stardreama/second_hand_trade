@@ -23,6 +23,91 @@ USE second_hand_trade;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `addresses`;
+CREATE TABLE `addresses`  (
+  `address_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `phone` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `province` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `city` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `district` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `is_default` tinyint(1) NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`address_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`student_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+DROP TABLE IF EXISTS `conversations`;
+CREATE TABLE `conversations`  (
+  `conversation_id` int NOT NULL AUTO_INCREMENT,
+  `buyer_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `seller_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `product_id` int NULL DEFAULT NULL,
+  `latest_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `latest_message_time` datetime NULL DEFAULT NULL,
+  `unread_buyer` int NULL DEFAULT 0,
+  `unread_seller` int NULL DEFAULT 0,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`conversation_id`) USING BTREE,
+  UNIQUE INDEX `unique_conversation`(`buyer_id` ASC, `seller_id` ASC, `product_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+DROP TABLE IF EXISTS `feedback`;
+CREATE TABLE `feedback`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `issue_type` int NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `images` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `contact` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+DROP TABLE IF EXISTS `follows`;
+CREATE TABLE `follows`  (
+  `follower_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `followee_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`follower_id`, `followee_id`) USING BTREE,
+  INDEX `fk_followee`(`followee_id` ASC) USING BTREE,
+  CONSTRAINT `fk_followee` FOREIGN KEY (`followee_id`) REFERENCES `users` (`student_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_follower` FOREIGN KEY (`follower_id`) REFERENCES `users` (`student_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+
+DROP TABLE IF EXISTS `likes`;
+CREATE TABLE `likes`  (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `product_id` int NOT NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_like`(`user_id` ASC, `product_id` ASC) USING BTREE,
+  INDEX `product_id`(`product_id` ASC) USING BTREE,
+  CONSTRAINT `likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`student_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `likes_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
+
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE `messages`  (
+  `message_id` int NOT NULL AUTO_INCREMENT,
+  `conversation_id` int NOT NULL,
+  `sender_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `receiver_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `is_read` tinyint(1) NULL DEFAULT 0,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`message_id`) USING BTREE,
+  INDEX `conversation_id`(`conversation_id` ASC) USING BTREE,
+  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`conversation_id`) REFERENCES `conversations` (`conversation_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
 DROP TABLE IF EXISTS `orders`;
 CREATE TABLE `orders`  (
   `order_id` int NOT NULL AUTO_INCREMENT,
@@ -46,33 +131,32 @@ CREATE TABLE `product_images`  (
   `product_id` int NOT NULL,
   `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `is_default` BOOLEAN DEFAULT FALSE,
+  `is_default` tinyint(1) NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
   CONSTRAINT `product_images_fk` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 0 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
 DROP TABLE IF EXISTS `products`;
-CREATE TABLE `products` (
+CREATE TABLE `products`  (
   `product_id` int NOT NULL AUTO_INCREMENT,
-  `seller_id` varchar(20) NOT NULL,
-  `price` decimal(10,2) NOT NULL,
-  `original_price` decimal(10,2) NOT NULL DEFAULT 0.00 COMMENT '原价',
-  `description` text NOT NULL,
-  `image` varchar(255) DEFAULT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `product_title` varchar(255) NOT NULL,
-  `product_status` varchar(255) NOT NULL,
-  `status` varchar(255) DEFAULT NULL COMMENT '交易方式，如 自提|邮寄',
-  `product_class` varchar(255) NOT NULL,
-  `product_type` enum('sell','buy') NOT NULL DEFAULT 'sell',
+  `seller_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `price` decimal(10, 2) NOT NULL,
+  `original_price` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '原价',
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `product_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `product_status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '交易方式，如 自提|邮寄',
+  `product_class` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `product_type` enum('sell','buy') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'sell',
   `like_amount` int NULL DEFAULT 0,
-  `is_off_shelf` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否下架：0-正常 1-已下架',
-  PRIMARY KEY (`product_id`),
-  INDEX `seller_id`(`seller_id`),
-  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users`(`student_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
+  `is_off_shelf` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否下架：0-正常 1-已下架',
+  PRIMARY KEY (`product_id`) USING BTREE,
+  INDEX `seller_id`(`seller_id` ASC) USING BTREE,
+  CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users` (`student_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`  (
@@ -86,72 +170,6 @@ CREATE TABLE `users`  (
   PRIMARY KEY (`student_id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
-DROP TABLE IF EXISTS `feedback`;
-CREATE TABLE `feedback` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(20) DEFAULT NULL,
-  `issue_type` int NOT NULL,
-  `description` text NOT NULL,
-  `images` text DEFAULT NULL,
-  `contact` varchar(100) DEFAULT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-DROP TABLE IF EXISTS `conversations`;
-CREATE TABLE conversations (
-  conversation_id INT PRIMARY KEY AUTO_INCREMENT,
-  buyer_id VARCHAR(50) NOT NULL,
-  seller_id VARCHAR(50) NOT NULL,
-  product_id INT,
-  latest_message TEXT,
-  latest_message_time DATETIME,
-  unread_buyer INT DEFAULT 0,
-  unread_seller INT DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_conversation (buyer_id, seller_id, product_id)
-);
-
-DROP TABLE IF EXISTS `likes`;
-CREATE TABLE `likes`  (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `product_id` int NOT NULL,
-  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `unique_like`(`user_id` ASC, `product_id` ASC) USING BTREE,
-  INDEX `product_id`(`product_id` ASC) USING BTREE,
-  CONSTRAINT `likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`student_id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `likes_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
-
-DROP TABLE IF EXISTS `messages`;
-CREATE TABLE messages (
-  message_id INT PRIMARY KEY AUTO_INCREMENT,
-  conversation_id INT NOT NULL,
-  sender_id VARCHAR(50) NOT NULL,
-  receiver_id VARCHAR(50) NOT NULL,
-  content TEXT,
-  image_url VARCHAR(255),
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id)
-);
-
-CREATE TABLE IF NOT EXISTS `addresses` (
-  `address_id` INT PRIMARY KEY AUTO_INCREMENT,
-  `user_id` VARCHAR(20) NOT NULL,
-  `name` VARCHAR(50) NOT NULL,
-  `phone` VARCHAR(15) NOT NULL,
-  `province` VARCHAR(50) NOT NULL,
-  `city` VARCHAR(50) NOT NULL,
-  `district` VARCHAR(50),
-  `address` VARCHAR(255) NOT NULL,
-  `is_default` TINYINT(1) DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`student_id`) ON DELETE CASCADE
-);
 SET FOREIGN_KEY_CHECKS = 1;
 ```
 
