@@ -266,29 +266,29 @@ export default {
   methods: {
     // 获取商品数据的方法
     fetchProducts() {
-      return new Promise((resolve, reject) => {
-        // 使用 uni.request 替代 axios 获取商品数据
-        uni.request({
-          url: "http://localhost:3000/api/products", // API endpoint
-          method: "GET", // HTTP method
-          success: (res) => {
-            if (res.statusCode === 200) {
-              // 更新 products 数据
-              this.products = res.data; // Assuming the response data is an array
-              console.log("商品数据已更新", this.products);
-              resolve(res.data); // 解析Promise
-            } else {
-              console.error("请求失败", res);
-              reject(new Error(res.errMsg || "请求失败")); // 拒绝Promise
-            }
-          },
-          fail: (err) => {
-            console.error("获取商品数据失败:", err);
-            reject(err); // 拒绝Promise
-          }
-        });
-      });
-    },
+  return new Promise((resolve, reject) => {
+    // 使用 uni.request 替代 axios 获取商品数据
+    uni.request({
+      url: "http://localhost:3000/api/products", // API endpoint
+      method: "GET", // HTTP method
+      success: (res) => {
+        if (res.statusCode === 200) {
+          // 使用与详情页一致的判断标准过滤下架商品
+          this.products = res.data.filter(item => item.is_off_shelf !== 1);
+          console.log("商品数据已更新", this.products);
+          resolve(this.products); // 解析Promise
+        } else {
+          console.error("请求失败", res);
+          reject(new Error(res.errMsg || "请求失败")); // 拒绝Promise
+        }
+      },
+      fail: (err) => {
+        console.error("获取商品数据失败:", err);
+        reject(err); // 拒绝Promise
+      }
+    });
+  });
+},
 
     /**
      * 处理图片路径的方法

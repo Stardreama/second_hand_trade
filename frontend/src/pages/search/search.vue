@@ -60,33 +60,34 @@ export default {
     }
   },
   methods: {
-    // 搜索商品
-    async searchProducts() {
-      if (!this.keyword.trim()) {
-        uni.showToast({
-          title: '请输入搜索关键词',
-          icon: 'none'
-        });
-        return;
-      }
+async searchProducts() {
+  if (!this.keyword.trim()) {
+    uni.showToast({
+      title: '请输入搜索关键词',
+      icon: 'none'
+    });
+    return;
+  }
 
-      uni.showLoading({ title: '正在搜索...' });
+  uni.showLoading({ title: '正在搜索...' });
 
-      try {
-        const response = await axios.get(`http://localhost:3000/api/products/search?keyword=${encodeURIComponent(this.keyword)}`);
-        this.searchResults = response.data;
-        this.searchDone = true;
+  try {
+    const response = await axios.get(`http://localhost:3000/api/products/search?keyword=${encodeURIComponent(this.keyword)}`);
+    // 过滤掉下架的商品，与首页保持一致的判断标准
+    this.searchResults = response.data.filter(item => item.is_off_shelf !== 1);
+    this.searchDone = true;
 
-        uni.hideLoading();
-      } catch (error) {
-        console.error('搜索失败:', error);
-        uni.hideLoading();
-        uni.showToast({
-          title: '搜索失败，请重试',
-          icon: 'none'
-        });
-      }
-    },
+    uni.hideLoading();
+  } catch (error) {
+    console.error('搜索失败:', error);
+    uni.hideLoading();
+    uni.showToast({
+      title: '搜索失败，请重试',
+      icon: 'none'
+    });
+  }
+},
+
 
     // 处理图片路径
     getImageUrl(path) {
