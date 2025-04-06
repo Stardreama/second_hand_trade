@@ -10,6 +10,15 @@
         <button class="cu-btn bg-blue shadow-blur round" @tap="searchProducts">搜索</button>
       </view>
     </view>
+  <!-- 排序选择器 -->
+  <view class="sort-container bg-white">
+  <view class="sort-option" :class="{'active': sortField === 'created_at'}" @tap="setSort('created_at')">
+    时间 <text class="sort-icon">{{ sortField === 'created_at' ? (sortOrder === 'asc' ? '↑' : '↓') : '↓' }}</text>
+  </view>
+  <view class="sort-option" :class="{'active': sortField === 'price'}" @tap="setSort('price')">
+    价格 <text class="sort-icon">{{ sortField === 'price' ? (sortOrder === 'asc' ? '↑' : '↓') : '↑' }}</text>
+  </view>
+</view>
 
     <!-- 搜索结果 -->
     <view class="result-info padding-sm text-grey" v-if="searchDone">
@@ -50,7 +59,9 @@ export default {
     return {
       keyword: '',
       searchResults: [],
-      searchDone: false
+      searchDone: false,
+      sortField: 'created_at', // 默认按时间排序
+      sortOrder: 'desc' // 默认降序（最新的在前面）
     };
   },
   onLoad(options) {
@@ -88,6 +99,51 @@ async searchProducts() {
   }
 },
 
+// 设置排序方式
+setSort(field) {
+  // 如果点击当前已选择的排序字段，则切换排序顺序
+  if (this.sortField === field) {
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+  } else {
+    // 切换排序字段
+    this.sortField = field;
+    // 时间默认降序（最新的在前），价格默认升序（便宜的在前）
+    this.sortOrder = field === 'created_at' ? 'desc' : 'asc';
+  }
+  
+  // 应用排序
+  this.applySorting();
+},
+// 应用排序逻辑
+applySorting() {
+  // 如果没有商品数据，直接返回
+  if (!this.searchResults || this.searchResults.length === 0) return;
+  
+  const sortedProducts = [...this.searchResults];
+  
+  sortedProducts.sort((a, b) => {
+    let valueA, valueB;
+    
+    if (this.sortField === 'price') {
+      // 价格排序 - 数值比较
+      valueA = parseFloat(a.price) || 0;
+      valueB = parseFloat(b.price) || 0;
+    } else {
+      // 时间排序 - 使用post_time或其他可用的时间字段
+      const timeFieldA = a.created_at || a.post_time || a.update_time || 0;
+      const timeFieldB = b.created_at || b.post_time || b.update_time || 0;
+      
+      valueA = timeFieldA ? new Date(timeFieldA).getTime() : 0;
+      valueB = timeFieldB ? new Date(timeFieldB).getTime() : 0;
+    }
+    
+    // 根据排序顺序返回比较结果
+    return this.sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+  });
+  
+  // 更新排序后的商品列表
+  this.searchResults = sortedProducts;
+},
 
     // 处理图片路径
     getImageUrl(path) {
@@ -156,5 +212,37 @@ async searchProducts() {
 .container_price_text_0 {
   color: red;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+}
+.container_price_text_0 {
+  color: red;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+}
+
+/* 排序选择器样式 */
+.sort-container {
+  display: flex;
+  padding: 20rpx 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.sort-option {
+  margin-right: 40rpx;
+  font-size: 26rpx;
+  color: #666;
+  padding: 6rpx 20rpx;
+  border-radius: 30rpx;
+  border: 1rpx solid #e0e0e0;  /* 添加灰色边框 */
+}
+
+.sort-option.active {
+  color: #ffffff;
+  background-color: #f37b1d;
+  font-weight: bold;
+  border: 1rpx solid #f37b1d;  /* 活跃状态边框色与背景色一致 */
+}
+
+.sort-icon {
+  margin-left: 4rpx;
+  display: inline-block;  /* 确保箭头总是显示 */
 }
 </style>
