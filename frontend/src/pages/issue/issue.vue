@@ -581,7 +581,7 @@ export default {
 				});
 				return;
 			}
-			this.aiUserInput+=`输出格式举例为：
+			let my_input=this.aiUserInput+`输出格式举例为：
 {
 "type": "卖",
 "title": "王道2024",
@@ -591,7 +591,7 @@ export default {
 "type": "买",
 "title": "求购王道2024计组",
 "introduction": "急需一本王道2024年计算机组成原理考研教材，85新以上即可，最好无笔记无破损。预算40元左右，比网上便宜些就行。希望校内当面交易，可灵活协商时间地点。本人计科专业考研备考中，诚心购买，请有闲置的同学尽快联系我。"
-}`;
+},请注意，输出内容一定只要买或者卖这两个中的一个，一定不要同时输出两部分`;
 			this.isGenerating = true;
 			const token = uni.getStorageSync('token');
 
@@ -601,7 +601,7 @@ export default {
 						url: 'http://localhost:3000/api/ai/generate',
 						method: 'POST',
 						data: {
-							userInput: this.aiUserInput
+							userInput: my_input
 						},
 						header: {
 							'Authorization': `Bearer ${token}`
