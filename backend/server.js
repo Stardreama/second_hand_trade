@@ -11,6 +11,7 @@ const Conversation = require("./models/conversation");
 const Message = require("./models/message");
 const addressRoutes = require("./routes/addressRoutes");
 const followRoutes = require("./routes/followRoutes");
+const favoriteRouter = require('./routes/favoriteRouter');
 const aiRoutes = require('./routes/aiRoutes');
 const cors = require("cors");
 const http = require("http");
@@ -27,7 +28,15 @@ const jwtService = require("./services/jwtService");
 const messageRoutes = require("./routes/messageRoutes");
 // 存储在线用户
 const connectedUsers = new Map();
-
+// 引入收藏路由
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true // 允许携带凭证
+  })
+);
 // Socket.io连接处理
 io.use((socket, next) => {
   // 获取token
@@ -116,24 +125,24 @@ io.use((socket, next) => {
 
       // 两种方式发送消息，提高可靠性
       // 1. 通过用户房间 - 总是发送，确保无论在哪个页面都能收到
-    io.to(`user_${receiverId}`).emit("receive_message", {
-      type: "message",
-      message: savedMessage,
-    });
+      io.to(`user_${receiverId}`).emit("receive_message", {
+        type: "message",
+        message: savedMessage,
+      });
 
-    // 2. 通过会话房间 - 针对聊天页面
-    const roomName = `conversation_${conversationId}`;
-    io.to(roomName).emit("receive_message", {
-      type: "message",
-      message: savedMessage,
-    });
-    
-    // 添加：通知接收者有新消息，可用于消息列表页面更新
-    io.to(`user_${receiverId}`).emit("new_message_notification", {
-      conversationId,
-      senderId: userId,
-      message: savedMessage
-    });
+      // 2. 通过会话房间 - 针对聊天页面
+      const roomName = `conversation_${conversationId}`;
+      io.to(roomName).emit("receive_message", {
+        type: "message",
+        message: savedMessage,
+      });
+
+      // 添加：通知接收者有新消息，可用于消息列表页面更新
+      io.to(`user_${receiverId}`).emit("new_message_notification", {
+        conversationId,
+        senderId: userId,
+        message: savedMessage
+      });
 
       // 通知发送者消息已发送成功，包含临时ID以便更新UI
       socket.emit("message_sent", {
@@ -212,7 +221,7 @@ io.use((socket, next) => {
         await Conversation.resetUnreadCount(conversationId, "seller");
       }
       console.log(`用户 ${userId} 标记消息为已读`, messagesMarked);
-      
+
       // 通知发送者其消息已被阅读
       if (messagesMarked.length > 0) {
         const senderSocket = connectedUsers.get(senderId);
@@ -347,6 +356,7 @@ app.use("/api/my", myRoutes);
 app.use("/api", feedbackRoutes);
 app.use("/api", messageRoutes);
 app.use("/api/address", addressRoutes);
+app.use('/api/products/favorite', favoriteRouter);
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

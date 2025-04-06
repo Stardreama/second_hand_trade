@@ -1,10 +1,26 @@
 <template>
   <view>
+    <!-- 排序控制器 -->
+    <view class="sort-container">
+      <view class="sort-item" :class="{ active: sortBy === 'newest' }" @tap="changeSort('newest')">
+        <text>最新发布</text>
+      </view>
+      <view class="sort-item" :class="{ active: sortBy === 'likes' }" @tap="changeSort('likes')">
+        <text>点赞最多</text>
+        <text class="sort-icon" v-if="sortBy === 'likes'">↓</text>
+      </view>
+      <view class="sort-item" :class="{ active: sortBy === 'price_asc' }" @tap="changeSort('price_asc')">
+        <text>价格</text>
+        <text class="sort-icon" v-if="sortBy === 'price_asc'">↑</text>
+        <text class="sort-icon" v-else-if="sortBy === 'price_desc'">↓</text>
+      </view>
+    </view>
+
     <!-- 内容 -->
     <view class="pa">
       <!-- 有商品时显示商品列表 -->
       <view v-if="productList && productList.length > 0">
-        <view class="contianer shadow-warp bg-white padding-sm" v-for="(item, index) in productList"
+        <view class="contianer shadow-warp bg-white padding-sm" v-for="(item, index) in sortedList"
           :key="item.product_id" :class="{ 'off-shelf-item': item.is_off_shelf === 1 }">
 
           <!-- 添加下架标识 -->
@@ -33,10 +49,10 @@
             </view>
 
             <view class="cu-capsule radius">
-              <view class="cu-tag bg-brown sm">
-                <text class="cuIcon-footprint"></text>
+              <view class="cu-tag bg-orange sm">
+                <uni-icons type="hand-up-filled" size="12" color="#ffffff"></uni-icons>
               </view>
-              <view class="cu-tag line-brown sm"> 168 </view>
+              <view class="cu-tag line-orange sm"> {{ item.like_amount || 0 }} </view>
             </view>
 
             <view class="cu-capsule radius margin-left">
@@ -141,6 +157,7 @@ export default {
     return {
       baseUrl: "http://localhost:3000/", // 后端基础地址
       productList: [], // 商品列表数据
+      sortBy: 'newest', // 默认按最新排序
       url: "https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg",
       //降价Model状态
       show_model_state: false,
@@ -155,7 +172,46 @@ export default {
       dep_price: "",
     };
   },
+
+  computed: {
+    // 计算属性：根据当前排序方式返回排序后的商品列表
+    sortedList() {
+      if (!this.productList || this.productList.length === 0) {
+        return [];
+      }
+
+      const list = [...this.productList];
+
+      switch (this.sortBy) {
+        case 'likes':
+          return list.sort((a, b) => (b.like_amount || 0) - (a.like_amount || 0));
+        case 'price_asc':
+          return list.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+        case 'price_desc':
+          return list.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+        case 'newest':
+        default:
+          return list.sort((a, b) => {
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
+            return dateB - dateA;
+          });
+      }
+    }
+  },
+
+
   methods: {
+
+    // 更改排序方式
+    changeSort(sort) {
+      if (sort === 'price_asc' && this.sortBy === 'price_asc') {
+        // 如果当前是价格升序，点击后切换为价格降序
+        this.sortBy = 'price_desc';
+      } else {
+        this.sortBy = sort;
+      }
+    },
     async loadSalesData() {
       try {
         const token = uni.getStorageSync("token");
@@ -765,5 +821,50 @@ export default {
   font-size: 24rpx;
   z-index: 1;
   box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+
+
+
+/* 排序控制器样式 */
+.sort-container {
+  display: flex;
+  background-color: #fff;
+  padding: 20rpx;
+  margin: 20rpx;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+}
+
+.sort-item {
+  flex: 1;
+  text-align: center;
+  font-size: 28rpx;
+  color: #666;
+  padding: 12rpx 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sort-item.active {
+  color: #1890ff;
+  font-weight: bold;
+}
+
+.sort-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -6rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background-color: #1890ff;
+}
+
+.sort-icon {
+  margin-left: 6rpx;
+  font-size: 24rpx;
 }
 </style>
