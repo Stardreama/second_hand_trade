@@ -364,10 +364,10 @@ export default {
       });
     },
 
+    // 在 methods 对象中找到 toPraise 方法并替换为以下代码
     toPraise() {
-      uni.showToast({
-        title: "暂未开放",
-        icon: "none",
+      uni.navigateTo({
+        url: '/pages/my/my_issue/my_issue'
       });
     },
 
@@ -383,8 +383,7 @@ export default {
         url: '/pages/my/my_follow/my_follow'
       });
     },
-    goToFansList()
-    {
+    goToFansList() {
       // 使用 uni-app 的路由跳转到粉丝列表页面
       uni.navigateTo({
         url: '/pages/my/my_fans/my_fans'
