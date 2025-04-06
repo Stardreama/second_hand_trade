@@ -11,6 +11,7 @@ const Conversation = require("./models/conversation");
 const Message = require("./models/message");
 const addressRoutes = require("./routes/addressRoutes");
 const followRoutes = require("./routes/followRoutes");
+const aiRoutes = require('./routes/aiRoutes');
 const cors = require("cors");
 const http = require("http");
 const server = http.createServer(app);
@@ -338,6 +339,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // 路由加载
+app.use("/api/ai", aiRoutes);
 app.use("/api", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
