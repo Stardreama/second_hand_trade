@@ -176,7 +176,49 @@
 				</view>
 			</scroll-view>
 		</view>
+		<!-- AI助手浮窗按钮 -->
+		<view class="ai-float-button" @tap="showAiModal">
+			<uni-icons type="info" size="28" color="#ffffff"></uni-icons>
+			<text class="ai-btn-text">AI帮写</text>
+		</view>
 
+		<!-- AI助手模态框 -->
+		<view class="cu-modal" :class="aiModalVisible ? 'show' : ''" @tap="hideAiModal">
+			<view class="cu-dialog" @tap.stop>
+				<view class="cu-bar bg-white justify-end">
+					<view class="content">AI助手</view>
+					<view class="action" @tap="hideAiModal">
+						<uni-icons type="close" size="24" color="#333333"></uni-icons>
+					</view>
+				</view>
+				<view class="padding-xl">
+					<view class="ai-input-container">
+						<input v-model="aiUserInput" class="ai-input" placeholder="描述您想要买/卖的商品，例如：我想要卖王道考研2024计组" />
+						<button class="cu-btn bg-blue ai-generate-btn" @tap="generateContent" :loading="isGenerating"
+							:disabled="isGenerating">
+							<uni-icons v-if="!isGenerating" type="refresh" size="22" color="#ffffff"></uni-icons>
+							<text>{{ isGenerating ? '生成中...' : '生成' }}</text>
+						</button>
+					</view>
+					<view class="ai-result-container" v-if="aiResult">
+						<view class="ai-result-title">
+							<text class="ai-label">类型:</text>
+							<text class="ai-content">{{ aiResult.type }}</text>
+						</view>
+						<view class="ai-result-title">
+							<text class="ai-label">标题:</text>
+							<text class="ai-content">{{ aiResult.title }}</text>
+							<button class="cu-btn bg-blue sm ai-use-btn" @tap="useAiTitle">使用</button>
+						</view>
+						<view class="ai-result-content">
+							<view class="ai-label">商品介绍:</view>
+							<text class="ai-introduction">{{ aiResult.introduction }}</text>
+							<button class="cu-btn bg-blue sm ai-use-btn" @tap="useAiContent">使用</button>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -226,6 +268,10 @@ export default {
 			contentError: false,
 			sellPriceError: false,
 			orginalPriceError: false,
+			aiModalVisible: false,
+			aiUserInput: '',
+			aiResult: null,
+			isGenerating: false
 		}
 	},
 	methods: {
@@ -515,7 +561,105 @@ export default {
 			allSchool.all(e, that);
 		},
 
-		// end
+		// 显示AI助手模态框
+		showAiModal() {
+			this.aiModalVisible = true;
+		},
+
+		// 隐藏AI助手模态框
+		hideAiModal() {
+			this.aiModalVisible = false;
+		},
+
+		// 生成AI内容
+		async generateContent() {
+			if (!this.aiUserInput.trim()) {
+				uni.showToast({
+					title: '请输入商品描述',
+					icon: 'none',
+					duration: 2000
+				});
+				return;
+			}
+			this.aiUserInput+=`输出格式举例为：
+{
+"type": "卖",
+"title": "王道2024",
+"introduction": "全新正品王道二手商品，型号2024，适合大学生使用。品牌信誉良好，功能齐全，新旧程度适中，性价比高。"
+}
+{
+"type": "买",
+"title": "求购王道2024计组",
+"introduction": "急需一本王道2024年计算机组成原理考研教材，85新以上即可，最好无笔记无破损。预算40元左右，比网上便宜些就行。希望校内当面交易，可灵活协商时间地点。本人计科专业考研备考中，诚心购买，请有闲置的同学尽快联系我。"
+}`;
+			this.isGenerating = true;
+			const token = uni.getStorageSync('token');
+
+			try {
+				const res = await new Promise((resolve, reject) => {
+					uni.request({
+						url: 'http://localhost:3000/api/ai/generate',
+						method: 'POST',
+						data: {
+							userInput: this.aiUserInput
+						},
+						header: {
+							'Authorization': `Bearer ${token}`
+						},
+						success: (res) => resolve(res),
+						fail: (err) => reject(err)
+					});
+				});
+
+				if (res.statusCode === 200) {
+					this.aiResult = res.data;
+					console.log('AI返回结果:', this.aiResult);
+				} else {
+					throw new Error(res.data.message || '内容生成失败');
+				}
+			} catch (error) {
+				console.error('AI内容生成失败:', error);
+				uni.showToast({
+					title: '内容生成失败，请重试',
+					icon: 'none',
+					duration: 2000
+				});
+			} finally {
+				this.isGenerating = false;
+			}
+		},
+
+		// 使用AI生成的标题
+		useAiTitle() {
+			if (this.aiResult && this.aiResult.title) {
+				this.title = this.aiResult.title;
+				// 根据类型自动切换标签页
+				if (this.aiResult.type === '买') {
+					this.tabIndex = 1; // 切换到求购标签
+				} else {
+					this.tabIndex = 0; // 切换到出售标签
+				}
+				uni.showToast({
+					title: '已应用AI标题',
+					icon: 'success',
+					duration: 1500
+				});
+				this.hideAiModal();
+			}
+		},
+
+		// 使用AI生成的内容
+		useAiContent() {
+			if (this.aiResult && this.aiResult.introduction) {
+				this.content = this.aiResult.introduction;
+				uni.showToast({
+					title: '已应用AI介绍',
+					icon: 'success',
+					duration: 1500
+				});
+				this.hideAiModal();
+			}
+		},
 
 
 		// 图片上传
@@ -725,6 +869,7 @@ export default {
 	height: 50rpx;
 	border-radius: 8rpx;
 	background-color: #f9f9f9;
+	height: auto;
 }
 
 /* 内容区域样式 */
@@ -741,6 +886,7 @@ export default {
 	padding: 16rpx;
 	border-radius: 8rpx;
 	background-color: #f9f9f9;
+	height: auto;
 }
 
 /* 图片上传区域 */
@@ -998,5 +1144,103 @@ export default {
 .error-input {
 	animation: flash 0.5s ease;
 	background-color: rgba(255, 73, 73, 0.1);
+}
+
+/* AI浮窗按钮样式 */
+.ai-float-button {
+	position: fixed;
+	right: 30rpx;
+	bottom: 180rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100rpx;
+	height: 100rpx;
+	background: linear-gradient(135deg, #3B7AEF, #2563eb);
+	border-radius: 50%;
+	box-shadow: 0 8rpx 20rpx rgba(37, 99, 235, 0.3);
+	z-index: 100;
+	padding: 10rpx;
+}
+
+.ai-btn-text {
+	font-size: 20rpx;
+	color: #ffffff;
+	margin-top: 4rpx;
+}
+
+/* AI模态框样式 */
+.ai-input-container {
+	display: flex;
+	margin-bottom: 30rpx;
+}
+
+.ai-input {
+	flex: 1;
+	border: 1px solid #ddd;
+	border-radius: 8rpx;
+	font-size: 28rpx;
+	margin-right: 16rpx;
+	height: 50rpx;
+}
+
+.ai-generate-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 30rpx;
+	border-radius: 8rpx;
+}
+
+.ai-generate-btn uni-icons {
+	margin-right: 8rpx;
+}
+
+.ai-result-container {
+	background-color: #f8f9fa;
+	border-radius: 12rpx;
+	padding: 24rpx;
+	margin-top: 20rpx;
+}
+
+.ai-result-title {
+	display: flex;
+	align-items: center;
+	margin-bottom: 20rpx;
+}
+
+.ai-label {
+	font-weight: bold;
+	margin-right: 10rpx;
+	color: #555;
+}
+
+.ai-content {
+	flex: 1;
+	color: #333;
+}
+
+.ai-result-content {
+	position: relative;
+}
+
+.ai-introduction {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 28rpx;
+	line-height: 1.6;
+	color: #333;
+	background-color: white;
+	padding: 16rpx;
+	border-radius: 8rpx;
+	border: 1px solid #eee;
+}
+
+.ai-use-btn {
+	margin-left: 16rpx;
+	padding: 0 20rpx;
+	height: 56rpx;
+	line-height: 56rpx;
 }
 </style>
