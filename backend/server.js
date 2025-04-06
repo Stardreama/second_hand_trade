@@ -347,14 +347,8 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 // 配置静态文件服务（访问上传的图片）
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-<<<<<<< HEAD
-// ...现有代码
-
-// 首先确保所有路由都在这里注册 (BEFORE server.listen)
-=======
 // 路由加载
 app.use("/api/ai", aiRoutes);
->>>>>>> 64e5f2e6e5a41cce3689734d094ee4cf745bb9af
 app.use("/api", authRoutes);
 app.use('/api/products/favorite', favoriteRouter); // 把更具体的路径先注册
 app.use("/api/products", productRoutes);
@@ -369,6 +363,3 @@ app.use("/api/user", followRoutes);
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
-// 删除这行，它放在server.listen之后不会生效
-// app.use("/api/user", followRoutes); 
