@@ -1,218 +1,189 @@
 <template>
 	<view>
-		<!-- 导航栏 -->
-		<view class="cu-bar bg-white solid-bottom nav-bar">
-			<view class="flex padding-sm text-center text-xl tab-container">
-				<view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 0 }" @tap="switchTab(0)">
-					<TagsOutlined class="tab-icon" />
-					<text>出售</text>
-				</view>
-				<view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 1 }" @tap="switchTab(1)">
-					<ShoppingCartOutlined class="tab-icon" />
-					<text>求购</text>
-				</view>
-			</view>
+	  <!-- 导航栏 -->
+	  <view class="cu-bar bg-white solid-bottom nav-bar">
+		<view class="flex padding-sm text-center text-xl tab-container">
+		  <view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 0 }" @tap="switchTab(0)">
+			<uni-icons type="shop" size="44" color="#1890ff" class="tab-icon"></uni-icons>
+			<text>出售</text>
+		  </view>
+		  <view class="flex-sub tab-item" :class="{ 'active-tab': tabIndex === 1 }" @tap="switchTab(1)">
+			<uni-icons type="cart" size="44" color="#1890ff" class="tab-icon"></uni-icons>
+			<text>求购</text>
+		  </view>
 		</view>
-
-		<form @submit="formSubmit" @reset="">
-			<!-- 标题 -->
-			<view class="cu-form-group margin-top form-item" :class="{ 'error-field': titleError }">
-				<view class="title">
-					<FileTextOutlined class="form-icon" />
-					<text>标题</text>
-				</view>
-				<input type="text" v-model="title" name="title" placeholder="品类品牌型号都是买家喜欢搜索的"
-					class="form-input"></input>
-			</view>
-			<!-- end -->
-
-			<!-- 内容 -->
-			<view class="cu-form-group margin-top content-area" :class="{ 'error-field': contentError }">
-				<textarea v-model="content" maxlength="1000" placeholder="描述宝贝的转手原因,入手渠道和使用感受"></textarea>
-			</view>
-			<!-- end -->
-
-			<!-- 图片 -->
-			<view class="cu-bar bg-white margin-top image-upload-bar">
-				<view class="action">
-					<UploadOutlined class="form-icon" />
-					<text class="section-title">图片上传</text>
-				</view>
-				<view class="action">
-					{{ imgList.length }}/5
-				</view>
-			</view>
-			<view class="cu-form-group image-upload-container">
-				<view class="grid col-4 grid-square flex-sub">
-
-					<view class="bg-img" v-for="(item, index) in imgList" :key="index" @tap="ViewImage"
-						:data-url="imgList[index]">
-						<image :src="imgList[index]" mode='aspectFill'></image>
-						<view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index">
-							<CloseOutlined />
-						</view>
-						<view class="cu-tag bg-blue cover-icon" @tap.stop="SetAsCover" :data-index="index">
-							<StarOutlined />
-							<text v-if="coverIndex === index" class="cover-text">封面</text>
-						</view>
-					</view>
-
-					<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
-						<CameraOutlined class="upload-icon" />
-						<text class="upload-text">添加图片</text>
-					</view>
-				</view>
-			</view>
-			<!-- end -->
-
-			<!-- 地址选择 -->
-			<view class="cu-form-group form-item">
-				<view class="title">
-					<EnvironmentOutlined class="form-icon" />
-					<text>地址选择</text>
-				</view>
-				<picker mode="multiSelector" @change="MultiChange" @columnchange="MultiColumnChange" :value="multiIndex"
-					:range="multiArray">
-					<view class="picker">
-						{{ multiArray[0][multiIndex[0]] }}，{{ multiArray[1][multiIndex[1]] }}，{{
-							multiArray[2][multiIndex[2]] }}
-					</view>
-				</picker>
-			</view>
-			<!-- end -->
-
-			<!-- 价钱 -->
-			<view class="cu-form-group margin-top price-group" v-if="tabIndex === 0">
-				<view class="title price-label">
-					<DollarOutlined class="form-icon" />
-					<text>出售价:</text>
-				</view>
-				<input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7' name="newPrice"
-					:class="{ 'error-input': sellPriceError }"></input>
-
-				<view class="title price-label">
-					<DollarOutlined class="form-icon" />
-					<text>原价:</text>
-				</view>
-				<input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价" maxlength='7'
-					name="oriPrice" :class="{ 'error-input': orginalPriceError }"></input>
-			</view>
-			<!-- end -->
-
-			<!-- 选择分类 -->
-			<view class="cu-form-group">
-				<view class="title">
-					<AppstoreOutlined class="form-icon" />
-					<text>分类:</text>
-				</view>
-				<input disabled="true" name="classify" :value='classify' class="category-input"></input>
-				<button class="cu-btn bg-green select-btn" role="button" aria-disabled="false" @tap="showModal"
-					data-target="DrawerModalL">选择</button>
-			</view>
-			<!-- end -->
-
-			<!-- 新旧 -->
-			<view class="cu-form-group" v-if="tabIndex === 0">
-				<view class="title">
-					<StarOutlined class="form-icon" />
-					<text>新旧:</text>
-				</view>
-				<input ref="status" disabled="true" name="itemLists" :value='itemLists[itemListsIndex]'
-					class="status-input"></input>
-				<button class="cu-btn bg-green select-btn" role="button" aria-disabled="false"
-					@tap="newState">选择</button>
-			</view>
-			<!-- end -->
-
-			<!-- 交易方式 -->
-			<view class="cu-form-group trade-method">
-				<view class="title">
-					<SwapOutlined class="form-icon" />
-					<text>交易方式</text>
-				</view>
-				<checkbox-group name="means" @change="checkboxChange" class="checkbox-group">
-					<label class="checkbox-item" :class="{ 'checked-label': checkboxs[0].checked }">
-						<checkbox :class="checkboxs[0].checked ? 'checked' : ''"
-							:checked="checkboxs[0].checked ? true : false" value="自提"></checkbox>
-						<text>自提</text>
-					</label>
-					<label class="checkbox-item" :class="{ 'checked-label': checkboxs[1].checked }">
-						<checkbox :class="checkboxs[1].checked ? 'checked' : ''"
-							:checked="checkboxs[1].checked ? true : false" value='同城面交'></checkbox>
-						<text>同城面交</text>
-					</label>
-					<label class="checkbox-item" :class="{ 'checked-label': checkboxs[2].checked }">
-						<checkbox :class="checkboxs[2].checked ? 'checked' : ''"
-							:checked="checkboxs[2].checked ? true : false" value='邮寄'></checkbox>
-						<text>邮寄</text>
-					</label>
-				</checkbox-group>
-			</view>
-			<!-- end -->
-
-			<!-- 确定发布 -->
-			<view class="padding flex flex-direction">
-				<button class="cu-btn submit-btn margin-tb-sm lg" form-type="submit">
-					<SendOutlined class="submit-icon" />
-					{{ isEdit ? '保存修改' : (tabIndex === 0 ? '发布出售' : '发布求购') }}
-				</button>
-			</view>
-			<!-- end -->
-		</form>
-
-		<!-- 模态框 -->
-		<view @touchmove.stop="modeMove" class="cu-modal drawer-modal justify-start"
-			:class="modalName == 'DrawerModalL' ? 'show' : ''" @tap="hideModal">
-			<scroll-view scroll-with-animation='true' scroll-y='true' class="cu-dialog basis-lg modal-content">
-				<view class="modal-header">
-					<text class="modal-title">选择分类</text>
-				</view>
-				<view class="cu-list menu text-left">
-					<view class="cu-item category-item" v-for="(item, index) in picker" :key="index" @tap="getClassify"
-						:data-name="item.classify_name" :data-value="item.classify_id">
-						<view class="content">
-							<view>{{ item.classify_name }}</view>
-						</view>
-					</view>
-				</view>
-			</scroll-view>
+	  </view>
+  
+	  <form @submit="formSubmit" @reset="">
+		<!-- 标题 -->
+		<view class="cu-form-group margin-top form-item" :class="{ 'error-field': titleError }">
+		  <view class="title">
+			<uni-icons type="compose" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text>标题</text>
+		  </view>
+		  <input type="text" v-model="title" name="title" placeholder="品类品牌型号都是买家喜欢搜索的"
+			class="form-input"></input>
 		</view>
-
+		<!-- end -->
+  
+		<!-- 内容 -->
+		<view class="cu-form-group margin-top content-area" :class="{ 'error-field': contentError }">
+		  <textarea v-model="content" maxlength="1000" placeholder="描述宝贝的转手原因,入手渠道和使用感受"></textarea>
+		</view>
+		<!-- end -->
+  
+		<!-- 图片 -->
+		<view class="cu-bar bg-white margin-top image-upload-bar">
+		  <view class="action">
+			<uni-icons type="upload" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text class="section-title">图片上传</text>
+		  </view>
+		  <view class="action">
+			{{ imgList.length }}/5
+		  </view>
+		</view>
+		<view class="cu-form-group image-upload-container">
+		  <view class="grid col-4 grid-square flex-sub">
+			<view class="bg-img" v-for="(item, index) in imgList" :key="index" @tap="ViewImage"
+			  :data-url="imgList[index]">
+			  <image :src="imgList[index]" mode='aspectFill'></image>
+			  <view class="cu-tag bg-red delete-icon" @tap.stop="DelImg" :data-index="index">
+				<uni-icons type="close" size="24" color="#ffffff"></uni-icons>
+			  </view>
+			  <view class="cu-tag bg-blue cover-icon" @tap.stop="SetAsCover" :data-index="index">
+				<uni-icons type="star" size="20" color="#ffffff"></uni-icons>
+				<text v-if="coverIndex === index" class="cover-text">封面</text>
+			  </view>
+			</view>
+			<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
+			  <uni-icons type="camera" size="60" color="#1890ff" class="upload-icon"></uni-icons>
+			  <text class="upload-text">添加图片</text>
+			</view>
+		  </view>
+		</view>
+		<!-- end -->
+  
+		<!-- 地址选择 -->
+		<view class="cu-form-group form-item">
+		  <view class="title">
+			<uni-icons type="location" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text>地址选择</text>
+		  </view>
+		  <picker mode="multiSelector" @change="MultiChange" @columnchange="MultiColumnChange" :value="multiIndex"
+			:range="multiArray">
+			<view class="picker">
+			  {{ multiArray[0][multiIndex[0]] }}，{{ multiArray[1][multiIndex[1]] }}，{{
+				multiArray[2][multiIndex[2]] }}
+			</view>
+		  </picker>
+		</view>
+		<!-- end -->
+  
+		<!-- 价钱 -->
+		<view class="cu-form-group margin-top price-group" v-if="tabIndex === 0">
+		  <view class="title price-label">
+			<uni-icons type="wallet" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text>出售价:</text>
+		  </view>
+		  <input type="digit" @input="moneyInput" :value="money" placeholder="请输入价钱" maxlength='7' name="newPrice"
+			:class="{ 'error-input': sellPriceError }"></input>
+  
+		  <view class="title price-label">
+			<uni-icons type="wallet" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text>原价:</text>
+		  </view>
+		  <input type="digit" @input="newInput" :value="newMoney" placeholder="请输入原价" maxlength='7'
+			name="oriPrice" :class="{ 'error-input': orginalPriceError }"></input>
+		</view>
+		<!-- end -->
+  
+		<!-- 选择分类 -->
+		<view class="cu-form-group">
+		  <view class="title">
+			<uni-icons type="list" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text>分类:</text>
+		  </view>
+		  <input disabled="true" name="classify" :value='classify' class="category-input"></input>
+		  <button class="cu-btn bg-green select-btn" role="button" aria-disabled="false" @tap="showModal"
+			data-target="DrawerModalL">选择</button>
+		</view>
+		<!-- end -->
+  
+		<!-- 新旧 -->
+		<view class="cu-form-group" v-if="tabIndex === 0">
+		  <view class="title">
+			<uni-icons type="star" size="36" color="#1890ff" class="form-icon"></uni-icons>
+			<text>新旧:</text>
+		  </view>
+		  <input ref="status" disabled="true" name="itemLists" :value='itemLists[itemListsIndex]'
+			class="status-input"></input>
+		  <button class="cu-btn bg-green select-btn" role="button" aria-disabled="false"
+			@tap="newState">选择</button>
+		</view>
+		<!-- end -->
+  
+		<!-- 交易方式 -->
+		<view class="cu-form-group trade-method">
+		  <view class="title">
+			<uni-icons type="loop" size="34" color="#1890ff" class="form-icon"></uni-icons>
+			<text>交易方式</text>
+		  </view>
+		  <checkbox-group name="means" @change="checkboxChange" class="checkbox-group">
+			<label class="checkbox-item" :class="{ 'checked-label': checkboxs[0].checked }">
+			  <checkbox :class="checkboxs[0].checked ? 'checked' : ''"
+				:checked="checkboxs[0].checked ? true : false" value="自提"></checkbox>
+			  <text>自提</text>
+			</label>
+			<label class="checkbox-item" :class="{ 'checked-label': checkboxs[1].checked }">
+			  <checkbox :class="checkboxs[1].checked ? 'checked' : ''"
+				:checked="checkboxs[1].checked ? true : false" value='同城面交'></checkbox>
+			  <text>同城面交</text>
+			</label>
+			<label class="checkbox-item" :class="{ 'checked-label': checkboxs[2].checked }">
+			  <checkbox :class="checkboxs[2].checked ? 'checked' : ''"
+				:checked="checkboxs[2].checked ? true : false" value='邮寄'></checkbox>
+			  <text>邮寄</text>
+			</label>
+		  </checkbox-group>
+		</view>
+		<!-- end -->
+  
+		<!-- 确定发布 -->
+		<view class="padding flex flex-direction">
+		  <button class="cu-btn submit-btn margin-tb-sm lg" form-type="submit">
+			<uni-icons type="paperplane" size="28" color="#ffffff" class="submit-icon"></uni-icons>
+			{{ isEdit ? '保存修改' : (tabIndex === 0 ? '发布出售' : '发布求购') }}
+		  </button>
+		</view>
+		<!-- end -->
+	  </form>
+  
+	  <!-- 模态框 -->
+	  <view @touchmove.stop="modeMove" class="cu-modal drawer-modal justify-start"
+		:class="modalName == 'DrawerModalL' ? 'show' : ''" @tap="hideModal">
+		<scroll-view scroll-with-animation='true' scroll-y='true' class="cu-dialog basis-lg modal-content">
+		  <view class="modal-header">
+			<text class="modal-title">选择分类</text>
+		  </view>
+		  <view class="cu-list menu text-left">
+			<view class="cu-item category-item" v-for="(item, index) in picker" :key="index" @tap="getClassify"
+			  :data-name="item.classify_name" :data-value="item.classify_id">
+			  <view class="content">
+				<view>{{ item.classify_name }}</view>
+			  </view>
+			</view>
+		  </view>
+		</scroll-view>
+	  </view>
 	</view>
-</template>
-
-<script>
-import {
-	TagsOutlined,
-	ShoppingCartOutlined,
-	FileTextOutlined,
-	UploadOutlined,
-	EnvironmentOutlined,
-	DollarOutlined,
-	AppstoreOutlined,
-	StarOutlined,
-	SwapOutlined,
-	SendOutlined,
-	PlusOutlined,
-	CloseOutlined,
-	CameraOutlined
-} from '@ant-design/icons-vue';
-import allSchool from "../../../common/allSchool.js";
-export default {
+  </template>
+  
+  <script>
+  import uniIcons from '@dcloudio/uni-ui/lib/uni-icons/uni-icons.vue';
+  import allSchool from "../../../common/allSchool.js";
+  export default {
 	components: {
-		TagsOutlined,
-		ShoppingCartOutlined,
-		FileTextOutlined,
-		UploadOutlined,
-		EnvironmentOutlined,
-		DollarOutlined,
-		AppstoreOutlined,
-		StarOutlined,
-		SwapOutlined,
-		SendOutlined,
-		PlusOutlined,
-		CloseOutlined,
-		CameraOutlined
+	  uniIcons
 	},
 	data() {
 		return {
