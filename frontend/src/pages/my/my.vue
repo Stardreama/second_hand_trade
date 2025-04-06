@@ -452,13 +452,6 @@ export default {
         url: "/pages/my/my_issue/my_issue",
       });
     },
-
-    toCollect() {
-      uni.navigateTo({
-        url: "/pages/my/my_collect/my_collect",
-      });
-    },
-
     toAddress() {
       uni.navigateTo({
         url: "/pages/my/my_address/my_address",
@@ -514,7 +507,12 @@ export default {
         url: "/pages/my/my_buy/my_buy",
       });
     },
-
+    toCollect() {
+      uni.navigateTo({
+        url: "/pages/my/my_likes/my_likes"
+      });
+    },
+    
     // 点击头像的事件，弹出预览或更换头像的选项
     changeAvatar() {
       uni.showActionSheet({
