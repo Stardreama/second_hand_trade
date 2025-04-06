@@ -80,8 +80,6 @@ exports.getFavoriteStatus = (req, res) => {
         });
     }
 };
-
-// 获取用户所有收藏的商品
 exports.getUserFavorites = (req, res) => {
     try {
         const userId = req.user.student_id;
@@ -90,18 +88,22 @@ exports.getUserFavorites = (req, res) => {
             if (err) {
                 console.error("获取收藏商品列表失败:", err);
                 return res.status(500).json({
+                    code: 500,
                     message: '服务器错误，请稍后再试'
                 });
             }
 
+            // 确保返回格式与my_issue.vue期望的一致
             res.status(200).json({
                 code: 200,
-                data: favorites
+                data: favorites,
+                message: '获取收藏商品成功'
             });
         });
     } catch (error) {
         console.error('获取收藏商品列表失败:', error);
         res.status(500).json({
+            code: 500,
             message: '服务器错误，请稍后再试'
         });
     }

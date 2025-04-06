@@ -350,14 +350,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // 路由加载
 app.use("/api/ai", aiRoutes);
 app.use("/api", authRoutes);
+app.use('/api/products/favorite', favoriteRouter); // 把更具体的路径先注册
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/my", myRoutes);
 app.use("/api", feedbackRoutes);
 app.use("/api", messageRoutes);
 app.use("/api/address", addressRoutes);
-app.use('/api/products/favorite', favoriteRouter);
+app.use("/api/user", followRoutes);
+
+// 然后才启动服务器
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-app.use("/api/user", followRoutes);

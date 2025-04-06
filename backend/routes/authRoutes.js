@@ -61,6 +61,19 @@ router.post(
   authController.authenticateJWT, // 确保用户通过JWT认证
   authController.updateNickname // 调用更新昵称的方法
 );
+// 获取用户详细信息
+router.get(
+  "/user/profile/detail",
+  authController.authenticateJWT,
+  authController.getUserDetailProfile
+);
+
+// 修改密码
+router.post(
+  "/user/update-password",
+  authController.authenticateJWT,
+  authController.updatePassword
+);
 // 其他路由
 router.post(
   "/products",

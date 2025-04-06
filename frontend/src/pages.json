@@ -115,6 +115,13 @@
       }
     },
     {
+      "path": "pages/my/settings/settings",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
       "path": "pages/my/my_feedback/my_feedback",
       "style": {
         "navigationBarTitleText": "意见反馈"

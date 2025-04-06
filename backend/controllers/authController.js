@@ -243,6 +243,81 @@ const getUserProfile = (req, res) => {
   });
 };
 
+
+// 获取用户详细信息
+const getUserDetailProfile = (req, res) => {
+  const student_id = req.user.student_id;
+
+  User.getUserDetailProfile(student_id, (err, results) => {
+    if (err) {
+      console.error('获取用户详细信息失败:', err);
+      return res.status(500).json({ message: '服务器错误' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: '用户不存在' });
+    }
+
+    // 不返回密码等敏感信息
+    const user = results[0];
+
+    res.status(200).json({ user });
+  });
+};
+
+// 修改密码函数
+const updatePassword = (req, res) => {
+  const student_id = req.user.student_id;
+  const { oldPassword, newPassword } = req.body;
+
+  // 参数验证
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: '请提供当前密码和新密码' });
+  }
+
+  // 验证当前密码
+  User.findByStudentId(student_id, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: '服务器错误' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: '用户不存在' });
+    }
+
+    const user = results[0];
+
+    // 使用bcrypt比较密码
+    bcrypt.compare(oldPassword, user.password, (err, match) => {
+      if (err) {
+        console.error("密码比较错误：", err);
+        return res.status(500).json({ message: '服务器错误' });
+      }
+
+      if (!match) {
+        return res.status(401).json({ message: '当前密码不正确' });
+      }
+
+      // 对新密码进行哈希处理
+      bcrypt.hash(newPassword, 10, (hashErr, hashedPassword) => {
+        if (hashErr) {
+          console.error("密码加密失败：", hashErr);
+          return res.status(500).json({ message: '密码加密失败' });
+        }
+
+        // 更新新密码
+        User.updatePassword(student_id, hashedPassword, (updateErr) => {
+          if (updateErr) {
+            console.error("更新密码失败：", updateErr);
+            return res.status(500).json({ message: '更新密码失败' });
+          }
+
+          res.status(200).json({ message: '密码更新成功' });
+        });
+      });
+    });
+  });
+};
 module.exports = {
   register,
   login,
@@ -251,4 +326,6 @@ module.exports = {
   getUserProfile,
   getUserInfo,
   updateNickname,
+  getUserDetailProfile,
+  updatePassword,
 };
