@@ -8,6 +8,10 @@
         mode="aspectFill"
       ></image>
       <view class="user-center-content">
+          <!-- 设置按钮 -->
+          <view class="settings-button" @tap="toSettings">
+          <uni-icons type="gear" size="28" color="#ffffff"></uni-icons>
+        </view>
         <!-- 头像和昵称放在这里 -->
         <image
           :src="avatar"
@@ -25,7 +29,6 @@
         </view>
       </view>
     </view>
-
     <!-- 修改昵称弹框 -->
     <view v-if="isNicknameModalVisible" class="nickname-modal">
       <view class="modal-content">
@@ -338,6 +341,7 @@ export default {
         },
       });
     },
+    
     // 读取用户信息（昵称）
     fetchUserProfile() {
       const token = uni.getStorageSync("token");
@@ -601,7 +605,12 @@ export default {
         url: "/pages/my/my_detail/my_detail",
       });
     },
-
+ // 跳转到设置页面
+ toSettings() {
+    uni.navigateTo({
+      url: "/pages/my/settings/settings"
+    });
+  },
     // 获取点赞总数
     fetchUserLikes() {
       const token = uni.getStorageSync("token");
@@ -945,5 +954,24 @@ export default {
   background-color: white;
   color: #666;
   border: 1px solid #d9d9d9;
+}
+
+/* 设置按钮样式 */
+.settings-button {
+  position: absolute;
+  top: 40rpx;
+  right: 40rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.settings-button:active {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 </style>

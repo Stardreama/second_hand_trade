@@ -58,7 +58,17 @@ const User = {
     );
     return result.length ? result[0].QRCode : null;
   },
+  // 获取用户详细信息
+  getUserDetailProfile: (student_id, callback) => {
+    const query = "SELECT student_id, username, avatar FROM users WHERE student_id = ?";
+    db.query(query, [student_id], callback);
+  },
 
+  // 更新用户密码
+  updatePassword: (student_id, newPassword, callback) => {
+    const query = "UPDATE users SET password = ? WHERE student_id = ?";
+    db.query(query, [newPassword, student_id], callback);
+  },
   updateUserQRCode: async (student_id, qrCode) => {
     return await query("UPDATE users SET QRCode = ? WHERE student_id = ?", [
       qrCode,

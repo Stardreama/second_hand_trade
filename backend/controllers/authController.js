@@ -243,6 +243,66 @@ const getUserProfile = (req, res) => {
   });
 };
 
+
+// 获取用户详细信息
+const getUserDetailProfile = (req, res) => {
+  const student_id = req.user.student_id;
+
+  User.getUserDetailProfile(student_id, (err, results) => {
+    if (err) {
+      console.error('获取用户详细信息失败:', err);
+      return res.status(500).json({ message: '服务器错误' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: '用户不存在' });
+    }
+
+    // 不返回密码等敏感信息
+    const user = results[0];
+
+    res.status(200).json({ user });
+  });
+};
+
+// 修改密码函数也需要相同的修复
+const updatePassword = (req, res) => {
+  const student_id = req.user.student_id;
+  const { oldPassword, newPassword } = req.body;
+
+  // 参数验证
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: '请提供当前密码和新密码' });
+  }
+
+  // 验证当前密码
+  User.findByStudentId(student_id, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: '服务器错误' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: '用户不存在' });
+    }
+
+    const user = results[0];
+
+    // 验证旧密码是否正确
+    // 注意：实际应用中应该使用bcrypt等库来比较加密密码
+    if (oldPassword !== user.password) {
+      return res.status(401).json({ message: '当前密码不正确' });
+    }
+
+    // 更新新密码
+    User.updatePassword(student_id, newPassword, (updateErr) => {
+      if (updateErr) {
+        return res.status(500).json({ message: '更新密码失败' });
+      }
+
+      res.status(200).json({ message: '密码更新成功' });
+    });
+  });
+};
 module.exports = {
   register,
   login,
@@ -251,4 +311,6 @@ module.exports = {
   getUserProfile,
   getUserInfo,
   updateNickname,
+  getUserDetailProfile,
+  updatePassword,
 };
