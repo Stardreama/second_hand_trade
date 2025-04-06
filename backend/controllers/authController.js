@@ -265,7 +265,7 @@ const getUserDetailProfile = (req, res) => {
   });
 };
 
-// 修改密码函数也需要相同的修复
+// 修改密码函数
 const updatePassword = (req, res) => {
   const student_id = req.user.student_id;
   const { oldPassword, newPassword } = req.body;
@@ -287,19 +287,34 @@ const updatePassword = (req, res) => {
 
     const user = results[0];
 
-    // 验证旧密码是否正确
-    // 注意：实际应用中应该使用bcrypt等库来比较加密密码
-    if (oldPassword !== user.password) {
-      return res.status(401).json({ message: '当前密码不正确' });
-    }
-
-    // 更新新密码
-    User.updatePassword(student_id, newPassword, (updateErr) => {
-      if (updateErr) {
-        return res.status(500).json({ message: '更新密码失败' });
+    // 使用bcrypt比较密码
+    bcrypt.compare(oldPassword, user.password, (err, match) => {
+      if (err) {
+        console.error("密码比较错误：", err);
+        return res.status(500).json({ message: '服务器错误' });
       }
 
-      res.status(200).json({ message: '密码更新成功' });
+      if (!match) {
+        return res.status(401).json({ message: '当前密码不正确' });
+      }
+
+      // 对新密码进行哈希处理
+      bcrypt.hash(newPassword, 10, (hashErr, hashedPassword) => {
+        if (hashErr) {
+          console.error("密码加密失败：", hashErr);
+          return res.status(500).json({ message: '密码加密失败' });
+        }
+
+        // 更新新密码
+        User.updatePassword(student_id, hashedPassword, (updateErr) => {
+          if (updateErr) {
+            console.error("更新密码失败：", updateErr);
+            return res.status(500).json({ message: '更新密码失败' });
+          }
+
+          res.status(200).json({ message: '密码更新成功' });
+        });
+      });
     });
   });
 };
