@@ -97,19 +97,19 @@
               >点赞</text
             >
           </view>
-  
-  <!-- 收藏按钮 -->
-  <view class="action-icon" @tap="toggleFavorite">
-    <view
-      :class="[
-        'cuIcon-favorfill text-xl',
-        favorited ? 'text-red' : 'text-gray',
-      ]"
-    ></view>
-    <text :class="['action-text', favorited ? 'text-red' : 'text-gray']"
-      >收藏</text
-    >
-  </view>
+
+          <!-- 收藏按钮 -->
+          <view class="action-icon" @tap="toggleFavorite">
+            <view
+              :class="[
+                'cuIcon-favorfill text-xl',
+                favorited ? 'text-red' : 'text-gray',
+              ]"
+            ></view>
+            <text :class="['action-text', favorited ? 'text-red' : 'text-gray']"
+              >收藏</text
+            >
+          </view>
 
           <!-- 聊一聊按钮 - 下架时禁用 -->
           <view
@@ -124,18 +124,7 @@
             <text class="action-text text-blue">聊一聊</text>
           </view>
         </view>
-        <!-- 新增的"我买到了"按钮 -->
-        <view
-          class="action-icon"
-          @tap="handlePurchase"
-          v-if="
-            productDetail.seller_id !== userInfo.student_id &&
-            productDetail.is_off_shelf !== 1
-          "
-        >
-          <view class="cuIcon-check text-green text-xl"></view>
-          <text class="action-text text-green">我买到了</text>
-        </view>
+
         <!-- 右侧主操作按钮 -->
         <view class="action-right">
           <button
@@ -194,37 +183,6 @@ export default {
     }
   },
   methods: {
-    handlePurchase() {
-      const token = uni.getStorageSync("token");
-      if (!token) {
-        uni.showToast({ title: "请先登录", icon: "none" });
-        return;
-      }
-
-      uni.request({
-        url: "http://localhost:3000/api/orders/purchases",
-        method: "POST",
-        header: {
-          Authorization: `Bearer ${token}`,
-        },
-        data: {
-          product_id: this.productDetail.product_id,
-        },
-        success: (res) => {
-          if (res.statusCode === 201) {
-            uni.showToast({ title: "购买记录已保存", icon: "success" });
-          } else {
-            uni.showToast({
-              title: res.data.message || "操作失败",
-              icon: "none",
-            });
-          }
-        },
-        fail: (err) => {
-          console.error("请求失败:", err);
-        },
-      });
-    },
     fetchProductDetail(productId) {
       uni.request({
         url: `http://localhost:3000/api/products/${productId}`,
@@ -352,69 +310,69 @@ export default {
       });
     },
     // 获取商品收藏状态
-fetchProductFavorite(productId) {
-  const token = uni.getStorageSync("token");
-  uni.request({
-    url: `http://localhost:3000/api/products/favorite/${productId}`,
-    method: "GET",
-    header: {
-      Authorization: `Bearer ${token}`,
-    },
-    success: (res) => {
-      if (res.statusCode === 200) {
-        this.favorited = res.data.favorited; // 赋值收藏状态
-      } else {
-        console.error("获取商品收藏状态失败:", res);
-      }
-    },
-    fail: (err) => {
-      console.error("获取商品收藏状态失败:", err);
-    },
-  });
-},
-
-// 收藏操作
-toggleFavorite() {
-  const token = uni.getStorageSync("token");
-  if (!token) {
-    uni.showToast({ title: "请先登录", icon: "none" });
-    return;
-  }
-  
-  uni.request({
-    url: "http://localhost:3000/api/products/favorite",
-    method: "POST",
-    data: {
-      productId: this.productDetail.product_id,
-    },
-    header: {
-      Authorization: `Bearer ${token}`,
-    },
-    success: (res) => {
-      if (res.statusCode === 200) {
-        this.favorited = res.data.favorited; // 更新收藏状态
-        // 添加操作成功的提示
-        uni.showToast({
-          title: this.favorited ? "收藏成功" : "已取消收藏",
-          icon: "success"
-        });
-      } else {
-        console.error("收藏操作失败:", res);
-        uni.showToast({
-          title: "操作失败，请重试",
-          icon: "none"
-        });
-      }
-    },
-    fail: (err) => {
-      console.error("收藏操作失败:", err);
-      uni.showToast({
-        title: "网络错误，请稍后再试",
-        icon: "none"
+    fetchProductFavorite(productId) {
+      const token = uni.getStorageSync("token");
+      uni.request({
+        url: `http://localhost:3000/api/products/favorite/${productId}`,
+        method: "GET",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.favorited = res.data.favorited; // 赋值收藏状态
+          } else {
+            console.error("获取商品收藏状态失败:", res);
+          }
+        },
+        fail: (err) => {
+          console.error("获取商品收藏状态失败:", err);
+        },
       });
     },
-  });
-},
+
+    // 收藏操作
+    toggleFavorite() {
+      const token = uni.getStorageSync("token");
+      if (!token) {
+        uni.showToast({ title: "请先登录", icon: "none" });
+        return;
+      }
+
+      uni.request({
+        url: "http://localhost:3000/api/products/favorite",
+        method: "POST",
+        data: {
+          productId: this.productDetail.product_id,
+        },
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 200) {
+            this.favorited = res.data.favorited; // 更新收藏状态
+            // 添加操作成功的提示
+            uni.showToast({
+              title: this.favorited ? "收藏成功" : "已取消收藏",
+              icon: "success",
+            });
+          } else {
+            console.error("收藏操作失败:", res);
+            uni.showToast({
+              title: "操作失败，请重试",
+              icon: "none",
+            });
+          }
+        },
+        fail: (err) => {
+          console.error("收藏操作失败:", err);
+          uni.showToast({
+            title: "网络错误，请稍后再试",
+            icon: "none",
+          });
+        },
+      });
+    },
     // 点赞操作
     toggleLike() {
       const token = uni.getStorageSync("token");

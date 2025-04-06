@@ -4,25 +4,33 @@
 
     <!-- end -->
 
-
     <!-- 价钱 -->
-    <view class='price bg-white'>
-
-      <view class='price bg-white'>
-        <view class='price-item'>
-          <view><text class='text-sl text-red text-uni' style="font-size: 60rpx; color: #ff0000;">需付款：{{
-            orderDetails.price }}</text></view>
+    <view class="price bg-white">
+      <view class="price bg-white">
+        <view class="price-item">
+          <view
+            ><text
+              class="text-sl text-red text-uni"
+              style="font-size: 60rpx; color: #ff0000"
+              >需付款：{{ orderDetails.price }}</text
+            ></view
+          >
         </view>
-        <view class='price-item'>
-          <view><text class='text-red text-uni' style="font-size: 30rpx; color: #333;">请截图保存付款信息</text></view>
+        <view class="price-item">
+          <view
+            ><text
+              class="text-red text-uni"
+              style="font-size: 30rpx; color: #333"
+              >请截图保存付款信息</text
+            ></view
+          >
         </view>
       </view>
-
     </view>
     <!-- end -->
 
     <!-- 分离线 -->
-    <view class='line'></view>
+    <view class="line"></view>
     <!-- end -->
 
     <!-- 物流描述 -->
@@ -33,59 +41,75 @@
 		</view> -->
     <!-- end -->
 
-
     <!-- 分离线 -->
-    <view class='line'></view>
+    <view class="line"></view>
     <!-- end -->
 
-
     <!-- 商品描述 -->
-    <view class='shoppin_detail bg-white'>
-      <view class='shoppin_detail_img'>
+    <view class="shoppin_detail bg-white">
+      <view class="shoppin_detail_img">
         <image :src="getImageUrl(orderDetails.image)"></image>
       </view>
 
-
-      <view class='shopping_detail '>
-        <view class='shopping_detail_title'>
-          <view class='shopping_detail_title_1 text-cut'><text class='text-black text-black'>商品：{{
-            orderDetails.product_title }}</text></view>
+      <view class="shopping_detail">
+        <view class="shopping_detail_title">
+          <view class="shopping_detail_title_1 text-cut"
+            ><text class="text-black text-black"
+              >商品：{{ orderDetails.product_title }}</text
+            ></view
+          >
           <!-- <text class='text-blue text-weight'>联系买家</text> -->
         </view>
 
-        <view class='shopping_detail-2'><text class='text-black'>商品描述：{{ orderDetails.description }}</text></view>
-
+        <view class="shopping_detail-2"
+          ><text class="text-black"
+            >商品描述：{{ orderDetails.description }}</text
+          ></view
+        >
       </view>
     </view>
     <!-- end -->
 
     <!-- 分离线 -->
-    <view class='line'></view>
+    <view class="line"></view>
     <!-- end -->
 
     <!-- 显示付款码 -->
     <!-- 显示付款码 -->
-    <view class='shopping bg-white'>
+    <view class="shopping bg-white">
       <view class="payment-code-container">
         <!-- 添加调试信息和mode属性 -->
-        <image :src="getImageUrl(orderDetails.payment_code)" mode="aspectFit" style="width: 300rpx; height: 300rpx;" />
+        <image
+          :src="getImageUrl(orderDetails.payment_code)"
+          mode="aspectFit"
+          style="width: 300rpx; height: 300rpx"
+        />
       </view>
     </view>
 
     <!-- end -->
 
     <!-- 分离线 -->
-    <view class='line'></view>
+    <view class="line"></view>
     <!-- end -->
 
-
     <!-- 确定按钮 -->
-    <view class='comfirm bg-white'>
-      <button class='bg-green cu-btn margin-tb-sm comfirm_button lg' @tap="goChatSeller">联系卖家</button>
+    <view class="comfirm bg-white">
+      <button
+        class="bg-red cu-btn margin-tb-sm comfirm_button lg"
+        @tap="handlePurchase"
+      >
+        我买到了
+      </button>
+      <button
+        class="bg-green cu-btn margin-tb-sm comfirm_button lg"
+        @tap="goChatSeller"
+      >
+        联系卖家
+      </button>
     </view>
 
     <!-- end -->
-
   </view>
 </template>
 
@@ -98,11 +122,11 @@ export default {
       orderDetails: {}, // 用于存储订单详情数据
       // 步骤条
       basicsList: [
-        { icon: 'roundcheckfill', name: '已拍下' },
-        { icon: 'roundcheckfill', name: '已付款' },
-        { icon: 'roundcheckfill', name: '已收货' },
-        { icon: 'roundcheckfill', name: '交易成功' }
-      ]
+        { icon: "roundcheckfill", name: "已拍下" },
+        { icon: "roundcheckfill", name: "已付款" },
+        { icon: "roundcheckfill", name: "已收货" },
+        { icon: "roundcheckfill", name: "交易成功" },
+      ],
     };
   },
   onLoad(options) {
@@ -110,23 +134,55 @@ export default {
     const productId = options.product_id;
     if (productId) {
       this.product_id = productId;
-      console.log('Received product_id:', this.product_id);
+      console.log("Received product_id:", this.product_id);
       // 使用 product_id 请求订单详情
       this.fetchOrderDetail(this.product_id);
     } else {
-      console.error('No product_id received');
+      console.error("No product_id received");
     }
   },
   methods: {
+    // 添加handlePurchase方法
+    handlePurchase() {
+      const token = uni.getStorageSync("token");
+      if (!token) {
+        uni.showToast({ title: "请先登录", icon: "none" });
+        return;
+      }
+
+      uni.request({
+        url: "http://localhost:3000/api/orders/purchases",
+        method: "POST",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          product_id: this.orderDetails.product_id,
+        },
+        success: (res) => {
+          if (res.statusCode === 201) {
+            uni.showToast({ title: "购买记录已保存", icon: "success" });
+          } else {
+            uni.showToast({
+              title: res.data.message || "操作失败",
+              icon: "none",
+            });
+          }
+        },
+        fail: (err) => {
+          console.error("请求失败:", err);
+        },
+      });
+    },
     // 请求订单详情信息
     fetchOrderDetail(productId) {
       uni.request({
         url: `http://localhost:3000/api/products/${productId}`,
-        method: 'GET',
+        method: "GET",
         success: (res) => {
           if (res.data) {
             this.orderDetails = res.data;
-            console.log('订单详情：', this.orderDetails);
+            console.log("订单详情：", this.orderDetails);
 
             // 根据订单状态更新步骤条状态
             if (this.orderDetails.status) {
@@ -135,21 +191,21 @@ export default {
 
             // 请求付款码，传递 seller_id
             if (this.orderDetails.seller_id) {
-              this.fetchPaymentCode(this.orderDetails.seller_id);  // 将 seller_id 作为参数传递
+              this.fetchPaymentCode(this.orderDetails.seller_id); // 将 seller_id 作为参数传递
             }
           } else {
             uni.showToast({
-              title: '获取订单信息失败',
-              icon: 'none'
+              title: "获取订单信息失败",
+              icon: "none",
             });
           }
         },
         fail: () => {
           uni.showToast({
-            title: '网络错误，请重试',
-            icon: 'none'
+            title: "网络错误，请重试",
+            icon: "none",
           });
-        }
+        },
       });
     },
 
@@ -174,9 +230,10 @@ export default {
           success: (res) => {
             if (res.statusCode === 200 && res.data && res.data.length > 0) {
               // 假设 res.data 是数组，使用后端逻辑返回的 findByParticipants 进行筛选
-              const conversation = res.data.find(item =>
-                item.seller_id == this.orderDetails.seller_id &&
-                item.product_id == this.orderDetails.product_id
+              const conversation = res.data.find(
+                (item) =>
+                  item.seller_id == this.orderDetails.seller_id &&
+                  item.product_id == this.orderDetails.product_id
               );
               if (conversation && conversation.conversation_id) {
                 resolve(conversation.conversation_id);
@@ -189,7 +246,7 @@ export default {
           },
           fail: (err) => {
             reject(err);
-          }
+          },
         });
       });
     },
@@ -199,32 +256,30 @@ export default {
     fetchPaymentCode(sellerId) {
       uni.request({
         url: `http://localhost:3000/api/my/my_pay-noToken?seller_id=${sellerId}`,
-        method: 'GET',
+        method: "GET",
         success: (res) => {
           if (res.data && res.data.qrCode) {
             // 移除开头的斜杠 "/"
-            this.orderDetails.payment_code = res.data.qrCode.startsWith('/')
+            this.orderDetails.payment_code = res.data.qrCode.startsWith("/")
               ? res.data.qrCode.substring(1)
               : res.data.qrCode;
 
-            console.log('付款码路径：', this.orderDetails.payment_code);
+            console.log("付款码路径：", this.orderDetails.payment_code);
           } else {
             uni.showToast({
-              title: '获取付款码失败',
-              icon: 'none'
+              title: "获取付款码失败",
+              icon: "none",
             });
           }
         },
         fail: () => {
           uni.showToast({
-            title: '获取付款码失败，请重试',
-            icon: 'none'
+            title: "获取付款码失败，请重试",
+            icon: "none",
           });
-        }
+        },
       });
     },
-
-
 
     // 拼接图片完整 URL 的方法
     getImageUrl(imagePath) {
@@ -242,28 +297,38 @@ export default {
     // 跳转到联系卖家聊天页面
     goChatSeller() {
       console.log("跳转到联系卖家页面");
-      this.getConversationForOrder().then((conversationId) => {
-        uni.navigateTo({
-          url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${this.orderDetails.seller_id}&product_id=${this.orderDetails.product_id || ""}&otherUserName=${this.orderDetails.seller_name}`,
+      this.getConversationForOrder()
+        .then((conversationId) => {
+          uni.navigateTo({
+            url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${
+              this.orderDetails.seller_id
+            }&product_id=${this.orderDetails.product_id || ""}&otherUserName=${
+              this.orderDetails.seller_name
+            }`,
+          });
+        })
+        .catch((error) => {
+          console.error("会话获取失败:", error);
+          uni.showToast({
+            title: "无法获取会话，请稍后再试",
+            icon: "none",
+          });
         });
-      }).catch((error) => {
-        console.error("会话获取失败:", error);
-        uni.showToast({
-          title: '无法获取会话，请稍后再试',
-          icon: 'none'
-        });
-      });
-    }
-
-
-  }
+    },
+  },
 };
 </script>
 
-
-
-
 <style>
+/* 新增红色按钮样式 */
+.bg-red {
+  background-color: #e54d42 !important;
+}
+
+/* 调整按钮间距 */
+.comfirm_button.lg {
+  margin-bottom: 20rpx;
+}
 /* 价钱 */
 .price {
   width: 100%;
@@ -328,14 +393,12 @@ export default {
 .price-explain-1 text {
   font-size: 25rpx;
   font-weight: 550;
-
 }
 
 .price-explain-1s text {
   font-size: 25rpx;
   color: black;
   font-weight: 550;
-
 }
 
 .price-explain-1s {
@@ -433,9 +496,7 @@ export default {
 
 /* end */
 
-
 /* 付款码图片容器 */
-
 
 /* 付款码图片样式 */
 .payment-code-container {
