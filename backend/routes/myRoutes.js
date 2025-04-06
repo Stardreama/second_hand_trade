@@ -3,6 +3,7 @@ const router = express.Router();
 const productController = require("../controllers/productController");
 const jwtService = require("../services/jwtService");
 const userController = require("../controllers/userController");
+const orderController = require("../controllers/orderController");
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -27,8 +28,6 @@ router.get(
 // 新增：无需 Token 验证的公共 API，通过用户ID获取点赞总数
 router.get("/public/like/:userId", productController.getPublicUserLikeAmount);
 
-
-
 router.get("/my_pay", jwtService.authMiddleware, userController.getQRCode);
 router.get("/my_pay-noToken", userController.getQRCodeNoToken);
 
@@ -37,5 +36,10 @@ router.post(
   jwtService.authMiddleware,
   upload.single("file"),
   userController.updateQRCode
+);
+router.get(
+  "/purchases",
+  jwtService.authMiddleware,
+  orderController.getMyPurchases
 );
 module.exports = router;

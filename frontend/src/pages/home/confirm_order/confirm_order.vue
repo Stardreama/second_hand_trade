@@ -132,9 +132,9 @@ export default {
     this.fetchDefaultAddress();
   },
   // onShow 每次页面显示时调用
-  // onShow() {
-  //   this.fetchDefaultAddress();
-  // },
+  onShow() {
+    this.fetchDefaultAddress();
+  },
   methods: {
     fetchProductDetail(productId) {
       uni.request({

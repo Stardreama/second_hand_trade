@@ -102,6 +102,49 @@ const Product = {
       });
     });
   },
+  // 根据sellerID搜索商品
+  findBySellerId: (sellerId) => {
+    return new Promise((resolve, reject) => {
+      const sql = `SELECT * FROM products WHERE seller_id = ?`;
+      db.query(sql, [sellerId], async (err, results) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        try {
+          // 遍历每个产品，查询其对应的图片URL
+          const processedResults = await Promise.all(
+            results.map(async (product) => {
+              // 查询该产品的所有图片URL
+              const images = await new Promise((resolve, reject) => {
+                const imageQuery =
+                  "SELECT image_url FROM product_images WHERE product_id = ?";
+                db.query(
+                  imageQuery,
+                  [product.product_id],
+                  (err, imageResults) => {
+                    if (err) reject(err);
+                    else resolve(imageResults.map((img) => img.image_url));
+                  }
+                );
+              });
+
+              // 返回包含图片数组的商品对象
+              return {
+                ...product,
+                images: images, // 使用从product_images表获取的图片
+              };
+            })
+          );
+
+          resolve(processedResults);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  },
   isLiked: async (userId, productId) => {
     const rows = await query(
       "SELECT 1 FROM likes WHERE user_id = ? AND product_id = ? LIMIT 1",
@@ -148,13 +191,21 @@ const Product = {
     );
   },
 
-  // 获取商品状态
-  getProductStatus: async (productId) => {
-    const results = await query(
-      "SELECT is_off_shelf FROM products WHERE product_id = ?",
-      [productId]
-    );
-    return results.length > 0 ? results[0].is_off_shelf : null;
+  checkExistingPurchase: async (buyerId, productId) => {
+    const sql = `SELECT * FROM purchases WHERE buyer_id = ? AND product_id = ?`;
+    const results = await query(sql, [buyerId, productId]);
+    return results.length > 0;
+  },
+
+  createPurchase: async (buyerId, productId, connection) => {
+    const sql = `INSERT INTO purchases (buyer_id, product_id) VALUES (?, ?)`;
+    return query(sql, [buyerId, productId], connection);
+  },
+
+  checkProductValidity: async (productId) => {
+    const sql = `SELECT is_off_shelf, seller_id FROM products WHERE product_id = ?`;
+    const [product] = await query(sql, [productId]);
+    return product;
   },
 };
 

@@ -1,6 +1,10 @@
 <template>
   <!-- <view> -->
-  <view v-if="productDetail" class="page-wrapper" :class="{ 'off-shelf-container': productDetail.is_off_shelf === 1 }">
+  <view
+    v-if="productDetail"
+    class="page-wrapper"
+    :class="{ 'off-shelf-container': productDetail.is_off_shelf === 1 }"
+  >
     <!-- 下架遮罩层 -->
     <view class="off-shelf-mask" v-if="productDetail.is_off_shelf === 1">
       <view class="off-shelf-text">已下架</view>
@@ -11,9 +15,12 @@
     <view class="bg-white">
       <view class="cf padding-sm">
         <view class="radius fl padding-sm">
-          <image :src="getImageUrl(productDetail.seller_avatar) ||
-            '../../../static/img/avatar.jpg'
-            "></image>
+          <image
+            :src="
+              getImageUrl(productDetail.seller_avatar) ||
+              '../../../static/img/avatar.jpg'
+            "
+          ></image>
           <view class="fr padding-name">
             <!-- <view>Amibition</view> -->
             <view>{{ productDetail.seller_name }}</view>
@@ -35,8 +42,12 @@
     <!-- 商品内容 -->
     <view class="contanier bg-white padding-sm top-20">
       <view class="price">
-        <text class="price-size" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.price }}</text>
-        <text class="price-ori" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.original_price }}</text>
+        <text class="price-size" v-if="productDetail.product_type !== 'buy'"
+          >￥{{ productDetail.price }}</text
+        >
+        <text class="price-ori" v-if="productDetail.product_type !== 'buy'"
+          >￥{{ productDetail.original_price }}</text
+        >
         <view class="cu-tag">{{ productDetail.product_status }}</view>
         <view class="cu-tag">{{ productDetail.status }}</view>
       </view>
@@ -46,12 +57,16 @@
       </view>
 
       <!-- 交易方式 -->
-      <view class="hint">
-      </view>
+      <view class="hint"> </view>
       <!-- end -->
       <!-- 图片位置 -->
       <block v-for="(item, index) in images" :key="index">
-        <image class="img" :src="getImageUrl(item)" mode="widthFix" @tap="previewImage(index)"></image>
+        <image
+          class="img"
+          :src="getImageUrl(item)"
+          mode="widthFix"
+          @tap="previewImage(index)"
+        ></image>
       </block>
       <view class="browse">
         <view>
@@ -73,25 +88,56 @@
         <view class="action-left">
           <!-- 收藏按钮 -->
           <view class="action-icon" @tap="toggleLike">
-            <view :class="['cuIcon-appreciatefill text-xl', liked ? 'text-orange' : 'text-gray']"></view>
-            <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
+            <view
+              :class="[
+                'cuIcon-appreciatefill text-xl',
+                liked ? 'text-orange' : 'text-gray',
+              ]"
+            ></view>
+            <text :class="['action-text', liked ? 'text-orange' : 'text-gray']"
+              >点赞</text
+            >
           </view>
 
           <!-- 聊一聊按钮 - 下架时禁用 -->
-          <view class="action-icon" @tap="chatWithSeller"
-            v-if="productDetail.seller_id !== userInfo.student_id && productDetail.is_off_shelf !== 1">
+          <view
+            class="action-icon"
+            @tap="chatWithSeller"
+            v-if="
+              productDetail.seller_id !== userInfo.student_id &&
+              productDetail.is_off_shelf !== 1
+            "
+          >
             <view class="cuIcon-message text-blue text-xl"></view>
             <text class="action-text text-blue">聊一聊</text>
           </view>
         </view>
-
+        <!-- 新增的"我买到了"按钮 -->
+        <view
+          class="action-icon"
+          @tap="handlePurchase"
+          v-if="
+            productDetail.seller_id !== userInfo.student_id &&
+            productDetail.is_off_shelf !== 1
+          "
+        >
+          <view class="cuIcon-check text-green text-xl"></view>
+          <text class="action-text text-green">我买到了</text>
+        </view>
         <!-- 右侧主操作按钮 -->
         <view class="action-right">
-          <button v-if="productDetail.seller_id === userInfo.student_id" class="cu-btn action-button edit-button"
-            @tap="editProduct">
+          <button
+            v-if="productDetail.seller_id === userInfo.student_id"
+            class="cu-btn action-button edit-button"
+            @tap="editProduct"
+          >
             编辑商品
           </button>
-          <button v-else-if="productDetail.is_off_shelf !== 1" class="cu-btn action-button buy-button" @tap="buy">
+          <button
+            v-else-if="productDetail.is_off_shelf !== 1"
+            class="cu-btn action-button buy-button"
+            @tap="buy"
+          >
             立即购买
           </button>
           <button v-else class="cu-btn action-button disabled-button" disabled>
@@ -112,7 +158,7 @@ export default {
       liked: false, // 是否点赞
       isFollowing: false, // 当前用户是否已关注
       showFollowButton: true, // 是否显示关注按钮（商品拥有者不显示）
-      userInfo: {}
+      userInfo: {},
     };
   },
   onLoad(query) {
@@ -126,11 +172,45 @@ export default {
   },
   onShow() {
     // 当页面显示时，若当前用户不是商品拥有者则重新检测关注状态
-    if (this.productDetail && this.userInfo.student_id !== this.productDetail.seller_id) {
+    if (
+      this.productDetail &&
+      this.userInfo.student_id !== this.productDetail.seller_id
+    ) {
       this.checkFollowStatus();
     }
   },
   methods: {
+    handlePurchase() {
+      const token = uni.getStorageSync("token");
+      if (!token) {
+        uni.showToast({ title: "请先登录", icon: "none" });
+        return;
+      }
+
+      uni.request({
+        url: "http://localhost:3000/api/orders/purchases",
+        method: "POST",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          product_id: this.productDetail.product_id,
+        },
+        success: (res) => {
+          if (res.statusCode === 201) {
+            uni.showToast({ title: "购买记录已保存", icon: "success" });
+          } else {
+            uni.showToast({
+              title: res.data.message || "操作失败",
+              icon: "none",
+            });
+          }
+        },
+        fail: (err) => {
+          console.error("请求失败:", err);
+        },
+      });
+    },
     fetchProductDetail(productId) {
       uni.request({
         url: `http://localhost:3000/api/products/${productId}`,
@@ -163,11 +243,11 @@ export default {
         url: `http://localhost:3000/api/user/follow/status`,
         method: "GET",
         header: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         data: {
           // follower_id: this.userInfo.student_id,
-          followee_id: this.productDetail.seller_id
+          followee_id: this.productDetail.seller_id,
         },
         success: (res) => {
           if (res.statusCode === 200) {
@@ -179,7 +259,7 @@ export default {
         },
         fail: (err) => {
           console.error("检查关注状态失败:", err);
-        }
+        },
       });
     },
     // 根据当前状态执行关注或取消关注操作
@@ -191,11 +271,11 @@ export default {
           url: `http://localhost:3000/api/user/follow`,
           method: "DELETE",
           header: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           data: {
             // follower_id: this.userInfo.student_id,
-            followee_id: this.productDetail.seller_id
+            followee_id: this.productDetail.seller_id,
           },
           success: (res) => {
             if (res.statusCode === 200) {
@@ -207,7 +287,7 @@ export default {
           },
           fail: (err) => {
             console.error("取消关注失败:", err);
-          }
+          },
         });
       } else {
         // 关注
@@ -216,11 +296,11 @@ export default {
           url: `http://localhost:3000/api/user/follow`,
           method: "POST",
           header: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           data: {
             // follower_id: this.userInfo.student_id,
-            followee_id: this.productDetail.seller_id
+            followee_id: this.productDetail.seller_id,
           },
           success: (res) => {
             if (res.statusCode === 201) {
@@ -232,7 +312,7 @@ export default {
           },
           fail: (err) => {
             console.error("关注失败:", err);
-          }
+          },
         });
       }
     },
@@ -331,12 +411,12 @@ export default {
     // },
     // 添加到methods中
     previewImage(index) {
-      const urls = this.images.map(item => this.getImageUrl(item));
+      const urls = this.images.map((item) => this.getImageUrl(item));
       uni.previewImage({
         current: index,
         urls: urls,
         indicator: "number",
-        loop: true
+        loop: true,
       });
     },
     // 获取商品图片和头像的完整 URL
@@ -364,7 +444,9 @@ export default {
     // 跳转到编辑商品页面
     editProduct() {
       uni.navigateTo({
-        url: '/pages/issue/issue_edit/issue_edit?product_id=' + this.productDetail.product_id
+        url:
+          "/pages/issue/issue_edit/issue_edit?product_id=" +
+          this.productDetail.product_id,
       });
     },
     // 跳转到聊天页面

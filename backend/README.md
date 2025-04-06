@@ -144,7 +144,6 @@ CREATE TABLE `products`  (
   `price` decimal(10, 2) NOT NULL,
   `original_price` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '原价',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   `product_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `product_status` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
@@ -157,6 +156,16 @@ CREATE TABLE `products`  (
   INDEX `seller_id`(`seller_id` ASC) USING BTREE,
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users` (`student_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+DROP TABLE IF EXISTS `purchases`;
+CREATE TABLE `purchases`  (
+  `purchase_id` int NOT NULL AUTO_INCREMENT,
+  `buyer_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '购买者学号',
+  `product_id` int NOT NULL COMMENT '商品ID',
+  `purchase_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`purchase_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users`  (
