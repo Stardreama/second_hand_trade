@@ -19,14 +19,37 @@
             <view>{{ productDetail.seller_name }}</view>
           </view>
         </view>
-        <!-- 新增关注按钮 -->
-        <!-- <button class="follow-btn" @tap="followSeller">
-          <uni-icons type="plus" size="24" color="#333"></uni-icons>
-          关注
-        </button> -->
-        <button v-if="showFollowButton" class="follow-btn" @tap="toggleFollow">
-          {{ isFollowing ? "已关注" : "关注" }}
-        </button>
+        <view v-if="showFollowButton" class="follow-btn-container">
+    <view class="follow-btn" 
+      :class="{'follow-btn-active': isFollowing, 'bounce-animation': buttonBouncing}"
+      @click="toggleFollow">
+      <view class="follow-btn-inner">
+        <text class="follow-icon">{{ isFollowing ? '✓' : '+' }}</text>
+        <text>{{ isFollowing ? "已关注" : "关注" }}</text>
+      </view>
+    </view>
+    
+    <!-- 简化动画元素 -->
+    <view v-if="showFollowAnimation" class="follow-animation-container">
+      <text class="follow-heart follow-center-heart">❤</text>
+      <text class="follow-text">爱你呦~</text>
+  <text class="follow-item follow-item-1">❤</text>
+  <text class="follow-item follow-item-2">★</text>
+  <text class="follow-item follow-item-3">♥</text>
+  <text class="follow-item follow-item-4">✿</text>
+  <text class="follow-item follow-item-5">♡</text>
+  <text class="follow-item follow-item-6">✧</text>
+  <text class="follow-item follow-item-7">❀</text>
+  <text class="follow-item follow-item-8">✩</text>
+  <text class="follow-item follow-item-9">❥</text>
+  <text class="follow-item follow-item-10">✮</text>
+  <text class="follow-item follow-item-11">♬</text>
+  <text class="follow-item follow-item-12">✿</text>
+  <text class="follow-item follow-item-13">❋</text>
+  <text class="follow-item follow-item-14">♪</text>
+  <text class="follow-item follow-item-15">✺</text>
+    </view>
+  </view>
       </view>
     </view>
 
@@ -70,55 +93,61 @@
     <!-- 修改底部按钮区域，考虑下架状态 -->
     <view class="action-bar-container">
       <view class="action-bar-wrapper bg-white">
-        <!-- 左侧按钮区域 -->
-        <view class="action-left">
-          <view class="action-icon" @tap="toggleLike">
-            <view :class="[
-              'cuIcon-appreciatefill text-xl',
-              liked ? 'text-orange' : 'text-gray',
-            ]"></view>
-            <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
-          </view>
+     <!-- 左侧按钮区域 -->
+<view class="action-left">
+  <view class="action-icon" @tap="toggleLike">
+    <uni-icons :type="liked ? 'heart-filled' : 'heart'" :color="liked ? '#ff7900' : '#666'" size="24"></uni-icons>
+    <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
+  </view>
 
-          <!-- 收藏按钮 -->
-          <view class="action-icon" @tap="toggleFavorite">
-            <view :class="[
-              'cuIcon-favorfill text-xl',
-              favorited ? 'text-red' : 'text-gray',
-            ]"></view>
-            <text :class="['action-text', favorited ? 'text-red' : 'text-gray']">收藏</text>
-          </view>
+  <!-- 收藏按钮 -->
+  <view class="action-icon" @tap="toggleFavorite">
+    <uni-icons :type="favorited ? 'star-filled' : 'star'" :color="favorited ? '#ff0000' : '#666'" size="24"></uni-icons>
+    <text :class="['action-text', favorited ? 'text-red' : 'text-gray']">收藏</text>
+  </view>
 
-          <!-- 聊一聊按钮 - 下架时禁用 -->
-          <view class="action-icon" @tap="chatWithSeller" v-if="
-            productDetail.seller_id !== userInfo.student_id &&
-            productDetail.is_off_shelf !== 1
-          ">
-            <view class="cuIcon-message text-blue text-xl"></view>
-            <text class="action-text text-blue">聊一聊</text>
-          </view>
-        </view>
+  <!-- 聊一聊按钮 - 下架时禁用 -->
+  <view class="action-icon" @tap="chatWithSeller" v-if="
+    productDetail.seller_id !== userInfo.student_id &&
+    productDetail.is_off_shelf !== 1
+  ">
+    <uni-icons type="chat" color="#007aff" size="24"></uni-icons>
+    <text class="action-text text-blue">聊一聊</text>
+  </view>
+</view>
 
-        <!-- 右侧主操作按钮 -->
-        <view class="action-right">
-          <button v-if="productDetail.seller_id === userInfo.student_id" class="cu-btn action-button edit-button"
-            @tap="editProduct">
-            编辑商品
-          </button>
-          <button v-else-if="productDetail.is_off_shelf !== 1" class="cu-btn action-button buy-button" @tap="buy">
-            立即购买
-          </button>
-          <button v-else class="cu-btn action-button disabled-button" disabled>
-            商品已下架
-          </button>
-        </view>
+       <!-- 右侧主操作按钮 -->
+<view class="action-right">
+  <uni-button v-if="productDetail.seller_id === userInfo.student_id" 
+    type="primary" 
+    class="action-button"
+    @click="editProduct">
+    编辑商品
+  </uni-button>
+  <uni-button v-else-if="productDetail.is_off_shelf !== 1" 
+    type="warn" 
+    class="action-button buy-button"
+    @click="buy">
+    立即购买
+  </uni-button>
+  <uni-button v-else 
+    type="default" 
+    class="action-button" 
+    disabled>
+    商品已下架
+  </uni-button>
+</view>
       </view>
     </view>
   </view>
 </template>
 
 <script>
+import uniIcons from "@dcloudio/uni-ui/lib/uni-icons/uni-icons.vue";
 export default {
+  components: {
+    uniIcons
+  },
   data() {
     return {
       productDetail: null, // 商品详情数据
@@ -128,6 +157,8 @@ export default {
       isFollowing: false, // 当前用户是否已关注
       showFollowButton: true, // 是否显示关注按钮（商品拥有者不显示）
       userInfo: {},
+      showFollowAnimation: false, // 控制关注动画显示
+      buttonBouncing: false,      // 控制按钮弹跳效果
     };
   },
   onLoad(query) {
@@ -201,81 +232,74 @@ export default {
         },
       });
     },
-    // 根据当前状态执行关注或取消关注操作
     toggleFollow() {
-      const token = uni.getStorageSync("token");
-      if (this.isFollowing) {
-        // 取消关注
-        uni.request({
-          url: `http://localhost:3000/api/user/follow`,
-          method: "DELETE",
-          header: {
-            Authorization: `Bearer ${token}`,
-          },
-          data: {
-            // follower_id: this.userInfo.student_id,
-            followee_id: this.productDetail.seller_id,
-          },
-          success: (res) => {
-            if (res.statusCode === 200) {
-              uni.showToast({ title: "取消关注成功", icon: "none" });
-              this.isFollowing = false;
-            } else {
-              uni.showToast({ title: "取消关注失败", icon: "none" });
-            }
-          },
-          fail: (err) => {
-            console.error("取消关注失败:", err);
-          },
-        });
-      } else {
-        // 关注
-        uni.request({
-          // url: `http://localhost:3000/api/follows`,
-          url: `http://localhost:3000/api/user/follow`,
-          method: "POST",
-          header: {
-            Authorization: `Bearer ${token}`,
-          },
-          data: {
-            // follower_id: this.userInfo.student_id,
-            followee_id: this.productDetail.seller_id,
-          },
-          success: (res) => {
-            if (res.statusCode === 201) {
-              uni.showToast({ title: "关注成功", icon: "none" });
-              this.isFollowing = true;
-            } else {
-              uni.showToast({ title: "关注失败", icon: "none" });
-            }
-          },
-          fail: (err) => {
-            console.error("关注失败:", err);
-          },
-        });
-      }
-    },
-    // 获取商品点赞状态
-    fetchProductLike(productId) {
-      const token = uni.getStorageSync("token");
-      uni.request({
-        url: `http://localhost:3000/api/products/like/${productId}`,
-        method: "GET",
-        header: {
-          Authorization: `Bearer ${token}`,
-        },
-        success: (res) => {
-          if (res.statusCode === 200) {
-            this.liked = res.data.liked; // 赋值点赞状态
-          } else {
-            console.error("获取商品点赞状态失败:", res);
-          }
-        },
-        fail: (err) => {
-          console.error("获取商品点赞状态失败:", err);
-        },
-      });
-    },
+  const token = uni.getStorageSync("token");
+  
+  if (this.isFollowing) {
+    // 取消关注逻辑
+    uni.request({
+      url: `http://localhost:3000/api/user/follow`,
+      method: "DELETE", // 使用DELETE方法取消关注
+      header: {
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        followee_id: this.productDetail.seller_id,
+      },
+      success: (res) => {
+        if (res.statusCode === 200) {
+          uni.showToast({ title: "已取消关注", icon: "none" });
+          this.isFollowing = false;
+          
+          // 添加取消关注时的按钮动画
+          this.buttonBouncing = true;
+          setTimeout(() => {
+            this.buttonBouncing = false;
+          }, 500);
+        } else {
+          uni.showToast({ title: "取消关注失败", icon: "none" });
+        }
+      },
+      fail: (err) => {
+        console.error("取消关注失败:", err);
+      },
+    });
+  } else {
+    // 关注逻辑保持不变
+    uni.request({
+      url: `http://localhost:3000/api/user/follow`,
+      method: "POST",
+      header: {
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        followee_id: this.productDetail.seller_id,
+      },
+      success: (res) => {
+        if (res.statusCode === 201) {
+          uni.showToast({ title: "关注成功", icon: "none" });
+          this.isFollowing = true;
+          
+          // 动画触发逻辑
+          this.buttonBouncing = true;
+          this.$nextTick(() => {
+            this.showFollowAnimation = true;
+            
+            setTimeout(() => {
+              this.buttonBouncing = false;
+              this.showFollowAnimation = false;
+            }, 1500);
+          });
+        } else {
+          uni.showToast({ title: "关注失败", icon: "none" });
+        }
+      },
+      fail: (err) => {
+        console.error("关注失败:", err);
+      },
+    });
+  }
+},
     // 获取商品收藏状态
     fetchProductFavorite(productId) {
       const token = uni.getStorageSync("token");
@@ -364,54 +388,6 @@ export default {
         },
       });
     },
-    // // 新增关注操作
-    // followSeller() {
-    //   const token = uni.getStorageSync("token");
-    //   if (!token) {
-    //     uni.showToast({
-    //       title: "请先登录",
-    //       icon: "none"
-    //     });
-    //     return;
-    //   }
-    //   // 如果关注对象是自己，则提示无法关注
-    //   if (this.productDetail.seller_id === this.userInfo.student_id) {
-    //     uni.showToast({
-    //       title: "不能关注自己",
-    //       icon: "none"
-    //     });
-    //     return;
-    //   }
-    //   uni.request({
-    //     url: "http://localhost:3000/api/user/follow",
-    //     method: "POST",
-    //     header: {
-    //       Authorization: `Bearer ${token}`
-    //     },
-    //     data: {
-    //       followee_id: this.productDetail.seller_id
-    //     },
-    //     success: (res) => {
-    //       if (res.statusCode === 201) {
-    //         uni.showToast({
-    //           title: res.data.message || "关注成功",
-    //           icon: "none"
-    //         });
-    //       } else {
-    //         uni.showToast({
-    //           title: res.data.message || "操作失败",
-    //           icon: "none"
-    //         });
-    //       }
-    //     },
-    //     fail: (err) => {
-    //       uni.showToast({
-    //         title: "网络错误",
-    //         icon: "none"
-    //       });
-    //     }
-    //   });
-    // },
     // 添加到methods中
     previewImage(index) {
       const urls = this.images.map((item) => this.getImageUrl(item));
@@ -896,5 +872,351 @@ text-title-size {
   text-align: justify;
 }
 
-/* end */
+
+/* 将这部分样式替换为更简洁的版本 */
+.follow-btn-container {
+  position: relative;
+  float: right;
+  margin-top: 25rpx;
+  margin-right: 30rpx;
+  z-index: 5;
+}
+
+.follow-btn {
+  position: relative;
+  cursor: pointer;
+  background: transparent; /* 确保没有背景色 */
+  border: none; /* 移除任何可能的边框 */
+  outline: none; /* 移除轮廓 */
+  padding: 0; /* 移除内边距 */
+  margin: 0; /* 移除外边距 */
+}
+
+.follow-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12rpx 30rpx;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  background: #f5f5f5;
+  color: #333;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  /* border: 2rpx solid #e0e0e0; */
+  transition: all 0.3s;
+}
+
+.follow-btn-active .follow-btn-inner {
+  background: linear-gradient(to right, #36d1dc, #5b86e5);
+  color: white;
+  border: 2rpx solid transparent;
+}
+
+.follow-icon {
+  margin-right: 8rpx;
+  font-weight: bold;
+}
+
+/* 简化弹跳动画 */
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.bounce-animation {
+  animation: bounce 0.5s ease;
+}
+/* 全新的动画容器 - 覆盖整个屏幕 */
+.follow-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* 中心大爱心 */
+.follow-center-heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  font-size: 200rpx;
+  color: #ff4757;
+  text-shadow: 0 0 30rpx rgba(255, 71, 87, 0.8);
+  animation: pulseHeart 1.5s ease-in-out forwards;
+  opacity: 0;
+}
+
+/* 花束元素共同样式 */
+.follow-item {
+  position: absolute;
+  bottom: -100rpx; /* 从屏幕底部开始 */
+  font-size: 80rpx;
+  text-shadow: 0 0 15rpx rgba(255, 255, 255, 0.8);
+  animation-duration: 2s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+/* 各个花朵元素的颜色和起始位置 */
+.follow-item-1 {
+  left: calc(50% - 180rpx);
+  color: #ff4757;
+  animation-name: flyItem1;
+}
+
+.follow-item-2 {
+  left: calc(50% - 120rpx);
+  color: #ffa502;
+  animation-name: flyItem2;
+  animation-delay: 0.1s;
+}
+
+.follow-item-3 {
+  left: calc(50% - 60rpx);
+  color: #ff6b81;
+  animation-name: flyItem3;
+  animation-delay: 0.15s;
+}
+
+.follow-item-4 {
+  left: calc(50%);
+  color: #7bed9f;
+  animation-name: flyItem4;
+  animation-delay: 0.2s;
+}
+
+.follow-item-5 {
+  left: calc(50% + 60rpx);
+  color: #70a1ff;
+  animation-name: flyItem5;
+  animation-delay: 0.25s;
+}
+
+.follow-item-6 {
+  left: calc(50% + 120rpx);
+  color: #eccc68;
+  animation-name: flyItem6;
+  animation-delay: 0.3s;
+}
+
+.follow-item-7 {
+  left: calc(50% + 180rpx);
+  color: #a29bfe;
+  animation-name: flyItem7;
+  animation-delay: 0.35s;
+}
+
+/* 中心脉动爱心动画 */
+@keyframes pulseHeart {
+  0% { 
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 1;
+  }
+  85% {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* 花束元素动画 - 向中心聚集 */
+@keyframes flyItem1 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-500rpx) translateX(70rpx) rotate(20deg) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-800rpx) translateX(100rpx) rotate(45deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem2 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-450rpx) translateX(40rpx) rotate(-15deg) scale(1.3); opacity: 0.9; }
+  100% { transform: translateY(-750rpx) translateX(60rpx) rotate(-30deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem3 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-550rpx) translateX(20rpx) rotate(30deg) scale(1.1); opacity: 0.9; }
+  100% { transform: translateY(-850rpx) translateX(30rpx) rotate(60deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem4 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-600rpx) translateX(0rpx) rotate(-20deg) scale(1.4); opacity: 0.9; }
+  100% { transform: translateY(-900rpx) translateX(0rpx) rotate(-40deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem5 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-550rpx) translateX(-20rpx) rotate(10deg) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-850rpx) translateX(-30rpx) rotate(20deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem6 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-450rpx) translateX(-40rpx) rotate(-25deg) scale(1.3); opacity: 0.9; }
+  100% { transform: translateY(-750rpx) translateX(-60rpx) rotate(-50deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem7 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-500rpx) translateX(-70rpx) rotate(15deg) scale(1.1); opacity: 0.9; }
+  100% { transform: translateY(-800rpx) translateX(-100rpx) rotate(30deg) scale(0); opacity: 0; }
+}
+
+/* 添加更多花束元素的样式 */
+.follow-item-8 {
+  left: calc(50% - 240rpx);
+  color: #ff9ff3;
+  animation-name: flyItem8;
+  animation-delay: 0.05s;
+}
+
+.follow-item-9 {
+  left: calc(50% + 240rpx);
+  color: #ff6b6b;
+  animation-name: flyItem9;
+  animation-delay: 0.08s;
+}
+
+.follow-item-10 {
+  left: calc(50% - 300rpx);
+  color: #feca57;
+  animation-name: flyItem10;
+  animation-delay: 0.12s;
+}
+
+.follow-item-11 {
+  left: calc(50% + 300rpx);
+  color: #1dd1a1;
+  animation-name: flyItem11;
+  animation-delay: 0.18s;
+}
+
+.follow-item-12 {
+  left: calc(50% - 90rpx);
+  color: #5f27cd;
+  animation-name: flyItem12;
+  animation-delay: 0.22s;
+}
+
+.follow-item-13 {
+  left: calc(50% + 90rpx);
+  color: #ff9f43;
+  animation-name: flyItem13;
+  animation-delay: 0.28s;
+}
+
+.follow-item-14 {
+  left: calc(50% - 150rpx);
+  color: #00d2d3;
+  animation-name: flyItem14;
+  animation-delay: 0.32s;
+}
+
+.follow-item-15 {
+  left: calc(50% + 150rpx);
+  color: #ff6348;
+  animation-name: flyItem15;
+  animation-delay: 0.37s;
+}
+
+/* 为新增元素添加动画 */
+@keyframes flyItem8 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-520rpx) translateX(100rpx) rotate(30deg) scale(1.4); opacity: 0.9; }
+  100% { transform: translateY(-820rpx) translateX(150rpx) rotate(60deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem9 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-520rpx) translateX(-100rpx) rotate(-30deg) scale(1.4); opacity: 0.9; }
+  100% { transform: translateY(-820rpx) translateX(-150rpx) rotate(-60deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem10 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-480rpx) translateX(130rpx) rotate(45deg) scale(1.3); opacity: 0.9; }
+  100% { transform: translateY(-950rpx) translateX(180rpx) rotate(90deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem11 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  60% { transform: translateY(-480rpx) translateX(-130rpx) rotate(-45deg) scale(1.3); opacity: 0.9; }
+  100% { transform: translateY(-950rpx) translateX(-180rpx) rotate(-90deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem12 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  65% { transform: translateY(-580rpx) translateX(50rpx) rotate(60deg) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-880rpx) translateX(80rpx) rotate(120deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem13 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  65% { transform: translateY(-580rpx) translateX(-50rpx) rotate(-60deg) scale(1.2); opacity: 0.9; }
+  100% { transform: translateY(-880rpx) translateX(-80rpx) rotate(-120deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem14 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; transform: translateY(20rpx); }
+  70% { transform: translateY(-650rpx) translateX(30rpx) rotate(-10deg) scale(1.5); opacity: 0.85; }
+  100% { transform: translateY(-1000rpx) translateX(60rpx) rotate(-20deg) scale(0); opacity: 0; }
+}
+
+@keyframes flyItem15 {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; transform: translateY(20rpx); }
+  70% { transform: translateY(-650rpx) translateX(-30rpx) rotate(10deg) scale(1.5); opacity: 0.85; }
+  100% { transform: translateY(-1000rpx) translateX(-60rpx) rotate(20deg) scale(0); opacity: 0; }
+}
+
+/* 提高中心爱心的视觉效果 */
+.follow-center-heart {
+  font-size: 240rpx; /* 增大尺寸 */
+  text-shadow: 0 0 40rpx rgba(255, 71, 87, 0.9); /* 增强发光效果 */
+}
+
+@keyframes pulseHeart {
+  0% { 
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  40% { 
+    transform: translate(-50%, -50%) scale(3.0); /* 更大的缩放效果 */
+    opacity: 1;
+  }
+  80% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
 </style>
