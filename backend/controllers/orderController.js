@@ -154,8 +154,161 @@ deletePurchase = async (req, res) => {
     });
   }
 };
+// 标记商品为已卖出（卖家操作）
+const markProductAsSold = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const sellerId = req.user.student_id;
+
+    // 验证商品所有权
+    const checkProduct = await query(
+      "SELECT * FROM products WHERE product_id = ? AND seller_id = ?",
+      [productId, sellerId]
+    );
+
+    if (checkProduct.length === 0) {
+      return res.status(403).json({ code: 403, message: "无权操作此商品" });
+    }
+
+    // 检查商品是否已经标记为已售出
+    const existingOrder = await query(
+      "SELECT * FROM orders WHERE product_id = ?",
+      [productId]
+    );
+    if (existingOrder.length > 0) {
+      return res
+        .status(400)
+        .json({ code: 400, message: "此商品已被标记为售出" });
+    }
+
+    // 创建订单记录，买家ID暂时为空(后续买家可以认领)
+    await query(
+      "INSERT INTO orders (product_id, seller_id, buyer_id) VALUES (?, ?, NULL)",
+      [productId, sellerId]
+    );
+
+    // 将商品标记为下架
+    await query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [
+      productId,
+    ]);
+
+    res.json({ code: 200, message: "商品已标记为售出" });
+  } catch (error) {
+    console.error("标记商品为已卖出失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
+  }
+};
+
+// 买家标记商品为已购买
+const markAsReceived = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const buyerId = req.user.student_id;
+    console.log(req.body);
+    
+    // 检查是否已经存在订单
+    const existingOrder = await query(
+      "SELECT * FROM orders WHERE product_id = ?",
+      [productId]
+    );
+
+    if (existingOrder.length > 0) {
+      // 更新订单的买家ID
+      await query("UPDATE orders SET buyer_id = ? WHERE product_id = ?", [
+        buyerId,
+        productId,
+      ]);
+    } else {
+      // 获取卖家ID
+      const product = await query(
+        "SELECT seller_id FROM products WHERE product_id = ?",
+        [productId]
+      );
+
+      if (product.length === 0) {
+        return res.status(404).json({ code: 404, message: "商品不存在" });
+      }
+
+      // 创建新订单
+      await query(
+        "INSERT INTO orders (product_id, buyer_id, seller_id) VALUES (?, ?, ?)",
+        [productId, buyerId, product[0].seller_id]
+      );
+
+      // // 将商品标记为下架
+      // await query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [
+      //   productId,
+      // ]);
+    }
+
+    res.json({ code: 200, message: "已确认收货" });
+  } catch (error) {
+    console.error("确认收货失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
+  }
+};
+
+// 获取已售出商品
+const getSoldProducts = async (req, res) => {
+  try {
+    const sellerId = req.user.student_id;
+
+    const soldProducts = await query(
+      `
+      SELECT o.*, p.product_title, p.price, p.description, 
+             u.username as buyer_name,
+             (SELECT pi.image_url FROM product_images pi 
+              WHERE pi.product_id = p.product_id AND pi.is_default = 1 
+              LIMIT 1) as image
+      FROM orders o
+      JOIN products p ON o.product_id = p.product_id
+      LEFT JOIN users u ON o.buyer_id = u.student_id
+      WHERE o.seller_id = ?
+      ORDER BY o.created_at DESC
+    `,
+      [sellerId]
+    );
+
+    res.json({ code: 200, data: soldProducts });
+  } catch (error) {
+    console.error("获取售出商品失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
+  }
+};
+
+// 获取购买记录
+const getPurchases = async (req, res) => {
+  try {
+    const buyerId = req.user.student_id;
+
+    const purchases = await query(
+      `
+      SELECT o.*, p.product_title, p.price, p.description, 
+             u.username as seller_name,
+             (SELECT pi.image_url FROM product_images pi 
+              WHERE pi.product_id = p.product_id AND pi.is_default = 1 
+              LIMIT 1) as image
+      FROM orders o
+      JOIN products p ON o.product_id = p.product_id
+      JOIN users u ON p.seller_id = u.student_id
+      WHERE o.buyer_id = ?
+      ORDER BY o.created_at DESC
+    `,
+      [buyerId]
+    );
+
+    res.json({ code: 200, data: purchases });
+  } catch (error) {
+    console.error("获取购买记录失败:", error);
+    res.status(500).json({ code: 500, message: "服务器错误" });
+  }
+};
 module.exports = {
   createOrder,
+  markProductAsSold,
+  markAsReceived,
+  getSoldProducts,
+  getPurchases,
   createPurchase,
   getMyPurchases,
   deletePurchase,

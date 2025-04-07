@@ -348,30 +348,15 @@ export default {
     actionSheetTap(item) {
       this.currentProduct = item; // 保存当前操作的商品
       uni.showActionSheet({
-        itemList: ["分享", "下架", "删除"],
+        itemList: ["标记为已卖出", "下架", "删除"], // 将"分享"改为"标记为已卖出"
         success: (e) => {
           console.log(e.tapIndex);
-          if (e.tapIndex === 1) { // 下架操作
+          if (e.tapIndex === 0) { // 标记为已卖出
+            this.markAsSold(item);
+          } else if (e.tapIndex === 1) { // 下架操作
             this.offShelfProduct(item.product_id);
-          } else if (e.tapIndex === 0) {
-            // 分享功能
-            uni.share({
-              provider: "weixin",
-              scene: "WXSceneSession",
-              type: 0,
-              title: item.product_title || "二手商品交易",
-              summary: item.description || "快来看看我发布的商品吧",
-              imageUrl: item.images[0] || "",
-              href: `pages/home/home_detail/home_detail?product_id=${item.product_id}`,
-              success: function (res) {
-                console.log("分享成功:", res);
-              },
-              fail: function (err) {
-                console.log("分享失败:", err);
-              }
-            });
           } else if (e.tapIndex === 2) {
-            // 删除功能，可以在这里实现
+            // 删除功能
             this.deleteProduct(item.product_id);
           }
         },
@@ -546,7 +531,50 @@ export default {
         });
       }
     },
+    // 新增标记为已卖出方法
+    async markAsSold(item) {
+      try {
+        uni.showModal({
+          title: '确认操作',
+          content: '确定要将此商品标记为已卖出吗？这将同时下架商品',
+          success: async (res) => {
+            if (res.confirm) {
+              const token = uni.getStorageSync("token");
+              const { data: res } = await uni.request({
+                url: "http://localhost:3000/api/orders/mark-as-sold",
+                method: "POST",
+                header: {
+                  Authorization: "Bearer " + token,
+                },
+                data: {
+                  productId: item.product_id
+                }
+              });
 
+              if (res.code === 200) {
+                uni.showToast({
+                  title: "已标记为售出",
+                  icon: "success"
+                });
+                // 刷新数据
+                this.loadSalesData();
+              } else {
+                uni.showToast({
+                  title: res.message || "操作失败",
+                  icon: "none"
+                });
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.error("标记为已卖出失败:", error);
+        uni.showToast({
+          title: "操作失败，请稍后重试",
+          icon: "none"
+        });
+      }
+    },
     // 获取图片URL的辅助方法
     getImageUrl(url) {
       if (!url) return "";

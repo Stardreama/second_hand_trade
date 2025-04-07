@@ -3,31 +3,15 @@
     <view class="content">
       <!-- 有购买记录 -->
       <view v-if="productList.length > 0">
-        <view
-          class="purchase-item"
-          v-for="item in productList"
-          :key="item.purchase_id"
-        >
+        <view class="purchase-item" v-for="item in productList" :key="item.purchase_id">
           <!-- 商品标题 -->
           <view class="title">{{ item.product_title }}</view>
 
           <!-- 图片展示区域 -->
-          <scroll-view
-            scroll-x
-            class="image-scroll"
-            v-if="item.images.length > 0"
-          >
+          <scroll-view scroll-x class="image-scroll" v-if="item.images.length > 0">
             <view class="image-container">
-              <view
-                v-for="(img, index) in item.images"
-                :key="index"
-                class="image-wrapper"
-              >
-                <image
-                  :src="getImageUrl(img)"
-                  mode="aspectFill"
-                  class="product-image"
-                />
+              <view v-for="(img, index) in item.images" :key="index" class="image-wrapper">
+                <image :src="getImageUrl(img)" mode="aspectFill" class="product-image" />
               </view>
             </view>
           </scroll-view>
@@ -184,15 +168,15 @@ export default {
       try {
         const token = uni.getStorageSync("token");
         const res = await uni.request({
-          url: this.baseUrl + "api/my/purchases",
+          url: this.baseUrl + "api/orders/purchases",
           header: { Authorization: `Bearer ${token}` },
         });
 
         if (res.data.code === 200) {
           this.productList = res.data.data.map((item) => ({
             ...item,
-            images: this.processImages(item.images),
-            purchase_time: this.formatTime(item.purchase_time),
+            images: this.processImages(item.image ? [item.image] : []),
+            purchase_time: this.formatTime(item.created_at),
           }));
         }
       } catch (error) {
@@ -248,8 +232,10 @@ export default {
 .product-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* 确保图片填充 */
+  object-fit: cover;
+  /* 确保图片填充 */
 }
+
 .container {
   padding: 20rpx;
   background-color: #f5f5f5;
