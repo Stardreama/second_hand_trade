@@ -24,6 +24,7 @@ const createProduct = (req, res) => {
     product_type,
     is_off_shelf,
     coverIndex, // 封面索引字段
+    address,
   } = req.body;
   console.log("后端收到封面索引:", coverIndex);
 
@@ -55,6 +56,7 @@ const createProduct = (req, res) => {
     status || "",
     product_type || "sell",
     is_off_shelf || 0, // 默认上架
+    address,
     (err, result) => {
       if (err) {
         console.log("插入产品错误:", err);
@@ -979,7 +981,6 @@ const getProductById = (req, res) => {
   });
 };
 
-
 // 获取指定用户的点赞总数（无需 Token 验证的公共 API）
 const getPublicUserLikeAmount = async (req, res) => {
   try {
@@ -1004,17 +1005,15 @@ const getPublicUserLikeAmount = async (req, res) => {
   }
 };
 
-
-
 // 获取指定用户发布的商品
 const getUserProducts = async (req, res) => {
   try {
     const userId = req.params.userId;
-    
+
     if (!userId) {
       return res.status(400).json({ message: "缺少用户ID" });
     }
-    
+
     // 查询指定用户发布的商品
     const query = `
       SELECT p.*, 
@@ -1025,22 +1024,23 @@ const getUserProducts = async (req, res) => {
       WHERE p.seller_id = ?
       ORDER BY p.created_at DESC
     `;
-    
+
     db.query(query, [userId], (err, results) => {
       if (err) {
         console.error("查询用户商品失败:", err);
         return res.status(500).json({ message: "服务器错误" });
       }
-      
+
       // 为没有默认图片的商品设置默认图片
-      results.forEach(product => {
+      results.forEach((product) => {
         if (!product.image) {
-          product.image = product.product_type === "buy" 
-            ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png" 
-            : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
+          product.image =
+            product.product_type === "buy"
+              ? "https://s21.ax1x.com/2025/03/19/pEwJHfJ.png"
+              : "https://s21.ax1x.com/2025/03/19/pEwJ6YQ.png";
         }
       });
-      
+
       res.status(200).json({ products: results });
     });
   } catch (error) {
@@ -1048,8 +1048,6 @@ const getUserProducts = async (req, res) => {
     res.status(500).json({ message: "服务器错误" });
   }
 };
-
-
 
 module.exports = {
   createProduct,

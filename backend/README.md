@@ -152,6 +152,7 @@ CREATE TABLE `products`  (
   `product_type` enum('sell','buy') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'sell',
   `like_amount` int NULL DEFAULT 0,
   `is_off_shelf` tinyint(1) NOT NULL DEFAULT 0 COMMENT '是否下架：0-正常 1-已下架',
+    `address` varchar(511) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   PRIMARY KEY (`product_id`) USING BTREE,
   INDEX `seller_id`(`seller_id` ASC) USING BTREE,
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`seller_id`) REFERENCES `users` (`student_id`) ON DELETE RESTRICT ON UPDATE RESTRICT

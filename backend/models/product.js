@@ -22,10 +22,11 @@ const Product = {
     status,
     product_type,
     is_off_shelf = 0,
+    address,
     callback
   ) => {
     const query =
-      "INSERT INTO products (seller_id, price, original_price, description, product_title, product_status, product_class, status, product_type, is_off_shelf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO products (seller_id, price, original_price, description, product_title, product_status, product_class, status, product_type, is_off_shelf,address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
 
     db.query(
       query,
@@ -41,6 +42,7 @@ const Product = {
         status,
         product_type,
         is_off_shelf,
+        address,
       ],
       callback
     );
