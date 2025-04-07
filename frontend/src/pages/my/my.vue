@@ -99,7 +99,7 @@
         </view>
         <view class="menu-content">
           <text>我的发布</text>
-          <view class="menu-badge">19</view>
+          <view class="menu-badge">{{ postCount }}</view>
         </view>
         <uni-icons
           type="right"
@@ -204,7 +204,7 @@
         </view>
         <view class="menu-content">
           <text>我的收藏</text>
-          <view class="menu-badge">39</view>
+          <view class="menu-badge">{{ favoriteCount }}</view>
         </view>
         <uni-icons
           type="right"
@@ -268,9 +268,43 @@ export default {
       followCount: 0, // 当前用户关注的数量
       fansCount: 0, // 当前用户的粉丝数量
       purchaseCount: 0, // 新增购买数量
+      postCount: 0, // 我的发布数量
+      favoriteCount: 0, // 我的收藏数量
     };
   },
   methods: {
+    // 获取用户发布的商品数量
+    // 获取发布数量
+    fetchPostCount() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+
+      uni.request({
+        url: "http://localhost:3000/api/my/post-count",
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.code === 200) {
+            this.postCount = res.data.data.count;
+          }
+        },
+      });
+    },
+
+    // 获取收藏数量
+    fetchFavoriteCount() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+
+      uni.request({
+        url: "http://localhost:3000/api/my/favorite-count",
+        header: { Authorization: `Bearer ${token}` },
+        success: (res) => {
+          if (res.data.code === 200) {
+            this.favoriteCount = res.data.data.count;
+          }
+        },
+      });
+    },
     // 新增获取购买数量方法
     fetchPurchaseCount() {
       const token = uni.getStorageSync("token");
@@ -664,6 +698,8 @@ export default {
     this.fetchUserLikes(); // 页面显示时获取点赞总数
     this.fetchFollowCounts(); // 获取关注和粉丝数据
     this.fetchPurchaseCount(); // 新增调用
+    this.fetchPostCount(); // 新增
+    this.fetchFavoriteCount(); // 新增
   },
 };
 </script>
