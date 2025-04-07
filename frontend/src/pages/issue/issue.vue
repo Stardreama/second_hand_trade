@@ -64,20 +64,17 @@
 			</view>
 			<!-- end -->
 
-			<!-- 地址选择 -->
 			<view class="cu-form-group form-item">
-				<view class="title">
-					<uni-icons type="location" size="36" color="#1890ff" class="form-icon"></uni-icons>
-					<text>地址选择</text>
-				</view>
-				<picker mode="multiSelector" @change="MultiChange" @columnchange="MultiColumnChange" :value="multiIndex"
-					:range="multiArray">
-					<view class="picker">
-						{{ multiArray[0][multiIndex[0]] }},{{ multiArray[1][multiIndex[1]] }},{{
-							multiArray[2][multiIndex[2]] }}
-					</view>
-				</picker>
-			</view>
+  <view class="title">
+    <uni-icons type="location" size="36" color="#1890ff" class="form-icon"></uni-icons>
+    <text>选择地址</text>
+  </view>
+  <picker @change="bindAddressChange" :range="addressList" range-key="fullAddress">
+    <view class="picker">
+      {{ selectedAddress.fullAddress || '请选择地址' }}
+    </view>
+  </picker>
+</view>
 			<!-- end -->
 
 			<!-- 价钱 -->
@@ -272,10 +269,55 @@ export default {
 			aiModalVisible: false,
 			aiUserInput: '',
 			aiResult: null,
-			isGenerating: false
+			isGenerating: false,
+			  addressList: [],       // 用户地址列表
+    selectedAddress: {}   // 选中的地址
 		}
 	},
 	methods: {
+		 // 修改后的前端获取地址方法
+async loadUserAddress() {
+	const token = uni.getStorageSync('token');
+  try {
+    // 从本地存储获取用户ID（需要确保登录时已存储）
+    const userId = uni.getStorageSync('userInfo').student_id;
+    
+    const res = await uni.request({
+      url: 'http://localhost:3000/api/address',
+      method: 'GET',
+			 header: {
+          'Authorization': `Bearer ${token}`
+        },
+      data: {
+        user_id: userId // 通过参数传递用户ID
+      }
+    });
+
+    if (res.statusCode === 200) {
+      this.addressList = res.data.data.map(addr => ({
+        ...addr,
+        fullAddress: `${addr.province} ${addr.city} ${addr.district || ''} ${addr.address}`
+      }));
+      
+      // 设置默认地址
+      const defaultAddr = this.addressList.find(addr => addr.is_default);
+      if (defaultAddr) this.selectedAddress = defaultAddr;
+    }
+  } catch (error) {
+    console.error('获取地址失败:', error);
+    uni.showToast({
+      title: '地址获取失败',
+      icon: 'none'
+    });
+  }
+},
+
+  // 地址选择改变
+  bindAddressChange(e) {
+    const index = e.detail.value;
+    this.selectedAddress = this.addressList[index];
+  },
+
 		// 切换标签页
 		switchTab(index) {
 			this.tabIndex = index;
@@ -315,6 +357,10 @@ export default {
 			if (!this.validateField('title')) {
 				isValid = false;
 			}
+			  if (!this.selectedAddress.address_id) {
+      uni.showToast({ title: '请选择地址', icon: 'none' });
+      return;
+    }
 			// 验证内容
 			if (!this.validateField('content')) {
 				isValid = false;
@@ -358,6 +404,7 @@ export default {
 				status: selectedMethods,
 				is_off_shelf: 0, // 默认上架
 				coverIndex: this.coverIndex, // 添加封面图片索引
+				address: this.selectedAddress.fullAddress
 			};
 			console.log(this.coverIndex, "封面索引");
 
@@ -787,7 +834,7 @@ export default {
 
 	},
 	onShow() {
-
+this.loadUserAddress(); // 页面显示时加载地址
 	},
 	onHide() {
 

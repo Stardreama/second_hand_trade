@@ -6,7 +6,7 @@ exports.getAllAddresses = async (req, res) => {
   try {
     // 从查询参数或请求体中获取用户ID
     const userId = req.query.user_id || req.body.user_id;
-
+    console.log("用户ID:", userId);
     if (!userId) {
       return res.status(401).json({
         success: false,
