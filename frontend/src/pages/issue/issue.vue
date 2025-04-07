@@ -240,7 +240,8 @@ export default {
 				{ classify_id: 2, classify_name: '家电' },
 				{ classify_id: 3, classify_name: '服饰' },
 				{ classify_id: 4, classify_name: '图书' },
-				{ classify_id: 5, classify_name: '生活用品' }
+				{ classify_id: 5, classify_name: '生活用品' },
+				{ classify_id: 6, classify_name: '其他闲置' } // 新增条目
 			],
 			itemListsIndex: 0, // 新旧程度下标（绑定到 product_status，类型 VARCHAR(255)）
 			itemLists: ['全新', '99新', '95新', '85新', '8新'],
