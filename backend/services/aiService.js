@@ -16,7 +16,7 @@ const aiService = {
     generateProductContent: async (userInput) => {
         try {
             const response = await openai.chat.completions.create({
-                model: "ernie-x1-32k-preview",
+                model: "ernie-speed-8k",
                 messages: [
                     {
                         role: "system",

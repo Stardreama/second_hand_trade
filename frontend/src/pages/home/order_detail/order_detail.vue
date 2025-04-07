@@ -76,9 +76,7 @@
 
     <!-- 确定按钮 -->
     <view class="comfirm bg-white">
-      <button class="bg-red cu-btn margin-tb-sm comfirm_button lg" @tap="handlePurchase">
-        我买到了
-      </button>
+      <button class="cu-btn bg-green lg" @tap="markAsReceived">我已收到商品</button>
       <button class="bg-green cu-btn margin-tb-sm comfirm_button lg" @tap="goChatSeller">
         联系卖家
       </button>
@@ -118,36 +116,43 @@ export default {
   },
   methods: {
     // 添加handlePurchase方法
-    handlePurchase() {
-      const token = uni.getStorageSync("token");
-      if (!token) {
-        uni.showToast({ title: "请先登录", icon: "none" });
-        return;
-      }
-
-      uni.request({
-        url: "http://localhost:3000/api/orders/purchases",
-        method: "POST",
-        header: {
-          Authorization: `Bearer ${token}`,
-        },
-        data: {
-          product_id: this.orderDetails.product_id,
-        },
-        success: (res) => {
-          if (res.statusCode === 201) {
-            uni.showToast({ title: "购买记录已保存", icon: "success" });
-          } else {
-            uni.showToast({
-              title: res.data.message || "操作失败",
-              icon: "none",
-            });
+    async markAsReceived() {
+      try {
+        const token = uni.getStorageSync("token");
+        const { data: res } = await uni.request({
+          url: "http://localhost:3000/api/orders/mark-as-received",
+          method: "POST",
+          header: {
+            Authorization: "Bearer " + token,
+          },
+          data: {
+            productId: this.product_id
           }
-        },
-        fail: (err) => {
-          console.error("请求失败:", err);
-        },
-      });
+        });
+
+        if (res.code === 200) {
+          uni.showToast({
+            title: "确认收货成功",
+            icon: "success"
+          });
+
+          // 跳转到我的购买页面
+          uni.navigateTo({
+            url: '/pages/my/my_buy/my_buy'
+          });
+        } else {
+          uni.showToast({
+            title: res.message || "操作失败",
+            icon: "none"
+          });
+        }
+      } catch (error) {
+        console.error("确认收货失败:", error);
+        uni.showToast({
+          title: "操作失败，请稍后重试",
+          icon: "none"
+        });
+      }
     },
     // 请求订单详情信息
     fetchOrderDetail(productId) {
@@ -197,11 +202,6 @@ export default {
           header: {
             Authorization: `Bearer ${token}`,
           },
-          // 可选：如果后端支持传参过滤，也可以传入seller_id和product_id
-          // data: {
-          //   seller_id: this.orderDetails.seller_id,
-          //   product_id: this.orderDetails.product_id,
-          // },
           success: (res) => {
             if (res.statusCode === 200 && res.data && res.data.length > 0) {
               // 假设 res.data 是数组，使用后端逻辑返回的 findByParticipants 进行筛选
@@ -269,24 +269,53 @@ export default {
       const formattedPath = imagePath.replace(/\\/g, "/");
       return `http://localhost:3000/${formattedPath}`;
     },
-    // 跳转到联系卖家聊天页面
     goChatSeller() {
-      console.log("跳转到联系卖家页面");
-      this.getConversationForOrder()
-        .then((conversationId) => {
+      const token = uni.getStorageSync("token");
+      if (!token) {
+        uni.showToast({
+          title: "请先登录",
+          icon: "none",
+        });
+        setTimeout(() => {
           uni.navigateTo({
-            url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${this.orderDetails.seller_id
-              }&product_id=${this.orderDetails.product_id || ""}&otherUserName=${this.orderDetails.seller_name
-              }`,
+            url: "/pages/auth/login",
           });
-        })
-        .catch((error) => {
-          console.error("会话获取失败:", error);
+        }, 1500);
+        return;
+      }
+      console.log(this.orderDetails.seller_id);
+      
+      // 创建会话
+      uni.request({
+        url: "http://localhost:3000/api/conversations/create",
+        method: "POST",
+        data: {
+          sellerId: this.orderDetails.seller_id,
+          productId: this.orderDetails.product_id,
+        },
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 201) {
+            // 跳转到聊天页面
+            uni.navigateTo({
+              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${this.orderDetails.seller_id}&product_id=${this.orderDetails.product_id}`,
+            });
+          } else {
+            uni.showToast({
+              title: "创建会话失败",
+              icon: "none",
+            });
+          }
+        },
+        fail: () => {
           uni.showToast({
-            title: "无法获取会话，请稍后再试",
+            title: "网络错误",
             icon: "none",
           });
-        });
+        },
+      });
     },
   },
 };
@@ -402,10 +431,14 @@ export default {
 .shoppin_detail {
   display: flex;
   padding: 20rpx;
-  min-height: 250rpx; /* 改为最小高度 */
-  height: auto; /* 高度自适应 */
-  align-items: flex-start; /* 顶部对齐 */
-  overflow: visible; /* 允许内容显示 */
+  min-height: 250rpx;
+  /* 改为最小高度 */
+  height: auto;
+  /* 高度自适应 */
+  align-items: flex-start;
+  /* 顶部对齐 */
+  overflow: visible;
+  /* 允许内容显示 */
 }
 
 .shoppin_detail_img image {
@@ -419,15 +452,18 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* 防止内容溢出 */
-  max-width: 70%; /* 控制最大宽度，给左侧图片留出足够空间 */
+  overflow: hidden;
+  /* 防止内容溢出 */
+  max-width: 70%;
+  /* 控制最大宽度，给左侧图片留出足够空间 */
 }
 
 /* 商品描述区域 */
 .shopping_detail-2 {
   width: 100%;
   display: flex;
-  flex-direction: column; /* 修改为纵向排列 */
+  flex-direction: column;
+  /* 修改为纵向排列 */
   margin-top: 10rpx;
 }
 
@@ -441,8 +477,10 @@ export default {
 
 .shopping_detail_title_1 {
   width: 100%;
-  display: flex; /* 使用flex布局 */
-  flex-wrap: wrap; /* 允许内容换行 */
+  display: flex;
+  /* 使用flex布局 */
+  flex-wrap: wrap;
+  /* 允许内容换行 */
 }
 
 
@@ -450,16 +488,20 @@ title-label {
   font-size: 28rpx;
   color: #333;
   font-weight: bold;
-  white-space: nowrap; /* 标签不换行 */
+  white-space: nowrap;
+  /* 标签不换行 */
 }
 
 .title-content {
   font-size: 28rpx;
   color: #333;
-  flex: 1; /* 让内容占据剩余空间 */
-  word-break: break-word; /* 允许在任何字符间换行 */
+  flex: 1;
+  /* 让内容占据剩余空间 */
+  word-break: break-word;
+  /* 允许在任何字符间换行 */
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-line-clamp: 2;
+  /* 最多显示2行 */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -536,8 +578,10 @@ title-label {
   white-space: pre-wrap;
   text-align: justify;
   width: 100%;
-  max-height: 200rpx; /* 限制最大高度 */
-  overflow-y: auto; /* 超出高度时可滚动 */
+  max-height: 200rpx;
+  /* 限制最大高度 */
+  overflow-y: auto;
+  /* 超出高度时可滚动 */
 }
 
 
@@ -545,6 +589,7 @@ title-label {
   font-size: 28rpx;
   color: #333;
   font-weight: bold;
-  margin-bottom: 8rpx; /* 添加底部间距 */
+  margin-bottom: 8rpx;
+  /* 添加底部间距 */
 }
 </style>

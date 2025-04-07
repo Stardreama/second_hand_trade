@@ -71,7 +71,7 @@ getPostCount = async (req, res) => {
   try {
     const sellerId = req.user.student_id;
     const result = await query(
-      "SELECT COUNT(*) AS count FROM products WHERE seller_id = ? AND product_type = 'sell'",
+      "SELECT COUNT(*) AS count FROM products WHERE seller_id = ? ",
       [sellerId]
     );
 
