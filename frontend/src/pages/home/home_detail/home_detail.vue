@@ -32,7 +32,6 @@
     <!-- 简化动画元素 -->
     <view v-if="showFollowAnimation" class="follow-animation-container">
       <text class="follow-heart follow-center-heart">❤</text>
-      <text class="follow-text">爱你呦~</text>
   <text class="follow-item follow-item-1">❤</text>
   <text class="follow-item follow-item-2">★</text>
   <text class="follow-item follow-item-3">♥</text>
@@ -96,13 +95,13 @@
      <!-- 左侧按钮区域 -->
 <view class="action-left">
   <view class="action-icon" @tap="toggleLike">
-    <uni-icons :type="liked ? 'heart-filled' : 'heart'" :color="liked ? '#ff7900' : '#666'" size="24"></uni-icons>
+    <uni-icons :type="liked ? 'hand-up-filled' : 'hand-up'" :color="liked ? '#ff7900' : '#666'" size="24"></uni-icons>
     <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
   </view>
 
   <!-- 收藏按钮 -->
   <view class="action-icon" @tap="toggleFavorite">
-    <uni-icons :type="favorited ? 'star-filled' : 'star'" :color="favorited ? '#ff0000' : '#666'" size="24"></uni-icons>
+    <uni-icons :type="favorited ? 'heart-filled' : 'heart'" :color="favorited ? '#ff0000' : '#666'" size="24"></uni-icons>
     <text :class="['action-text', favorited ? 'text-red' : 'text-gray']">收藏</text>
   </view>
 
