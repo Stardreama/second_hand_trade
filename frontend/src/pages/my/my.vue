@@ -8,8 +8,8 @@
         mode="aspectFill"
       ></image>
       <view class="user-center-content">
-          <!-- 设置按钮 -->
-          <view class="settings-button" @tap="toSettings">
+        <!-- 设置按钮 -->
+        <view class="settings-button" @tap="toSettings">
           <uni-icons type="gear" size="28" color="#ffffff"></uni-icons>
         </view>
         <!-- 头像和昵称放在这里 -->
@@ -161,7 +161,9 @@
         </view>
         <view class="menu-content">
           <text>我买到的</text>
-          <view class="menu-badge">1</view>
+          <view v-if="purchaseCount > 0" class="menu-badge">
+            {{ purchaseCount > 99 ? "99+" : purchaseCount }}
+          </view>
         </view>
         <uni-icons
           type="right"
@@ -265,9 +267,30 @@ export default {
       totalLikes: 0,
       followCount: 0, // 当前用户关注的数量
       fansCount: 0, // 当前用户的粉丝数量
+      purchaseCount: 0, // 新增购买数量
     };
   },
   methods: {
+    // 新增获取购买数量方法
+    fetchPurchaseCount() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+
+      uni.request({
+        url: "http://localhost:3000/api/my/purchase-count",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.data.code === 200) {
+            this.purchaseCount = res.data.data.count;
+          }
+        },
+        fail: () => {
+          console.log("获取购买数量失败");
+        },
+      });
+    },
     // 清除全部缓存
     clearAllStore(res) {
       uni.showModal({
@@ -341,7 +364,7 @@ export default {
         },
       });
     },
-    
+
     // 读取用户信息（昵称）
     fetchUserProfile() {
       const token = uni.getStorageSync("token");
@@ -471,7 +494,7 @@ export default {
     // 在 methods 对象中找到 toPraise 方法并替换为以下代码
     toPraise() {
       uni.navigateTo({
-        url: '/pages/my/my_issue/my_issue'
+        url: "/pages/my/my_issue/my_issue",
       });
     },
 
@@ -513,10 +536,10 @@ export default {
     },
     toCollect() {
       uni.navigateTo({
-        url: "/pages/my/my_likes/my_likes"
+        url: "/pages/my/my_likes/my_likes",
       });
     },
-    
+
     // 点击头像的事件，弹出预览或更换头像的选项
     changeAvatar() {
       uni.showActionSheet({
@@ -605,12 +628,12 @@ export default {
         url: "/pages/my/my_detail/my_detail",
       });
     },
- // 跳转到设置页面
- toSettings() {
-    uni.navigateTo({
-      url: "/pages/my/settings/settings"
-    });
-  },
+    // 跳转到设置页面
+    toSettings() {
+      uni.navigateTo({
+        url: "/pages/my/settings/settings",
+      });
+    },
     // 获取点赞总数
     fetchUserLikes() {
       const token = uni.getStorageSync("token");
@@ -640,6 +663,7 @@ export default {
     this.fetchUserProfile(); // 页面显示时获取用户信息
     this.fetchUserLikes(); // 页面显示时获取点赞总数
     this.fetchFollowCounts(); // 获取关注和粉丝数据
+    this.fetchPurchaseCount(); // 新增调用
   },
 };
 </script>

@@ -1,7 +1,15 @@
 //用户、我的页面管理器
 // controllers/myController.js
 const User = require("../models/user");
-
+const { db } = require("../config/config");
+const query = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+};
 getQRCode = async (req, res) => {
   const student_id = req.user.student_id;
   const qrCode = await User.getUserQRCode(student_id);
@@ -35,9 +43,32 @@ getQRCodeNoToken = async (req, res) => {
     res.status(500).json({ success: false, message: "服务器错误" });
   }
 };
+getPurchaseCount = async (req, res) => {
+  try {
+    const buyerId = req.user.student_id; // 获取当前登录用户的 student_id;
+    // 使用参数化查询防止SQL注入
+    const result = await query(
+      "SELECT COUNT(*) AS count FROM purchases WHERE buyer_id = ?",
+      [buyerId]
+    );
 
+    res.json({
+      code: 200,
+      data: {
+        count: result[0].count,
+      },
+    });
+  } catch (err) {
+    console.error("统计购买量失败:", err);
+    res.status(500).json({
+      code: 500,
+      message: "服务器内部错误",
+    });
+  }
+};
 module.exports = {
   getQRCode,
   updateQRCode,
   getQRCodeNoToken, // 导出新的方法
+  getPurchaseCount,
 };

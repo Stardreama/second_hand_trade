@@ -42,4 +42,9 @@ router.get(
   jwtService.authMiddleware,
   orderController.getMyPurchases
 );
+router.get(
+  "/purchase-count",
+  jwtService.authMiddleware,
+  userController.getPurchaseCount
+);
 module.exports = router;
