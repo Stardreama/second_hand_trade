@@ -298,11 +298,25 @@ async loadUserAddress() {
         ...addr,
         fullAddress: `${addr.province} ${addr.city} ${addr.district || ''} ${addr.address}`
       }));
-      
-      // 设置默认地址
-      const defaultAddr = this.addressList.find(addr => addr.is_default);
+     // 设置默认地址
+	 const defaultAddr = this.addressList.find(addr => addr.is_default);
       if (defaultAddr) this.selectedAddress = defaultAddr;
+      
+      // 如果没有任何地址，提示用户并跳转到地址添加页面
+      if (this.addressList.length === 0) {
+        uni.showModal({
+          title: '提示',
+          content: '您还没有添加任何地址，请先添加收货地址',
+          showCancel: false,
+          success: () => {
+            uni.navigateTo({
+              url: '/pages/my/my_address/my_address'
+            });
+          }
+        });
+      }
     }
+	
   } catch (error) {
     console.error('获取地址失败:', error);
     uni.showToast({
