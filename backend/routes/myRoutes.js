@@ -47,4 +47,14 @@ router.get(
   jwtService.authMiddleware,
   userController.getPurchaseCount
 );
+router.get(
+  "/post-count",
+  jwtService.authMiddleware,
+  userController.getPostCount
+);
+router.get(
+  "/favorite-count",
+  jwtService.authMiddleware,
+  userController.getFavoriteCount
+);
 module.exports = router;

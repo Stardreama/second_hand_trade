@@ -66,9 +66,47 @@ getPurchaseCount = async (req, res) => {
     });
   }
 };
+// 获取用户发布的商品数量
+getPostCount = async (req, res) => {
+  try {
+    const sellerId = req.user.student_id;
+    const result = await query(
+      "SELECT COUNT(*) AS count FROM products WHERE seller_id = ? AND product_type = 'sell'",
+      [sellerId]
+    );
+
+    res.json({
+      code: 200,
+      data: { count: result[0].count },
+    });
+  } catch (err) {
+    console.error("统计发布数量失败:", err);
+    res.status(500).json({ code: 500, message: "服务器内部错误" });
+  }
+};
+// 获取用户收藏数量
+getFavoriteCount = async (req, res) => {
+  try {
+    const userId = req.user.student_id;
+    const result = await query(
+      "SELECT COUNT(*) AS count FROM favorites WHERE user_id = ?",
+      [userId]
+    );
+
+    res.json({
+      code: 200,
+      data: { count: result[0].count },
+    });
+  } catch (err) {
+    console.error("统计收藏失败:", err);
+    res.status(500).json({ code: 500, message: "服务器内部错误" });
+  }
+};
 module.exports = {
   getQRCode,
   updateQRCode,
   getQRCodeNoToken, // 导出新的方法
   getPurchaseCount,
+  getPostCount,
+  getFavoriteCount,
 };
