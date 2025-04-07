@@ -397,54 +397,6 @@ export default {
         },
       });
     },
-    // // 新增关注操作
-    // followSeller() {
-    //   const token = uni.getStorageSync("token");
-    //   if (!token) {
-    //     uni.showToast({
-    //       title: "请先登录",
-    //       icon: "none"
-    //     });
-    //     return;
-    //   }
-    //   // 如果关注对象是自己，则提示无法关注
-    //   if (this.productDetail.seller_id === this.userInfo.student_id) {
-    //     uni.showToast({
-    //       title: "不能关注自己",
-    //       icon: "none"
-    //     });
-    //     return;
-    //   }
-    //   uni.request({
-    //     url: "http://localhost:3000/api/user/follow",
-    //     method: "POST",
-    //     header: {
-    //       Authorization: `Bearer ${token}`
-    //     },
-    //     data: {
-    //       followee_id: this.productDetail.seller_id
-    //     },
-    //     success: (res) => {
-    //       if (res.statusCode === 201) {
-    //         uni.showToast({
-    //           title: res.data.message || "关注成功",
-    //           icon: "none"
-    //         });
-    //       } else {
-    //         uni.showToast({
-    //           title: res.data.message || "操作失败",
-    //           icon: "none"
-    //         });
-    //       }
-    //     },
-    //     fail: (err) => {
-    //       uni.showToast({
-    //         title: "网络错误",
-    //         icon: "none"
-    //       });
-    //     }
-    //   });
-    // },
     // 添加到methods中
     previewImage(index) {
       const urls = this.images.map((item) => this.getImageUrl(item));
