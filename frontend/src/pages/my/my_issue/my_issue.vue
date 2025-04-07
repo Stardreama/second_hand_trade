@@ -454,98 +454,59 @@ export default {
       }
     },
 
-    // 删除商品方法
-    async deleteProduct(productId) {
-      try {
-        uni.showModal({
-          title: '确认删除',
-          content: '确定要删除这个商品吗？此操作不可恢复。',
-          success: async (res) => {
-            if (res.confirm) {
-              const token = uni.getStorageSync("token");
-              const { data: res } = await uni.request({
-                url: `http://localhost:3000/api/products/${productId}`,
-                method: "DELETE",
-                header: {
-                  Authorization: "Bearer " + token,
-                }
-              });
 
-              if (res.code === 200) {
-                uni.showToast({
-                  title: "删除成功",
-                  icon: "success"
-                });
-                // 刷新数据
-                this.loadSalesData();
-              } else {
-                uni.showToast({
-                  title: res.message || "删除失败",
-                  icon: "none"
-                });
-              }
-            }
+// 删除商品的函数
+async deleteProduct(productId) {
+  try {
+    // 先弹出确认弹窗
+    uni.showModal({
+      title: '确认删除',
+      content: '确定要删除这个商品吗？删除后无法恢复',
+      confirmColor: '#FF0000',
+      success: async (res) => {
+        if (res.confirm) {
+          // 用户点了确定，执行删除操作
+          const token = uni.getStorageSync("token");
+          const { data: res } = await uni.request({
+            url: "http://localhost:3000/api/products/delete",
+            method: "POST",
+            header: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token
+            },
+            data: { productId }
+          });
+          
+          if (res.code === 200) {
+            // 删除成功，显示成功提示
+            uni.showToast({
+              title: "商品删除成功",
+              icon: "success"
+            });
+            
+            // 从界面列表中移除该商品（不重新加载）
+            this.productList = this.productList.filter(item => 
+              item.product_id !== productId
+            );
+          } else {
+            uni.showToast({
+              title: res.message || "删除失败",
+              icon: "none"
+            });
           }
-        });
-      } catch (error) {
-        console.error("删除商品失败:", error);
-        uni.showToast({
-          title: "删除失败，请稍后重试",
-          icon: "none"
-        });
-      }
-    },
-
-    // 确认价格修改
-    async confirmPriceChange() {
-      if (!this.currentProduct || !this.dep_price) {
-        uni.showToast({
-          title: "请选择一个价格",
-          icon: "none",
-        });
-        return;
-      }
-
-      try {
-        const token = uni.getStorageSync("token");
-        const { data: res } = await uni.request({
-          url: `${this.baseUrl}api/products/updatePrice`, // 路径是正确的，保持products而不是product
-          method: "POST",
-          header: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-          },
-          data: {
-            productId: this.currentProduct.product_id,
-            newPrice: this.dep_price,
-          },
-        });
-
-        if (res.code === 200) {
-          uni.showToast({
-            title: "价格修改成功",
-            icon: "success",
-          });
-
-          // 关闭弹窗
-          this.close_Model();
-
-          // 重新加载数据
-          this.loadSalesData();
-        } else {
-          uni.showToast({
-            title: res.message || "价格修改失败",
-            icon: "none",
-          });
         }
-      } catch (error) {
-        console.error("价格修改失败:", error);
-        uni.showToast({
-          title: "价格修改失败，请稍后重试",
-          icon: "none",
-        });
+        // 用户点了取消，不做任何操作
       }
-    },
+    });
+  } catch (error) {
+    console.error('删除商品时发生错误:', error);
+    uni.showToast({
+      title: "删除失败，请稍后再试",
+      icon: "none"
+    });
+  }
+},
+
 
     // 获取图片URL的辅助方法
     getImageUrl(url) {

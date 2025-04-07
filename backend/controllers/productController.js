@@ -125,8 +125,8 @@ const createProduct = (req, res) => {
                 ? 1
                 : 0
               : index === 0
-              ? 1
-              : 0;
+                ? 1
+                : 0;
 
             console.log(
               `处理图片 ${index}:`,
@@ -325,6 +325,40 @@ const getMySaleProducts = async (req, res) => {
     res.status(500).json({
       code: 500,
       message: "服务器错误，获取出售商品失败",
+    });
+  }
+};
+// 删除商品
+const deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    const sellerId = req.user.student_id; // 从JWT中获取用户ID
+
+    if (!productId) {
+      return res.status(400).json({ code: 400, message: "缺少商品ID" });
+    }
+
+    try {
+      await Product.deleteProduct(productId, sellerId);
+      res.status(200).json({
+        code: 200,
+        message: "商品删除成功",
+        data: { productId }
+      });
+    } catch (error) {
+      if (error.message.includes("无权删除")) {
+        return res.status(403).json({
+          code: 403,
+          message: error.message
+        });
+      }
+      throw error; // 其他错误继续向上抛出
+    }
+  } catch (error) {
+    console.error("删除商品失败:", error);
+    res.status(500).json({
+      code: 500,
+      message: "服务器错误，删除商品失败"
     });
   }
 };
@@ -1064,4 +1098,5 @@ module.exports = {
   updateProductStatus,
   getPublicUserLikeAmount,
   getUserProducts,
+  deleteProduct,
 };

@@ -209,6 +209,82 @@ const Product = {
     const [product] = await query(sql, [productId]);
     return product;
   },
+  // 删除商品
+  deleteProduct: async (productId, sellerId) => {
+    // 开始事务
+    const connection = await new Promise((resolve, reject) => {
+      db.getConnection((err, conn) => {
+        if (err) reject(err);
+        else resolve(conn);
+      });
+    });
+
+    try {
+      await new Promise((resolve, reject) => {
+        connection.beginTransaction(err => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      // 验证商品是否属于该卖家
+      const [product] = await query(
+        "SELECT * FROM products WHERE product_id = ? AND seller_id = ?",
+        [productId, sellerId],
+        connection
+      );
+
+      if (!product) {
+        throw new Error("商品不存在或您无权删除该商品");
+      }
+
+      // 1. 删除商品图片记录
+      await query(
+        "DELETE FROM product_images WHERE product_id = ?",
+        [productId],
+        connection
+      );
+
+      // 2. 删除点赞记录
+      await query(
+        "DELETE FROM likes WHERE product_id = ?",
+        [productId],
+        connection
+      );
+
+      // 3. 删除收藏记录（如果有收藏表的话）
+      await query(
+        "DELETE FROM favorites WHERE product_id = ?",
+        [productId],
+        connection
+      );
+
+      // 4. 删除商品记录
+      await query(
+        "DELETE FROM products WHERE product_id = ? AND seller_id = ?",
+        [productId, sellerId],
+        connection
+      );
+
+      // 提交事务
+      await new Promise((resolve, reject) => {
+        connection.commit(err => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+
+      return true;
+    } catch (error) {
+      // 回滚事务
+      await new Promise(resolve => {
+        connection.rollback(() => resolve());
+      });
+      throw error;
+    } finally {
+      connection.release(); // 释放连接
+    }
+  },
 };
 
 module.exports = Product;
