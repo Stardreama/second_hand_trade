@@ -45,8 +45,13 @@
 
           <!-- 操作按钮 -->
           <view class="action-buttons">
-            <view class="btn contact">联系卖家</view>
-            <view class="btn delete">删除记录</view>
+            <!-- 修改后 -->
+            <view class="btn contact" @tap="goChatSeller(item)">
+              联系卖家
+            </view>
+            <view class="btn delete" @tap="deletePurchase(item)">
+              删除记录
+            </view>
           </view>
         </view>
       </view>
@@ -70,6 +75,111 @@ export default {
     };
   },
   methods: {
+    // 新增删除方法
+    async deletePurchase(item) {
+      uni.showModal({
+        title: "确认删除",
+        content: "确定要删除这条购买记录吗？",
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+              const token = uni.getStorageSync("token");
+              const res = await uni.request({
+                url: `${this.baseUrl}api/orders/purchases/${item.purchase_id}`,
+                method: "DELETE",
+                header: { Authorization: `Bearer ${token}` },
+              });
+
+              if (res.data.code === 200) {
+                uni.showToast({ title: "删除成功", icon: "success" });
+                // 本地过滤删除项
+                this.productList = this.productList.filter(
+                  (p) => p.purchase_id !== item.purchase_id
+                );
+              } else {
+                uni.showToast({ title: res.data.message, icon: "none" });
+              }
+            } catch (error) {
+              uni.showToast({ title: "删除失败，请重试", icon: "none" });
+            }
+          }
+        },
+      });
+    },
+    // 新增联系卖家方法
+    async getConversationForOrder(item) {
+      return new Promise((resolve, reject) => {
+        const token = uni.getStorageSync("token");
+        if (!token) {
+          uni.showToast({ title: "请先登录", icon: "none" });
+          reject("用户未登录");
+          return;
+        }
+
+        uni.request({
+          url: "http://localhost:3000/api/conversations",
+          method: "GET",
+          header: { Authorization: `Bearer ${token}` },
+          success: (res) => {
+            if (res.statusCode === 200) {
+              const conversation = res.data.find(
+                (c) =>
+                  c.product_id == item.product_id &&
+                  c.seller_id == item.seller_id
+              );
+              if (conversation) {
+                resolve(conversation.conversation_id);
+              } else {
+                // 如果没有找到会话则创建新会话
+                this.createNewConversation(item)
+                  .then((newConvId) => resolve(newConvId))
+                  .catch((err) => reject(err));
+              }
+            }
+          },
+          fail: reject,
+        });
+      });
+    },
+
+    // 创建新会话
+    async createNewConversation(item) {
+      const token = uni.getStorageSync("token");
+      return new Promise((resolve, reject) => {
+        uni.request({
+          url: "http://localhost:3000/api/conversations",
+          method: "POST",
+          header: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          data: {
+            seller_id: item.seller_id,
+            product_id: item.product_id,
+          },
+          success: (res) => {
+            if (res.statusCode === 201) {
+              resolve(res.data.conversation_id);
+            } else {
+              reject(res.data.message);
+            }
+          },
+          fail: reject,
+        });
+      });
+    },
+
+    // 跳转聊天页面
+    async goChatSeller(item) {
+      try {
+        const conversationId = await this.getConversationForOrder(item);
+        uni.navigateTo({
+          url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${item.seller_id}&product_id=${item.product_id}&otherUserName=${item.seller_name}`,
+        });
+      } catch (error) {
+        uni.showToast({ title: "连接卖家失败，请重试", icon: "none" });
+      }
+    },
     async loadData() {
       try {
         const token = uni.getStorageSync("token");

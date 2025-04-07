@@ -120,8 +120,43 @@ getMyPurchases = async (req, res) => {
     res.status(500).json({ code: 500, message: "服务器内部错误" });
   }
 };
+deletePurchase = async (req, res) => {
+  try {
+    const { purchaseId } = req.params;
+    const buyerId = req.user.student_id; // 从JWT中获取当前用户ID
+    console.log("删除购买记录:", purchaseId);
+    console.log("当前用户ID:", buyerId);
+    // 1. 验证购买记录是否存在且属于当前用户
+    const purchase = await query(
+      "SELECT * FROM purchases WHERE purchase_id = ? AND buyer_id = ?",
+      [purchaseId, buyerId]
+    );
+
+    if (purchase.length === 0) {
+      return res.status(404).json({
+        code: 404,
+        message: "购买记录不存在或无权操作",
+      });
+    }
+
+    // 2. 执行删除
+    await query("DELETE FROM purchases WHERE purchase_id = ?", [purchaseId]);
+
+    res.json({
+      code: 200,
+      message: "删除成功",
+    });
+  } catch (err) {
+    console.error("删除失败:", err);
+    res.status(500).json({
+      code: 500,
+      message: "服务器内部错误",
+    });
+  }
+};
 module.exports = {
   createOrder,
   createPurchase,
   getMyPurchases,
+  deletePurchase,
 };

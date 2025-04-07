@@ -9,4 +9,9 @@ router.post(
   jwtService.authMiddleware,
   orderController.createPurchase
 );
+router.delete(
+  "/purchases/:purchaseId",
+  jwtService.authMiddleware,
+  orderController.deletePurchase
+);
 module.exports = router;
