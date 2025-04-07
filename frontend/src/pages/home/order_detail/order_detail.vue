@@ -269,25 +269,6 @@ export default {
       const formattedPath = imagePath.replace(/\\/g, "/");
       return `http://localhost:3000/${formattedPath}`;
     },
-    // 跳转到联系卖家聊天页面
-    // goChatSeller() {
-    //   console.log("跳转到联系卖家页面");
-    //   this.getConversationForOrder()
-    //     .then((conversationId) => {
-    //       uni.navigateTo({
-    //         url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${this.orderDetails.seller_id
-    //           }&product_id=${this.orderDetails.product_id || ""}&otherUserName=${this.orderDetails.seller_name
-    //           }`,
-    //       });
-    //     })
-    //     .catch((error) => {
-    //       console.error("会话获取失败:", error);
-    //       uni.showToast({
-    //         title: "无法获取会话，请稍后再试",
-    //         icon: "none",
-    //       });
-    //     });
-    // },
     goChatSeller() {
       const token = uni.getStorageSync("token");
       if (!token) {
@@ -302,7 +283,8 @@ export default {
         }, 1500);
         return;
       }
-
+      console.log(this.orderDetails.seller_id);
+      
       // 创建会话
       uni.request({
         url: "http://localhost:3000/api/conversations/create",
@@ -318,7 +300,7 @@ export default {
           if (res.statusCode === 201) {
             // 跳转到聊天页面
             uni.navigateTo({
-              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${this.productDetail.seller_id}&product_id=${this.productDetail.product_id}`,
+              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${this.orderDetails.seller_id}&product_id=${this.orderDetails.product_id}`,
             });
           } else {
             uni.showToast({

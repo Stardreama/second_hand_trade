@@ -536,7 +536,7 @@ export default {
       try {
         uni.showModal({
           title: '确认操作',
-          content: '确定要将此商品标记为已卖出吗？这将同时下架商品',
+          content: '确定要将此商品标记为已卖出吗？需要买家先标记为已购买才能完成此操作',
           success: async (res) => {
             if (res.confirm) {
               const token = uni.getStorageSync("token");
@@ -559,10 +559,39 @@ export default {
                 // 刷新数据
                 this.loadSalesData();
               } else {
-                uni.showToast({
-                  title: res.message || "操作失败",
-                  icon: "none"
-                });
+                // 如果是买家还没有标记为已购买的错误，提供额外的操作选项
+                if (res.message && res.message.includes("请先提醒买家")) {
+                  // uni.showModal({
+                  //   title: '提示',
+                  //   content: res.message,
+                  //   confirmText: '复制商品链接',
+                  //   cancelText: '知道了',
+                  //   success: (modalRes) => {
+                  //     if (modalRes.confirm) {
+                  //       // 复制商品链接，供卖家发送给买家
+                  //       const productLink = `http://localhost:5173/#/pages/product/product?product_id=${item.product_id}`;
+                  //       uni.setClipboardData({
+                  //         data: productLink,
+                  //         success: () => {
+                  //           uni.showToast({
+                  //             title: "链接已复制，请发送给买家",
+                  //             icon: "none"
+                  //           });
+                  //         }
+                  //       });
+                  //     }
+                  //   }
+                  // });
+                  uni.showToast({
+                    title: "请提醒买家先标记为已购买",
+                    icon: "none"
+                  });
+                } else {
+                  uni.showToast({
+                    title: res.message || "操作失败",
+                    icon: "none"
+                  });
+                }
               }
             }
           }

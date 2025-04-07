@@ -95,28 +95,53 @@ const createConversation = async (req, res) => {
   console.log("创建会话");
 
   try {
-    const { sellerId, productId } = req.body;
-    // 修改这一行，使用正确的用户ID字段
-    const buyerId = req.user.student_id || req.user.id;
-
-    console.log("买家ID:", buyerId);
-    console.log("卖家ID:", sellerId);
-    console.log("商品ID:", productId);
-
+    // 获取参数
+    const { sellerId, buyerId, productId } = req.body;
+    const currentUserId = req.user.student_id || req.user.id;
+    
+    console.log("当前用户ID:", currentUserId);
+    console.log("请求参数 - 买家ID:", buyerId);
+    console.log("请求参数 - 卖家ID:", sellerId);
+    console.log("请求参数 - 商品ID:", productId);
+    
+    // 根据参数和当前用户角色确定买卖家ID
+    let actualBuyerId = buyerId;
+    let actualSellerId = sellerId;
+    
+    // 如果前端没有传入买家ID，而当前用户不是卖家，那么当前用户就是买家
+    if (!buyerId && currentUserId !== sellerId) {
+      actualBuyerId = currentUserId;
+    }
+    
+    // 如果前端没有传入卖家ID，而当前用户不是买家，那么当前用户就是卖家
+    if (!sellerId && currentUserId !== buyerId) {
+      actualSellerId = currentUserId;
+    }
+    
+    // 如果前端传入了买卖家ID，以前端传入为准
+    
+    console.log("确定的买家ID:", actualBuyerId);
+    console.log("确定的卖家ID:", actualSellerId);
+    
     // 防止自己和自己聊天
-    if (sellerId === buyerId) {
+    if (actualBuyerId === actualSellerId) {
       return res.status(400).json({ message: "不能和自己聊天" });
+    }
+    
+    // 确保有效值
+    if (!actualBuyerId || !actualSellerId) {
+      return res.status(400).json({ message: "买家ID和卖家ID不能为空" });
     }
 
     // 查找或创建会话
     let conversation = await Conversation.findByParticipants(
-      buyerId,
-      sellerId,
+      actualBuyerId,
+      actualSellerId,
       productId
     );
 
     if (!conversation) {
-      conversation = await Conversation.create(buyerId, sellerId, productId);
+      conversation = await Conversation.create(actualBuyerId, actualSellerId, productId);
     }
 
     res.status(201).json(conversation);

@@ -170,29 +170,32 @@ const markProductAsSold = async (req, res) => {
       return res.status(403).json({ code: 403, message: "无权操作此商品" });
     }
 
-    // 检查商品是否已经标记为已售出
+    // 检查是否已经存在订单记录
     const existingOrder = await query(
       "SELECT * FROM orders WHERE product_id = ?",
       [productId]
     );
+
     if (existingOrder.length > 0) {
-      return res
-        .status(400)
-        .json({ code: 400, message: "此商品已被标记为售出" });
+      // 订单已存在，检查买家ID是否存在
+      if (existingOrder[0].buyer_id) {
+        // 买家ID已存在，更新商品为已下架
+        await query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [productId]);
+        return res.json({ code: 200, message: "商品已标记为售出" });
+      } else {
+        // 买家ID不存在，提示卖家通知买家
+        return res.status(400).json({ 
+          code: 400, 
+          message: "请先提醒买家标记商品为已购买，否则无法联系买家" 
+        });
+      }
+    } else {
+      // 不存在订单记录，提示卖家通知买家先购买
+      return res.status(400).json({ 
+        code: 400, 
+        message: "请先提醒买家标记商品为已购买，否则无法联系买家" 
+      });
     }
-
-    // 创建订单记录，买家ID暂时为空(后续买家可以认领)
-    await query(
-      "INSERT INTO orders (product_id, seller_id, buyer_id) VALUES (?, ?, NULL)",
-      [productId, sellerId]
-    );
-
-    // 将商品标记为下架
-    await query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [
-      productId,
-    ]);
-
-    res.json({ code: 200, message: "商品已标记为售出" });
   } catch (error) {
     console.error("标记商品为已卖出失败:", error);
     res.status(500).json({ code: 500, message: "服务器错误" });

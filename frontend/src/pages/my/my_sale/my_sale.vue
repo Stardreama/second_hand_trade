@@ -12,14 +12,14 @@
             </view>
             <view class='container-top-2'>
               <view class='container-top-2_1 text-cut'>
-                <text>{{item.product_title}}</text>
+                <text>{{ item.product_title }}</text>
               </view>
               <view class='container-top-2_2'>
-                <text class='text-price text-sm text-red'>{{item.price}}</text>
+                <text class='text-price text-sm text-red'>{{ item.price }}</text>
               </view>
               <view>
                 <text class='cuIcon-time lg text-gray'></text>
-                <text class='text-xxm'>{{formatTime(item.created_at)}}</text>
+                <text class='text-xxm'>{{ formatTime(item.created_at) }}</text>
               </view>
             </view>
           </view>
@@ -27,7 +27,7 @@
           <view class='container-line'></view>
 
           <view class='container-under'>
-            <view class='container-under-1' @tap="contactBuyer(item)">
+            <view class='container-under-1' @tap="chatWithbuyer(item)">
               <text class='cuIcon-message font-size-lg text-black'></text>
               <text class='text-sm text-black'>联系买家</text>
             </view>
@@ -114,8 +114,8 @@ export default {
       return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
     },
 
-    // 联系买家
-    async contactBuyer(item) {
+    //联系买家
+    async chatWithbuyer(item) {
       if (!item.buyer_id) {
         uni.showToast({
           title: "买家信息不存在",
@@ -126,7 +126,11 @@ export default {
 
       try {
         const token = uni.getStorageSync("token");
-        
+        // 获取当前用户ID (卖家ID)
+        const userInfo = uni.getStorageSync("userInfo");
+        const sellerId = userInfo.student_id;
+        console.log("卖家ID:", sellerId, "买家ID:", item.buyer_id, "商品ID:", item.product_id);
+
         // 创建或获取会话
         const { data: res } = await uni.request({
           url: `${this.baseUrl}api/conversations/create`,
@@ -136,10 +140,13 @@ export default {
             "Content-Type": "application/json"
           },
           data: {
-            buyerId: item.buyer_id,
-            productId: item.product_id
+            sellerId: sellerId,      // 改为sellerId
+            buyerId: item.buyer_id,  // 改为buyerId
+            productId: item.product_id // 改为productId
           }
         });
+
+        console.log("联系买家返回数据:", res);
 
         if (res.conversation_id) {
           // 跳转到聊天页面
@@ -160,6 +167,55 @@ export default {
         });
       }
     },
+    // chatWithbuyer(item) {
+    //   const token = uni.getStorageSync("token");
+    //   const userInfo = uni.getStorageSync("userInfo");
+    //   const sellerId = userInfo.student_id;
+    //   if (!token) {
+    //     uni.showToast({
+    //       title: "请先登录",
+    //       icon: "none",
+    //     });
+    //     setTimeout(() => {
+    //       uni.navigateTo({
+    //         url: "/pages/auth/login",
+    //       });
+    //     }, 1500);
+    //     return;
+    //   }
+
+    //   // 创建会话
+    //   uni.request({
+    //     url: "http://localhost:3000/api/conversations/create",
+    //     method: "POST",
+    //     data: {
+    //       sellerId: sellerId,
+    //       productId: item.product_id,
+    //     },
+    //     header: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //     success: (res) => {
+    //       if (res.statusCode === 201) {
+    //         // 跳转到聊天页面
+    //         uni.navigateTo({
+    //           url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${sellerId}&product_id=${item.product_id}`,
+    //         });
+    //       } else {
+    //         uni.showToast({
+    //           title: "创建会话失败",
+    //           icon: "none",
+    //         });
+    //       }
+    //     },
+    //     fail: () => {
+    //       uni.showToast({
+    //         title: "网络错误",
+    //         icon: "none",
+    //       });
+    //     },
+    //   });
+    // },
 
     // 跳转到我的发布页面
     goToMyIssue() {
