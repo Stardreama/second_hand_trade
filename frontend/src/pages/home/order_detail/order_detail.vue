@@ -8,22 +8,11 @@
     <view class="price bg-white">
       <view class="price bg-white">
         <view class="price-item">
-          <view
-            ><text
-              class="text-sl text-red text-uni"
-              style="font-size: 60rpx; color: #ff0000"
-              >需付款：{{ orderDetails.price }}</text
-            ></view
-          >
+          <view><text class="text-sl text-red text-uni" style="font-size: 60rpx; color: #ff0000">需付款：{{
+            orderDetails.price }}</text></view>
         </view>
         <view class="price-item">
-          <view
-            ><text
-              class="text-red text-uni"
-              style="font-size: 30rpx; color: #333"
-              >请截图保存付款信息</text
-            ></view
-          >
+          <view><text class="text-red text-uni" style="font-size: 30rpx; color: #333">请截图保存付款信息</text></view>
         </view>
       </view>
     </view>
@@ -53,19 +42,15 @@
 
       <view class="shopping_detail">
         <view class="shopping_detail_title">
-          <view class="shopping_detail_title_1 text-cut"
-            ><text class="text-black text-black"
-              >商品：{{ orderDetails.product_title }}</text
-            ></view
-          >
+          <view class="shopping_detail_title_1 text-cut"><text class="text-black text-black">商品：{{
+            orderDetails.product_title }}</text></view>
           <!-- <text class='text-blue text-weight'>联系买家</text> -->
         </view>
 
-        <view class="shopping_detail-2"
-          ><text class="text-black"
-            >商品描述：{{ orderDetails.description }}</text
-          ></view
-        >
+        <view class="shopping_detail-2">
+          <text class="text-black">商品描述：</text>
+          <view class="order-description-text">{{ orderDetails.description }}</view>
+        </view>
       </view>
     </view>
     <!-- end -->
@@ -79,11 +64,7 @@
     <view class="shopping bg-white">
       <view class="payment-code-container">
         <!-- 添加调试信息和mode属性 -->
-        <image
-          :src="getImageUrl(orderDetails.payment_code)"
-          mode="aspectFit"
-          style="width: 300rpx; height: 300rpx"
-        />
+        <image :src="getImageUrl(orderDetails.payment_code)" mode="aspectFit" style="width: 300rpx; height: 300rpx" />
       </view>
     </view>
 
@@ -95,16 +76,10 @@
 
     <!-- 确定按钮 -->
     <view class="comfirm bg-white">
-      <button
-        class="bg-red cu-btn margin-tb-sm comfirm_button lg"
-        @tap="handlePurchase"
-      >
+      <button class="bg-red cu-btn margin-tb-sm comfirm_button lg" @tap="handlePurchase">
         我买到了
       </button>
-      <button
-        class="bg-green cu-btn margin-tb-sm comfirm_button lg"
-        @tap="goChatSeller"
-      >
+      <button class="bg-green cu-btn margin-tb-sm comfirm_button lg" @tap="goChatSeller">
         联系卖家
       </button>
     </view>
@@ -300,11 +275,9 @@ export default {
       this.getConversationForOrder()
         .then((conversationId) => {
           uni.navigateTo({
-            url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${
-              this.orderDetails.seller_id
-            }&product_id=${this.orderDetails.product_id || ""}&otherUserName=${
-              this.orderDetails.seller_name
-            }`,
+            url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${this.orderDetails.seller_id
+              }&product_id=${this.orderDetails.product_id || ""}&otherUserName=${this.orderDetails.seller_name
+              }`,
           });
         })
         .catch((error) => {
@@ -329,6 +302,7 @@ export default {
 .comfirm_button.lg {
   margin-bottom: 20rpx;
 }
+
 /* 价钱 */
 .price {
   width: 100%;
@@ -424,11 +398,14 @@ export default {
 /* end */
 
 /* 商品描述 */
+/* 整体商品描述容器调整 */
 .shoppin_detail {
   display: flex;
   padding: 20rpx;
-  height: 250rpx;
-  align-items: center;
+  min-height: 250rpx; /* 改为最小高度 */
+  height: auto; /* 高度自适应 */
+  align-items: flex-start; /* 顶部对齐 */
+  overflow: visible; /* 允许内容显示 */
 }
 
 .shoppin_detail_img image {
@@ -436,23 +413,56 @@ export default {
   width: 130rpx;
 }
 
+/* 商品详情区域整体样式 */
 .shopping_detail {
   margin-left: 20rpx;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止内容溢出 */
+  max-width: 70%; /* 控制最大宽度，给左侧图片留出足够空间 */
 }
 
+/* 商品描述区域 */
 .shopping_detail-2 {
-  margin-top: 20rpx;
+  width: 100%;
+  display: flex;
+  flex-direction: column; /* 修改为纵向排列 */
+  margin-top: 10rpx;
 }
 
+/* 商品标题区域 */
 .shopping_detail_title {
   display: flex;
   justify-content: space-between;
-  width: 95%;
+  width: 100%;
+  margin-bottom: 15rpx;
 }
 
 .shopping_detail_title_1 {
-  width: 75%;
+  width: 100%;
+  display: flex; /* 使用flex布局 */
+  flex-wrap: wrap; /* 允许内容换行 */
+}
+
+
+title-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+  white-space: nowrap; /* 标签不换行 */
+}
+
+.title-content {
+  font-size: 28rpx;
+  color: #333;
+  flex: 1; /* 让内容占据剩余空间 */
+  word-break: break-word; /* 允许在任何字符间换行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* end */
@@ -515,5 +525,26 @@ export default {
   border-radius: 12rpx;
   box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
   /* 可选：添加阴影增强可视性 */
+}
+
+
+.order-description-text {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  text-align: justify;
+  width: 100%;
+  max-height: 200rpx; /* 限制最大高度 */
+  overflow-y: auto; /* 超出高度时可滚动 */
+}
+
+
+.desc-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 8rpx; /* 添加底部间距 */
 }
 </style>

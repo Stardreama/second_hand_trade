@@ -1,10 +1,6 @@
 <template>
   <!-- <view> -->
-  <view
-    v-if="productDetail"
-    class="page-wrapper"
-    :class="{ 'off-shelf-container': productDetail.is_off_shelf === 1 }"
-  >
+  <view v-if="productDetail" class="page-wrapper" :class="{ 'off-shelf-container': productDetail.is_off_shelf === 1 }">
     <!-- 下架遮罩层 -->
     <view class="off-shelf-mask" v-if="productDetail.is_off_shelf === 1">
       <view class="off-shelf-text">已下架</view>
@@ -15,12 +11,9 @@
     <view class="bg-white">
       <view class="cf padding-sm">
         <view class="radius fl padding-sm">
-          <image
-            :src="
-              getImageUrl(productDetail.seller_avatar) ||
-              '../../../static/img/avatar.jpg'
-            "
-          ></image>
+          <image :src="getImageUrl(productDetail.seller_avatar) ||
+            '../../../static/img/avatar.jpg'
+            "></image>
           <view class="fr padding-name">
             <!-- <view>Amibition</view> -->
             <view>{{ productDetail.seller_name }}</view>
@@ -42,18 +35,16 @@
     <!-- 商品内容 -->
     <view class="contanier bg-white padding-sm top-20">
       <view class="price">
-        <text class="price-size" v-if="productDetail.product_type !== 'buy'"
-          >￥{{ productDetail.price }}</text
-        >
-        <text class="price-ori" v-if="productDetail.product_type !== 'buy'"
-          >￥{{ productDetail.original_price }}</text
-        >
+        <text class="price-size" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.price }}</text>
+        <text class="price-ori" v-if="productDetail.product_type !== 'buy'">￥{{ productDetail.original_price }}</text>
         <view class="cu-tag">{{ productDetail.product_status }}</view>
         <view class="cu-tag">{{ productDetail.status }}</view>
       </view>
 
-      <view class="bg-white top-20 font-size">
-        <text>{{ productDetail.description }}</text>
+      <view class="bg-white top-20">
+        <view class="detail-product-description">
+          {{ productDetail.description }}
+        </view>
       </view>
 
       <!-- 交易方式 -->
@@ -61,12 +52,7 @@
       <!-- end -->
       <!-- 图片位置 -->
       <block v-for="(item, index) in images" :key="index">
-        <image
-          class="img"
-          :src="getImageUrl(item)"
-          mode="widthFix"
-          @tap="previewImage(index)"
-        ></image>
+        <image class="img" :src="getImageUrl(item)" mode="widthFix" @tap="previewImage(index)"></image>
       </block>
       <view class="browse">
         <view>
@@ -87,39 +73,27 @@
         <!-- 左侧按钮区域 -->
         <view class="action-left">
           <view class="action-icon" @tap="toggleLike">
-            <view
-              :class="[
-                'cuIcon-appreciatefill text-xl',
-                liked ? 'text-orange' : 'text-gray',
-              ]"
-            ></view>
-            <text :class="['action-text', liked ? 'text-orange' : 'text-gray']"
-              >点赞</text
-            >
+            <view :class="[
+              'cuIcon-appreciatefill text-xl',
+              liked ? 'text-orange' : 'text-gray',
+            ]"></view>
+            <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
           </view>
 
           <!-- 收藏按钮 -->
           <view class="action-icon" @tap="toggleFavorite">
-            <view
-              :class="[
-                'cuIcon-favorfill text-xl',
-                favorited ? 'text-red' : 'text-gray',
-              ]"
-            ></view>
-            <text :class="['action-text', favorited ? 'text-red' : 'text-gray']"
-              >收藏</text
-            >
+            <view :class="[
+              'cuIcon-favorfill text-xl',
+              favorited ? 'text-red' : 'text-gray',
+            ]"></view>
+            <text :class="['action-text', favorited ? 'text-red' : 'text-gray']">收藏</text>
           </view>
 
           <!-- 聊一聊按钮 - 下架时禁用 -->
-          <view
-            class="action-icon"
-            @tap="chatWithSeller"
-            v-if="
-              productDetail.seller_id !== userInfo.student_id &&
-              productDetail.is_off_shelf !== 1
-            "
-          >
+          <view class="action-icon" @tap="chatWithSeller" v-if="
+            productDetail.seller_id !== userInfo.student_id &&
+            productDetail.is_off_shelf !== 1
+          ">
             <view class="cuIcon-message text-blue text-xl"></view>
             <text class="action-text text-blue">聊一聊</text>
           </view>
@@ -127,18 +101,11 @@
 
         <!-- 右侧主操作按钮 -->
         <view class="action-right">
-          <button
-            v-if="productDetail.seller_id === userInfo.student_id"
-            class="cu-btn action-button edit-button"
-            @tap="editProduct"
-          >
+          <button v-if="productDetail.seller_id === userInfo.student_id" class="cu-btn action-button edit-button"
+            @tap="editProduct">
             编辑商品
           </button>
-          <button
-            v-else-if="productDetail.is_off_shelf !== 1"
-            class="cu-btn action-button buy-button"
-            @tap="buy"
-          >
+          <button v-else-if="productDetail.is_off_shelf !== 1" class="cu-btn action-button buy-button" @tap="buy">
             立即购买
           </button>
           <button v-else class="cu-btn action-button disabled-button" disabled>
@@ -868,6 +835,17 @@ text-title-size {
   background: #cccccc !important;
   color: #666666 !important;
   cursor: not-allowed;
+}
+
+
+.detail-product-description {
+  font-size: 30rpx;
+  color: #333;
+  line-height: 1.6;
+  padding: 20rpx 10rpx;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  text-align: justify;
 }
 
 /* end */
