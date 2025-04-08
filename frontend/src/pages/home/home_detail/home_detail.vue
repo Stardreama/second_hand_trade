@@ -118,15 +118,15 @@
 
         <!-- 右侧主操作按钮 -->
         <view class="action-right">
-          <uni-button v-if="productDetail.seller_id === userInfo.student_id" type="primary" class="action-button"
-            @click="editProduct">
+          <uni-button v-if="productDetail.seller_id === userInfo.student_id" type="primary" class="action-button edit-button"
+            @tap="editProduct">
             编辑商品
           </uni-button>
           <uni-button v-else-if="productDetail.is_off_shelf !== 1" type="warn" class="action-button buy-button"
-            @click="buy">
+            @tap="buy">
             立即购买
           </uni-button>
-          <uni-button v-else type="default" class="action-button" disabled>
+          <uni-button v-else type="default" class="action-button  disabled-button" disabled>
             商品已下架
           </uni-button>
         </view>
@@ -293,6 +293,27 @@ export default {
         });
       }
     },
+    // 获取商品点赞状态
+    fetchProductLike(productId) {
+        const token = uni.getStorageSync("token");
+        uni.request({
+          url: `http://localhost:3000/api/products/like/${productId}`,
+          method: "GET",
+          header: {
+            Authorization: `Bearer ${token}`,
+          },
+          success: (res) => {
+            if (res.statusCode === 200) {
+              this.liked = res.data.liked; // 赋值点赞状态
+            } else {
+              console.error("获取商品点赞状态失败:", res);
+            }
+          },
+          fail: (err) => {
+            console.error("获取商品点赞状态失败:", err);
+          },
+        });
+      },
     // 获取商品收藏状态
     fetchProductFavorite(productId) {
       const token = uni.getStorageSync("token");
