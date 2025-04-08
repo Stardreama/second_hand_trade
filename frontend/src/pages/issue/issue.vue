@@ -276,8 +276,8 @@ export default {
 	},
 	methods: {
 		 // 修改后的前端获取地址方法
-async loadUserAddress() {
-	const token = uni.getStorageSync('token');
+		 async loadUserAddress() {
+  const token = uni.getStorageSync('token');
   try {
     // 从本地存储获取用户ID（需要确保登录时已存储）
     const userId = uni.getStorageSync('userInfo').student_id;
@@ -285,9 +285,9 @@ async loadUserAddress() {
     const res = await uni.request({
       url: 'http://localhost:3000/api/address',
       method: 'GET',
-			 header: {
-          'Authorization': `Bearer ${token}`
-        },
+      header: {
+        'Authorization': `Bearer ${token}`
+      },
       data: {
         user_id: userId // 通过参数传递用户ID
       }
@@ -298,25 +298,12 @@ async loadUserAddress() {
         ...addr,
         fullAddress: `${addr.province} ${addr.city} ${addr.district || ''} ${addr.address}`
       }));
-     // 设置默认地址
-	 const defaultAddr = this.addressList.find(addr => addr.is_default);
+      // 设置默认地址
+      const defaultAddr = this.addressList.find(addr => addr.is_default);
       if (defaultAddr) this.selectedAddress = defaultAddr;
       
-      // 如果没有任何地址，提示用户并跳转到地址添加页面
-      if (this.addressList.length === 0) {
-        uni.showModal({
-          title: '提示',
-          content: '您还没有添加任何地址，请先添加收货地址',
-          showCancel: false,
-          success: () => {
-            uni.navigateTo({
-              url: '/pages/my/my_address/my_address'
-            });
-          }
-        });
-      }
+      // 移除了这里的自动弹出提示框部分
     }
-	
   } catch (error) {
     console.error('获取地址失败:', error);
     uni.showToast({
@@ -363,18 +350,29 @@ async loadUserAddress() {
 			this.checkboxs.forEach(item => item.checked = false);
 		},
 		formSubmit() {
-			// 从本地存储获取 token
 			console.log("Title:", this.title);
-			const token = uni.getStorageSync('token');
-			let isValid = true;
-			// 验证标题
-			if (!this.validateField('title')) {
-				isValid = false;
-			}
-			  if (!this.selectedAddress.address_id) {
-      uni.showToast({ title: '请选择地址', icon: 'none' });
-      return;
-    }
+  const token = uni.getStorageSync('token');
+  let isValid = true;
+  // 验证标题
+  if (!this.validateField('title')) {
+    isValid = false;
+  }
+  
+  // 验证地址
+  if (!this.selectedAddress.address_id) {
+    uni.showModal({
+      title: '提示',
+      content: '您还没有添加任何地址，请先添加收货地址',
+      showCancel: false,
+      success: () => {
+        uni.navigateTo({
+          url: '/pages/my/my_address/my_address'
+        });
+      }
+    });
+    return;
+  }
+  
 			// 验证内容
 			if (!this.validateField('content')) {
 				isValid = false;
