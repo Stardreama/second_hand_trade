@@ -21,10 +21,11 @@
       <!-- 有商品时显示商品列表 -->
       <view v-if="productList && productList.length > 0">
         <view class="contianer shadow-warp bg-white padding-sm" v-for="(item, index) in sortedList"
-          :key="item.product_id" :class="{ 'off-shelf-item': item.is_off_shelf === 1 }">
-
+          :key="item.product_id" :class="{ 'off-shelf-item': item.is_off_shelf === 1, 'sold-item': item.is_sold }">
           <!-- 添加下架标识 -->
-          <view class="off-shelf-badge" v-if="item.is_off_shelf === 1">已下架</view>
+          <!-- 添加下架和售出标识 -->
+          <view class="off-shelf-badge" v-if="item.is_off_shelf === 1 && !item.is_sold">已下架</view>
+          <view class="sold-badge" v-if="item.is_sold">已售出</view>
           <view class="contianer-title">
             <view class="contianer-title_1 text-cut"><text class="text-cut">{{ item.product_title }}</text></view>
           </view>
@@ -52,7 +53,9 @@
               <view class="cu-tag bg-orange sm">
                 <uni-icons type="hand-up-filled" size="12" color="#ffffff"></uni-icons>
               </view>
-              <view class="cu-tag line-orange sm"> {{ item.like_amount || 0 }} </view>
+              <view class="cu-tag line-orange sm">
+                {{ item.like_amount || 0 }}
+              </view>
             </view>
 
             <view class="cu-capsule radius margin-left">
@@ -64,7 +67,11 @@
           </view>
           <view class="container-compile">
             <!-- 根据下架状态显示不同的操作按钮 -->
-            <block v-if="item.is_off_shelf === 1">
+            <block v-if="item.is_sold">
+              <view class="cu-tag line-red">已售出</view>
+              <view class="cu-tag line-yellow" @tap="actionSheetTap(item)">更多</view>
+            </block>
+            <block v-else-if="item.is_off_shelf === 1">
               <view class="cu-tag line-blue" @tap="onShelfProduct(item.product_id)">重新上架</view>
               <view class="cu-tag line-yellow" @tap="actionSheetTap(item)">更多</view>
             </block>
@@ -157,7 +164,7 @@ export default {
     return {
       baseUrl: "http://localhost:3000/", // 后端基础地址
       productList: [], // 商品列表数据
-      sortBy: 'newest', // 默认按最新排序
+      sortBy: "newest", // 默认按最新排序
       url: "https://ossweb-img.qq.com/images/lol/web201310/skin/big10001.jpg",
       //降价Model状态
       show_model_state: false,
@@ -183,13 +190,15 @@ export default {
       const list = [...this.productList];
 
       switch (this.sortBy) {
-        case 'likes':
-          return list.sort((a, b) => (b.like_amount || 0) - (a.like_amount || 0));
-        case 'price_asc':
+        case "likes":
+          return list.sort(
+            (a, b) => (b.like_amount || 0) - (a.like_amount || 0)
+          );
+        case "price_asc":
           return list.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-        case 'price_desc':
+        case "price_desc":
           return list.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-        case 'newest':
+        case "newest":
         default:
           return list.sort((a, b) => {
             const dateA = new Date(a.created_at || 0);
@@ -197,17 +206,15 @@ export default {
             return dateB - dateA;
           });
       }
-    }
+    },
   },
 
-
   methods: {
-
     // 更改排序方式
     changeSort(sort) {
-      if (sort === 'price_asc' && this.sortBy === 'price_asc') {
+      if (sort === "price_asc" && this.sortBy === "price_asc") {
         // 如果当前是价格升序，点击后切换为价格降序
-        this.sortBy = 'price_desc';
+        this.sortBy = "price_desc";
       } else {
         this.sortBy = sort;
       }
@@ -222,8 +229,10 @@ export default {
         });
 
         if (res.code === 200) {
-          // 后端已经处理好了图片数组，直接使用即可
-          this.productList = res.data.map((item) => {
+          // 处理每个商品的数据
+          const processedProducts = [];
+
+          for (const item of res.data) {
             // 处理图片路径
             const processedImages = Array.isArray(item.images)
               ? item.images.map((img) => {
@@ -236,12 +245,23 @@ export default {
               })
               : [];
 
-            return {
+            // 检查商品是否已售出
+            const { data: soldCheck } = await uni.request({
+              url: `http://localhost:3000/api/my/check-product-sold/${item.product_id}`,
+              method: "GET",
+              header: { Authorization: "Bearer " + token },
+            });
+
+            const isSold = soldCheck.code === 200 && soldCheck.data.isSold;
+
+            processedProducts.push({
               ...item,
               images: processedImages,
-            };
-          });
+              is_sold: isSold, // 添加售出标识
+            });
+          }
 
+          this.productList = processedProducts;
           console.log("处理后的商品列表:", this.productList);
         } else {
           uni.showToast({
@@ -258,15 +278,15 @@ export default {
     toIssue(item) {
       if (!item || !item.product_id) {
         uni.showToast({
-          title: '商品信息不完整',
-          icon: 'none'
+          title: "商品信息不完整",
+          icon: "none",
         });
         return;
       }
 
       // 跳转到编辑页面
       uni.navigateTo({
-        url: `/pages/issue/issue_edit/issue_edit?product_id=${item.product_id}`
+        url: `/pages/issue/issue_edit/issue_edit?product_id=${item.product_id}`,
       });
     },
 
@@ -327,7 +347,9 @@ export default {
       // 根据商品的当前价格计算不同折扣的价格
       const originalPrice = item.price;
       for (let i = 0; i < that.re_price.length; i++) {
-        that.re_price[i].price = parseFloat((originalPrice * that.re_price[i].discount).toFixed(2));
+        that.re_price[i].price = parseFloat(
+          (originalPrice * that.re_price[i].discount).toFixed(2)
+        );
 
         // 默认选中第一个
         if (i === 0) {
@@ -346,22 +368,50 @@ export default {
 
     // 显示编辑
     actionSheetTap(item) {
-      this.currentProduct = item; // 保存当前操作的商品
-      uni.showActionSheet({
-        itemList: ["标记为已卖出", "下架", "删除"], // 将"分享"改为"标记为已卖出"
-        success: (e) => {
-          console.log(e.tapIndex);
-          if (e.tapIndex === 0) { // 标记为已卖出
-            this.markAsSold(item);
-          } else if (e.tapIndex === 1) { // 下架操作
-            this.offShelfProduct(item.product_id);
-          } else if (e.tapIndex === 2) {
-            // 删除功能
-            this.deleteProduct(item.product_id);
-          }
-        },
-      });
+  this.currentProduct = item; // 保存当前操作的商品
+  
+  // 根据商品状态提供不同的操作选项
+  let itemList = [];
+  
+  if(item.is_sold) {
+    // 已售出的商品只能删除
+    itemList = ["删除"];
+  } else if(item.is_off_shelf === 1) {
+    // 已下架但未售出的商品可以标记为已卖出或删除
+    itemList = ["标记为已卖出", "删除"];
+  } else {
+    // 在售商品可以标记为已卖出、下架或删除
+    itemList = ["标记为已卖出", "下架", "删除"];
+  }
+  
+  uni.showActionSheet({
+    itemList: itemList,
+    success: (e) => {
+      if(item.is_sold) {
+        // 已售出商品
+        if(e.tapIndex === 0) {
+          this.deleteProduct(item.product_id);
+        }
+      } else if(item.is_off_shelf === 1) {
+        // 已下架商品
+        if(e.tapIndex === 0) {
+          this.markAsSold(item);
+        } else if(e.tapIndex === 1) {
+          this.deleteProduct(item.product_id);
+        }
+      } else {
+        // 在售商品
+        if(e.tapIndex === 0) {
+          this.markAsSold(item);
+        } else if(e.tapIndex === 1) {
+          this.offShelfProduct(item.product_id);
+        } else if(e.tapIndex === 2) {
+          this.deleteProduct(item.product_id);
+        }
+      }
     },
+  });
+},
 
     // 下架商品方法
     async offShelfProduct(productId) {
@@ -375,28 +425,28 @@ export default {
           },
           data: {
             productId: productId,
-            status: "off_shelf" // 设置为下架状态
-          }
+            status: "off_shelf", // 设置为下架状态
+          },
         });
 
         if (res.code === 200) {
           uni.showToast({
             title: "商品已下架",
-            icon: "success"
+            icon: "success",
           });
           // 刷新数据
           this.loadSalesData();
         } else {
           uni.showToast({
             title: res.message || "操作失败",
-            icon: "none"
+            icon: "none",
           });
         }
       } catch (error) {
         console.error("下架商品失败:", error);
         uni.showToast({
           title: "操作失败，请稍后重试",
-          icon: "none"
+          icon: "none",
         });
       }
     },
@@ -405,6 +455,26 @@ export default {
     async onShelfProduct(productId) {
       try {
         const token = uni.getStorageSync("token");
+
+        // 先检查商品是否已售出
+        const { data: checkRes } = await uni.request({
+          url: `http://localhost:3000/api/my/check-product-sold/${productId}`,
+          method: "GET",
+          header: {
+            Authorization: "Bearer " + token,
+          },
+        });
+
+        if (checkRes.code === 200 && checkRes.data.isSold) {
+          uni.showToast({
+            title: "该商品已售出，无法重新上架",
+            icon: "none",
+            duration: 2000,
+          });
+          return;
+        }
+
+        // 如果未售出，继续执行上架操作
         const { data: res } = await uni.request({
           url: "http://localhost:3000/api/products/status",
           method: "POST",
@@ -413,84 +483,83 @@ export default {
           },
           data: {
             productId: productId,
-            status: "on_sale" // 设置为在售状态
-          }
+            status: "on_sale", // 设置为在售状态
+          },
         });
 
         if (res.code === 200) {
           uni.showToast({
             title: "商品已上架",
-            icon: "success"
+            icon: "success",
           });
           // 刷新数据
           this.loadSalesData();
         } else {
           uni.showToast({
             title: res.message || "操作失败",
-            icon: "none"
+            icon: "none",
           });
         }
       } catch (error) {
         console.error("上架商品失败:", error);
         uni.showToast({
           title: "操作失败，请稍后重试",
-          icon: "none"
+          icon: "none",
         });
       }
     },
 
+    // 删除商品的函数
+    async deleteProduct(productId) {
+      try {
+        // 先弹出确认弹窗
+        uni.showModal({
+          title: "确认删除",
+          content: "确定要删除这个商品吗？删除后无法恢复",
+          confirmColor: "#FF0000",
+          success: async (res) => {
+            if (res.confirm) {
+              // 用户点了确定，执行删除操作
+              const token = uni.getStorageSync("token");
+              const { data: res } = await uni.request({
+                url: "http://localhost:3000/api/products/delete",
+                method: "POST",
+                header: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + token,
+                },
+                data: { productId },
+              });
 
-// 删除商品的函数
-async deleteProduct(productId) {
-  try {
-    // 先弹出确认弹窗
-    uni.showModal({
-      title: '确认删除',
-      content: '确定要删除这个商品吗？删除后无法恢复',
-      confirmColor: '#FF0000',
-      success: async (res) => {
-        if (res.confirm) {
-          // 用户点了确定，执行删除操作
-          const token = uni.getStorageSync("token");
-          const { data: res } = await uni.request({
-            url: "http://localhost:3000/api/products/delete",
-            method: "POST",
-            header: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + token
-            },
-            data: { productId }
-          });
-          
-          if (res.code === 200) {
-            // 删除成功，显示成功提示
-            uni.showToast({
-              title: "商品删除成功",
-              icon: "success"
-            });
-            
-            // 从界面列表中移除该商品（不重新加载）
-            this.productList = this.productList.filter(item => 
-              item.product_id !== productId
-            );
-          } else {
-            uni.showToast({
-              title: res.message || "删除失败",
-              icon: "none"
-            });
-          }
-        }
-        // 用户点了取消，不做任何操作
+              if (res.code === 200) {
+                // 删除成功，显示成功提示
+                uni.showToast({
+                  title: "商品删除成功",
+                  icon: "success",
+                });
+
+                // 从界面列表中移除该商品（不重新加载）
+                this.productList = this.productList.filter(
+                  (item) => item.product_id !== productId
+                );
+              } else {
+                uni.showToast({
+                  title: res.message || "删除失败",
+                  icon: "none",
+                });
+              }
+            }
+            // 用户点了取消，不做任何操作
+          },
+        });
+      } catch (error) {
+        console.error("删除商品时发生错误:", error);
+        uni.showToast({
+          title: "删除失败，请稍后再试",
+          icon: "none",
+        });
       }
-    });
-  } catch (error) {
-    console.error('删除商品时发生错误:', error);
-    uni.showToast({
-      title: "删除失败，请稍后再试",
-      icon: "none"
-    });
-  }
-},
+    },
 
     // 确认价格修改
     async confirmPriceChange() {
@@ -546,8 +615,9 @@ async deleteProduct(productId) {
     async markAsSold(item) {
       try {
         uni.showModal({
-          title: '确认操作',
-          content: '确定要将此商品标记为已卖出吗？需要买家先标记为已购买才能完成此操作',
+          title: "确认操作",
+          content:
+            "确定要将此商品标记为已卖出吗？需要买家先标记为已购买才能完成此操作",
           success: async (res) => {
             if (res.confirm) {
               const token = uni.getStorageSync("token");
@@ -558,14 +628,14 @@ async deleteProduct(productId) {
                   Authorization: "Bearer " + token,
                 },
                 data: {
-                  productId: item.product_id
-                }
+                  productId: item.product_id,
+                },
               });
 
               if (res.code === 200) {
                 uni.showToast({
                   title: "已标记为售出",
-                  icon: "success"
+                  icon: "success",
                 });
                 // 刷新数据
                 this.loadSalesData();
@@ -595,23 +665,23 @@ async deleteProduct(productId) {
                   // });
                   uni.showToast({
                     title: "请提醒买家先标记为已购买",
-                    icon: "none"
+                    icon: "none",
                   });
                 } else {
                   uni.showToast({
                     title: res.message || "操作失败",
-                    icon: "none"
+                    icon: "none",
                   });
                 }
               }
             }
-          }
+          },
         });
       } catch (error) {
         console.error("标记为已卖出失败:", error);
         uni.showToast({
           title: "操作失败，请稍后重试",
-          icon: "none"
+          icon: "none",
         });
       }
     },
@@ -878,6 +948,11 @@ async deleteProduct(productId) {
   /* 柔和的灰色背景 */
 }
 
+.sold-item {
+  background-color: #f0e0e0;
+  /* 浅粉色背景，区分已售出状态 */
+}
+
 .off-shelf-badge {
   position: absolute;
   top: 15rpx;
@@ -888,10 +963,20 @@ async deleteProduct(productId) {
   border-radius: 10rpx;
   font-size: 24rpx;
   z-index: 1;
-  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.1);
 }
 
-
+.sold-badge {
+  position: absolute;
+  top: 15rpx;
+  right: 15rpx;
+  background-color: rgba(220, 20, 60, 0.8);
+  /* 深红色背景 */
+  color: white;
+  padding: 6rpx 16rpx;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  z-index: 1;
+}
 
 /* 排序控制器样式 */
 .sort-container {
@@ -921,7 +1006,7 @@ async deleteProduct(productId) {
 }
 
 .sort-item.active::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -6rpx;
   left: 50%;

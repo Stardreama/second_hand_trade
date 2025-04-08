@@ -48,7 +48,7 @@ getPurchaseCount = async (req, res) => {
     const buyerId = req.user.student_id; // 获取当前登录用户的 student_id;
     // 使用参数化查询防止SQL注入
     const result = await query(
-      "SELECT COUNT(*) AS count FROM purchases WHERE buyer_id = ?",
+      "SELECT COUNT(*) AS count FROM orders WHERE buyer_id = ?",
       [buyerId]
     );
 

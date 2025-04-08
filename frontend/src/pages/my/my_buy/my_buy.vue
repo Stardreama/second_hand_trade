@@ -91,78 +91,88 @@ export default {
       });
     },
     // 新增联系卖家方法
-    async getConversationForOrder(item) {
-      return new Promise((resolve, reject) => {
-        const token = uni.getStorageSync("token");
-        if (!token) {
-          uni.showToast({ title: "请先登录", icon: "none" });
-          reject("用户未登录");
-          return;
-        }
+    // async getConversationForOrder(item) {
+    //   return new Promise((resolve, reject) => {
+    //     const token = uni.getStorageSync("token");
+    //     if (!token) {
+    //       uni.showToast({ title: "请先登录", icon: "none" });
+    //       reject("用户未登录");
+    //       return;
+    //     }
 
-        uni.request({
-          url: "http://localhost:3000/api/conversations",
-          method: "GET",
-          header: { Authorization: `Bearer ${token}` },
-          success: (res) => {
-            if (res.statusCode === 200) {
-              const conversation = res.data.find(
-                (c) =>
-                  c.product_id == item.product_id &&
-                  c.seller_id == item.seller_id
-              );
-              if (conversation) {
-                resolve(conversation.conversation_id);
-              } else {
-                // 如果没有找到会话则创建新会话
-                this.createNewConversation(item)
-                  .then((newConvId) => resolve(newConvId))
-                  .catch((err) => reject(err));
-              }
-            }
-          },
-          fail: reject,
-        });
-      });
-    },
+    //     uni.request({
+    //       url: "http://localhost:3000/api/conversations",
+    //       method: "GET",
+    //       header: { Authorization: `Bearer ${token}` },
+    //       success: (res) => {
+    //         if (res.statusCode === 200) {
+    //           const conversation = res.data.find(
+    //             (c) =>
+    //               c.product_id == item.product_id &&
+    //               c.seller_id == item.seller_id
+    //           );
+    //           if (conversation) {
+    //             resolve(conversation.conversation_id);
+    //           } else {
+    //             // 如果没有找到会话则创建新会话
+    //             this.createNewConversation(item)
+    //               .then((newConvId) => resolve(newConvId))
+    //               .catch((err) => reject(err));
+    //           }
+    //         }
+    //       },
+    //       fail: reject,
+    //     });
+    //   });
+    // },
 
     // 创建新会话
-    async createNewConversation(item) {
-      const token = uni.getStorageSync("token");
-      return new Promise((resolve, reject) => {
-        uni.request({
-          url: "http://localhost:3000/api/conversations",
-          method: "POST",
-          header: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          data: {
-            seller_id: item.seller_id,
-            product_id: item.product_id,
-          },
-          success: (res) => {
-            if (res.statusCode === 201) {
-              resolve(res.data.conversation_id);
-            } else {
-              reject(res.data.message);
-            }
-          },
-          fail: reject,
-        });
-      });
-    },
-
-    // 跳转聊天页面
     async goChatSeller(item) {
-      try {
-        const conversationId = await this.getConversationForOrder(item);
-        uni.navigateTo({
-          url: `/pages/msg/msg_chat/msg_chat?conversation_id=${conversationId}&user_id=${item.seller_id}&product_id=${item.product_id}&otherUserName=${item.seller_name}`,
+      const token = uni.getStorageSync("token");
+      if (!token) {
+        uni.showToast({
+          title: "请先登录",
+          icon: "none",
         });
-      } catch (error) {
-        uni.showToast({ title: "连接卖家失败，请重试", icon: "none" });
+        setTimeout(() => {
+          uni.navigateTo({
+            url: "/pages/auth/login",
+          });
+        }, 1500);
+        return;
       }
+
+      // 创建会话
+      uni.request({
+        url: "http://localhost:3000/api/conversations/create",
+        method: "POST",
+        data: {
+          sellerId: item.seller_id,
+          productId: item.product_id,
+        },
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.statusCode === 201) {
+            // 跳转到聊天页面
+            uni.navigateTo({
+              url: `/pages/msg/msg_chat/msg_chat?conversation_id=${res.data.conversation_id}&user_id=${item.seller_id}&product_id=${item.product_id}&otherUserName=${item.seller_name}`,
+            });
+          } else {
+            uni.showToast({
+              title: "创建会话失败",
+              icon: "none",
+            });
+          }
+        },
+        fail: () => {
+          uni.showToast({
+            title: "网络错误",
+            icon: "none",
+          });
+        },
+      });
     },
     async loadData() {
       try {

@@ -140,7 +140,9 @@
         </view>
         <view class="menu-content">
           <text>我的卖出</text>
-          <view class="menu-badge">99</view>
+          <view v-if="saleCount > 0" class="menu-badge">
+            {{ saleCount > 99 ? "99+" : saleCount }}
+          </view>
         </view>
         <uni-icons
           type="right"
@@ -204,7 +206,9 @@
         </view>
         <view class="menu-content">
           <text>我的收藏</text>
-          <view class="menu-badge">{{ favoriteCount }}</view>
+          <view v-if="favoriteCount > 0" class="menu-badge">{{
+            favoriteCount
+          }}</view>
         </view>
         <uni-icons
           type="right"
@@ -270,6 +274,7 @@ export default {
       purchaseCount: 0, // 新增购买数量
       postCount: 0, // 我的发布数量
       favoriteCount: 0, // 我的收藏数量
+      saleCount: 0, // 添加卖出商品数量变量
     };
   },
   methods: {
@@ -325,29 +330,24 @@ export default {
         },
       });
     },
-    // 清除全部缓存
-    clearAllStore(res) {
-      uni.showModal({
-        title: "清除缓存",
-        content: "是否要清除全部缓存!",
-        success: function (res) {
-          if (res.confirm) {
-            uni.clearStorage({
-              success: function (res) {
-                uni.showToast({
-                  title: "清除成功",
-                  duration: 1000,
-                });
-              },
-              fail: function (res) {
-                uni.showToast({
-                  title: "清除失败",
-                  icon: "none",
-                  duration: 1000,
-                });
-              },
-            });
+    // 获取卖出商品数量
+    fetchSaleCount() {
+      const token = uni.getStorageSync("token");
+      if (!token) return;
+      console.log("获取卖出商品数量zhong");
+      uni.request({
+        url: "http://localhost:3000/api/my/sale-count",
+        header: {
+          Authorization: `Bearer ${token}`,
+        },
+        success: (res) => {
+          if (res.data.code === 200) {
+            console.log("获取卖出商品数量成功", res.data.data.count);
+            this.saleCount = res.data.data.count;
           }
+        },
+        fail: () => {
+          console.log("获取卖出商品数量失败");
         },
       });
     },
@@ -698,8 +698,9 @@ export default {
     this.fetchUserLikes(); // 页面显示时获取点赞总数
     this.fetchFollowCounts(); // 获取关注和粉丝数据
     this.fetchPurchaseCount(); // 新增调用
-    this.fetchPostCount(); // 新增
-    this.fetchFavoriteCount(); // 新增
+    this.fetchPostCount(); // 获取发布数量
+    this.fetchFavoriteCount(); // 新增获取收藏数量
+    this.fetchSaleCount(); // 新增获取卖出商品数量
   },
 };
 </script>

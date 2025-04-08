@@ -4,6 +4,7 @@ const productController = require("../controllers/productController");
 const jwtService = require("../services/jwtService");
 const userController = require("../controllers/userController");
 const orderController = require("../controllers/orderController");
+const myController = require("../controllers/myController");
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -57,4 +58,7 @@ router.get(
   jwtService.authMiddleware,
   userController.getFavoriteCount
 );
+router.get("/sale-count", jwtService.authMiddleware, myController.getSaleCount);
+// 添加检查商品是否已售出的路由
+router.get("/check-product-sold/:productId", jwtService.authMiddleware, myController.checkProductSold);
 module.exports = router;

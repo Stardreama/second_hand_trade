@@ -132,7 +132,7 @@ export default {
 
         if (res.code === 200) {
           uni.showToast({
-            title: "确认收货成功",
+            title: "确认收货成功，去提醒卖家标记为已经出售",
             icon: "success"
           });
 
