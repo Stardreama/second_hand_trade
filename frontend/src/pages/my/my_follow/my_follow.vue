@@ -1,14 +1,7 @@
 <template>
     <view class="container">
-        <!-- 标题区域 -->
-        <!-- <view class="header">
-            <text class="header-title">我的关注</text>
-        </view> -->
-        <!-- 分割线 -->
-        <!-- <view class="divider"></view> -->
-        <!-- 关注列表 -->
-        <!-- 在关注列表中给每个项目添加点击事件 -->
-        <scroll-view class="follow-list" :scroll-y="true">
+        <!-- 有关注人时显示列表 -->
+        <scroll-view v-if="followees && followees.length > 0" class="follow-list" :scroll-y="true">
             <block v-for="item in followees" :key="item.student_id">
                 <view class="follow-item" @tap="navigateToUserInfo(item.student_id)">
                     <image class="avatar" :src="getImageUrl(item.avatar)" mode="aspectFill"></image>
@@ -17,6 +10,16 @@
                 <view class="item-divider"></view>
             </block>
         </scroll-view>
+
+        <!-- 无关注人时显示空状态 -->
+        <view v-else class="empty-state">
+            <view class="icon-container">
+                <text class="empty-icon">❤</text>
+            </view>
+            <view class="empty-text">暂无关注</view>
+            <view class="empty-subtext">关注感兴趣的卖家，不错过他们的新商品</view>
+            <button class="cu-btn bg-blue margin-top" @tap="goToHome">去逛逛</button>
+        </view>
     </view>
 </template>
 
@@ -90,6 +93,12 @@ export default {
                     url: `/pages/my/user_info/user_info?id=${userId}`
                 });
             }
+        },
+        // 跳转到首页
+        goToHome() {
+            uni.switchTab({
+                url: "/pages/home/home"
+            });
         }
     }
 };
@@ -148,5 +157,56 @@ export default {
     height: 1px;
     background-color: #f0f0f0;
     margin: 0 0 10px 60px;
+}
+
+
+
+/* 空状态样式 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60rpx 0;
+    background-color: #fff;
+    border-radius: 12rpx;
+    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+    margin: 30rpx;
+    height: 60vh;
+}
+
+.icon-container {
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    width: 160rpx;
+    height: 160rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30rpx;
+}
+
+.empty-icon {
+    font-size: 80rpx;
+    color: #1890ff;
+}
+
+.empty-text {
+    font-size: 32rpx;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 20rpx;
+}
+
+.empty-subtext {
+    font-size: 28rpx;
+    color: #999;
+    margin-bottom: 40rpx;
+    text-align: center;
+    padding: 0 30rpx;
+}
+
+.margin-top {
+    margin-top: 20rpx;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
     <view class="container">
-        <scroll-view class="fans-list" :scroll-y="true">
+        <scroll-view v-if="fans && fans.length > 0" class="fans-list" :scroll-y="true">
             <block v-for="item in fans" :key="item.student_id">
                 <view class="fans-item">
                     <!-- 用户信息部分（点击跳转到用户详情） -->
@@ -41,6 +41,14 @@
                 <view class="item-divider"></view>
             </block>
         </scroll-view>
+        <!-- 无粉丝时显示空状态 -->
+        <view v-else class="empty-state">
+            <view class="icon-container">
+                <text class="empty-icon">👤</text>
+            </view>
+            <view class="empty-text">暂无粉丝</view>
+            <view class="empty-subtext">发布优质商品，吸引更多粉丝关注</view>
+        </view>
     </view>
 </template>
 
@@ -514,5 +522,54 @@ export default {
         transform: translateY(-425rpx) translateX(-30rpx) rotate(20deg) scale(0);
         opacity: 0;
     }
+}
+
+
+
+
+
+/* 空状态样式 */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60rpx 0;
+    background-color: #fff;
+    border-radius: 12rpx;
+    box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+    margin: 30rpx;
+    height: 60vh;
+}
+
+.icon-container {
+    background-color: #f5f5f5;
+    border-radius: 50%;
+    width: 160rpx;
+    height: 160rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 30rpx;
+}
+
+.empty-icon {
+    font-size: 80rpx;
+    color: #1890ff;
+}
+
+.empty-text {
+    font-size: 32rpx;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 20rpx;
+}
+
+.empty-subtext {
+    font-size: 28rpx;
+    color: #999;
+    margin-bottom: 40rpx;
+    text-align: center;
+    padding: 0 30rpx;
 }
 </style>
