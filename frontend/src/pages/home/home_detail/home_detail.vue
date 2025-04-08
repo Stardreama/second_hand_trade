@@ -95,14 +95,14 @@
         <view class="action-left">
           <view class="action-icon" @tap="toggleLike">
             <uni-icons :type="liked ? 'hand-up-filled' : 'hand-up'" :color="liked ? '#ff7900' : '#666'"
-              size="24"></uni-icons>
+              size="34"></uni-icons>
             <text :class="['action-text', liked ? 'text-orange' : 'text-gray']">点赞</text>
           </view>
 
           <!-- 收藏按钮 -->
           <view class="action-icon" @tap="toggleFavorite">
             <uni-icons :type="favorited ? 'heart-filled' : 'heart'" :color="favorited ? '#ff0000' : '#666'"
-              size="24"></uni-icons>
+              size="34"></uni-icons>
             <text :class="['action-text', favorited ? 'text-red' : 'text-gray']">收藏</text>
           </view>
 
@@ -111,7 +111,7 @@
             productDetail.seller_id !== userInfo.student_id &&
             productDetail.is_off_shelf !== 1
           ">
-            <uni-icons type="chat" color="#007aff" size="24"></uni-icons>
+            <uni-icons type="chat" color="#007aff" size="34"></uni-icons>
             <text class="action-text text-blue">聊一聊</text>
           </view>
         </view>
@@ -544,7 +544,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10rpx 30rpx;
+  padding: 10rpx 10rpx;
   height: 100rpx;
 }
 
