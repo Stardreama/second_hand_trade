@@ -192,7 +192,7 @@
     <view class="ai-assistant-container">
       <!-- 左侧小助手形象 -->
       <view class="ai-mascot-container">
-        <image src="/static/images/ai-mascot.png" class="ai-mascot-image" mode="aspectFit"></image>
+        <image src="/static/img/ai-mascot.png" class="ai-mascot-image" mode="aspectFit"></image>
         <view class="ai-speech-bubble">
           <text class="ai-speech-text">Hi~我是AI小助手！告诉我你想买/卖什么，我来帮你写介绍喔~</text>
         </view>
@@ -666,7 +666,7 @@ export default {
 "type": "买",
 "title": "求购王道2024计组",
 "introduction": "急需一本王道2024年计算机组成原理考研教材，85新以上即可，最好无笔记无破损。预算40元左右，比网上便宜些就行。希望校内当面交易，可灵活协商时间地点。本人计科专业考研备考中，诚心购买，请有闲置的同学尽快联系我。"
-},请注意，输出内容一定只要买或者卖这两个中的一个，一定不要同时输出两部分`;
+},请注意，输出内容一定只要买或者卖这两个json中的一个，一定不要同时输出两部分`;
 			this.isGenerating = true;
 			const token = uni.getStorageSync('token');
 
