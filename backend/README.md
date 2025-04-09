@@ -112,8 +112,8 @@ DROP TABLE IF EXISTS `orders`;
 CREATE TABLE `orders`  (
   `order_id` int NOT NULL AUTO_INCREMENT,
   `product_id` int NOT NULL,
-  `buyer_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
-  `seller_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `buyer_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `seller_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`order_id`) USING BTREE,
   INDEX `product_id`(`product_id` ASC) USING BTREE,
