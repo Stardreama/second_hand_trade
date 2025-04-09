@@ -52,7 +52,6 @@
 			  </view>
 			  <view class="cu-tag bg-blue cover-icon" @tap.stop="SetAsCover" :data-index="index">
 				<uni-icons type="star" size="20" color="#ffffff"></uni-icons>
-				<text v-if="coverIndex === index" class="cover-text">封面</text>
 			  </view>
 			</view>
 			<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
@@ -920,18 +919,35 @@
 	background-color: #f8f8f8;
 	padding: 16rpx;
 }
-
+/* 调整图片尺寸和边距 */
+.bg-img image {
+	width: 100%;
+	height: 100%;
+	border-radius: 8rpx;
+}
+/* 确保图片容器有足够空间显示两个按钮 */
 .bg-img {
-	overflow: hidden;
-	border-radius: 12rpx;
-	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
 	position: relative;
+	min-height: 120rpx;
+	overflow: visible !important;
+	/* 允许按钮显示在边界外 */
+	margin: 10rpx;
 }
 
 .delete-icon {
-	padding: 8rpx;
-	border-radius: 50%;
-	font-size: 24rpx;
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;  /* 从右侧改为左侧 */
+  padding: 8rpx;
+  border-radius: 50%;
+  font-size: 24rpx;
+  z-index: 1;
+  background-color: rgba(255, 0, 0, 0.8); /* 保持红色背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40rpx;
+  height: 40rpx;
 }
 
 .upload-box {
@@ -1076,18 +1092,19 @@
 
 /* 封面标记图标样式 */
 .cover-icon {
-	position: absolute;
-	top: 8rpx;
-	right: 8rpx;
-	padding: 8rpx;
-	border-radius: 8rpx;
-	font-size: 24rpx;
-	z-index: 1;
-}
-
-.cover-text {
-	margin-left: 8rpx;
-	font-size: 22rpx;
+  position: absolute;
+  top: 8rpx;     /* 改为 top 让它出现在顶部 */
+  right: 8rpx;   /* 保持在右边 */
+  padding: 8rpx;
+  border-radius: 50%;
+  font-size: 24rpx;
+  z-index: 1;
+  background-color: rgba(24, 144, 255, 0.8); /* 与删除按钮类似的圆形样式，但颜色维持蓝色 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40rpx;
+  height: 40rpx;
 }
 
 /* 当图片既是封面又要删除时，调整位置 */

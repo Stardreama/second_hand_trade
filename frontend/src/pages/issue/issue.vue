@@ -52,8 +52,6 @@
 						</view>
 						<view class="cu-tag bg-blue cover-icon" @tap.stop="SetAsCover" :data-index="index">
 							<uni-icons type="star" size="20" color="#ffffff"></uni-icons>
-							<!-- 显示封面标记 -->
-							<text v-if="coverIndex === index" class="cover-text">封面</text>
 						</view>
 					</view>
 					<view class="solids upload-box" @tap="ChooseImage" v-if="imgList.length < 5">
@@ -65,16 +63,16 @@
 			<!-- end -->
 
 			<view class="cu-form-group form-item">
-  <view class="title">
-    <uni-icons type="location" size="36" color="#1890ff" class="form-icon"></uni-icons>
-    <text>选择地址</text>
-  </view>
-  <picker @change="bindAddressChange" :range="addressList" range-key="fullAddress">
-    <view class="picker">
-      {{ selectedAddress.fullAddress || '请选择地址' }}
-    </view>
-  </picker>
-</view>
+				<view class="title">
+					<uni-icons type="location" size="36" color="#1890ff" class="form-icon"></uni-icons>
+					<text>选择地址</text>
+				</view>
+				<picker @change="bindAddressChange" :range="addressList" range-key="fullAddress">
+					<view class="picker">
+						{{ selectedAddress.fullAddress || '请选择地址' }}
+					</view>
+				</picker>
+			</view>
 			<!-- end -->
 
 			<!-- 价钱 -->
@@ -180,57 +178,58 @@
 		</view>
 
 		<!-- AI助手模态框 -->
-<view class="cu-modal" :class="aiModalVisible ? 'show' : ''" @tap="hideAiModal">
-  <view class="cu-dialog ai-dialog-enhanced" @tap.stop>
-    <view class="cu-bar bg-white justify-end">
-      <view class="content">AI 智能助手</view>
-      <view class="action" @tap="hideAiModal">
-        <uni-icons type="close" size="24" color="#333333"></uni-icons>
-      </view>
-    </view>
-    
-    <view class="ai-assistant-container">
-      <!-- 左侧小助手形象 -->
-      <view class="ai-mascot-container">
-        <image src="/static/img/ai-mascot.png" class="ai-mascot-image" mode="aspectFit"></image>
-        <view class="ai-speech-bubble">
-          <text class="ai-speech-text">Hi~我是AI小助手！告诉我你想买/卖什么，我来帮你写介绍喔~</text>
-        </view>
-      </view>
-      
-      <!-- 右侧输入和结果区域 -->
-      <view class="ai-content-area">
-  <view class="ai-input-container">
-    <textarea v-model="aiUserInput" class="ai-input" placeholder="例如：我想要卖王道考研2024计组" auto-height />
-  </view>
-  <view class="ai-button-container">
-    <button class="cu-btn bg-blue ai-generate-btn" @tap="generateContent" :loading="isGenerating"
-      :disabled="isGenerating">
-      <uni-icons v-if="!isGenerating" type="refresh" size="22" color="#ffffff"></uni-icons>
-      <text>{{ isGenerating ? '生成中...' : '生成' }}</text>
-    </button>
-  </view>
-        
-        <view class="ai-result-container" v-if="aiResult">
-          <view class="ai-result-title">
-            <text class="ai-label">类型:</text>
-            <text class="ai-content">{{ aiResult.type }}</text>
-          </view>
-          <view class="ai-result-title">
-            <text class="ai-label">标题:</text>
-            <text class="ai-content">{{ aiResult.title }}</text>
-            <button class="cu-btn bg-blue sm ai-use-btn" @tap="useAiTitle">使用</button>
-          </view>
-          <view class="ai-result-content">
-            <view class="ai-label">商品介绍:</view>
-            <text class="ai-introduction">{{ aiResult.introduction }}</text>
-            <button class="cu-btn bg-blue sm ai-use-btn" @tap="useAiContent">使用</button>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-</view>
+		<view class="cu-modal" :class="aiModalVisible ? 'show' : ''" @tap="hideAiModal">
+			<view class="cu-dialog ai-dialog-enhanced" @tap.stop>
+				<view class="cu-bar bg-white justify-end">
+					<view class="content">AI 智能助手</view>
+					<view class="action" @tap="hideAiModal">
+						<uni-icons type="close" size="24" color="#333333"></uni-icons>
+					</view>
+				</view>
+
+				<view class="ai-assistant-container">
+					<!-- 左侧小助手形象 -->
+					<view class="ai-mascot-container">
+						<image src="/static/img/ai-mascot.png" class="ai-mascot-image" mode="aspectFit"></image>
+						<view class="ai-speech-bubble">
+							<text class="ai-speech-text">Hi~我是AI小助手！告诉我你想买/卖什么，我来帮你写介绍喔~</text>
+						</view>
+					</view>
+
+					<!-- 右侧输入和结果区域 -->
+					<view class="ai-content-area">
+						<view class="ai-input-container">
+							<textarea v-model="aiUserInput" class="ai-input" placeholder="例如：我想要卖王道考研2024计组"
+								auto-height />
+						</view>
+						<view class="ai-button-container">
+							<button class="cu-btn bg-blue ai-generate-btn" @tap="generateContent"
+								:loading="isGenerating" :disabled="isGenerating">
+								<uni-icons v-if="!isGenerating" type="refresh" size="22" color="#ffffff"></uni-icons>
+								<text>{{ isGenerating ? '生成中...' : '生成' }}</text>
+							</button>
+						</view>
+
+						<view class="ai-result-container" v-if="aiResult">
+							<view class="ai-result-title">
+								<text class="ai-label">类型:</text>
+								<text class="ai-content">{{ aiResult.type }}</text>
+							</view>
+							<view class="ai-result-title">
+								<text class="ai-label">标题:</text>
+								<text class="ai-content">{{ aiResult.title }}</text>
+								<button class="cu-btn bg-blue sm ai-use-btn" @tap="useAiTitle">使用</button>
+							</view>
+							<view class="ai-result-content">
+								<view class="ai-label">商品介绍:</view>
+								<text class="ai-introduction">{{ aiResult.introduction }}</text>
+								<button class="cu-btn bg-blue sm ai-use-btn" @tap="useAiContent">使用</button>
+							</view>
+						</view>
+					</view>
+				</view>
+			</view>
+		</view>
 	</view>
 </template>
 
@@ -285,54 +284,54 @@ export default {
 			aiUserInput: '',
 			aiResult: null,
 			isGenerating: false,
-			  addressList: [],       // 用户地址列表
-    selectedAddress: {}   // 选中的地址
+			addressList: [],       // 用户地址列表
+			selectedAddress: {}   // 选中的地址
 		}
 	},
 	methods: {
-		 // 修改后的前端获取地址方法
-		 async loadUserAddress() {
-  const token = uni.getStorageSync('token');
-  try {
-    // 从本地存储获取用户ID（需要确保登录时已存储）
-    const userId = uni.getStorageSync('userInfo').student_id;
-    
-    const res = await uni.request({
-      url: 'http://localhost:3000/api/address',
-      method: 'GET',
-      header: {
-        'Authorization': `Bearer ${token}`
-      },
-      data: {
-        user_id: userId // 通过参数传递用户ID
-      }
-    });
+		// 修改后的前端获取地址方法
+		async loadUserAddress() {
+			const token = uni.getStorageSync('token');
+			try {
+				// 从本地存储获取用户ID（需要确保登录时已存储）
+				const userId = uni.getStorageSync('userInfo').student_id;
 
-    if (res.statusCode === 200) {
-      this.addressList = res.data.data.map(addr => ({
-        ...addr,
-        fullAddress: `${addr.province} ${addr.city} ${addr.district || ''} ${addr.address}`
-      }));
-      // 设置默认地址
-      const defaultAddr = this.addressList.find(addr => addr.is_default);
-      if (defaultAddr) this.selectedAddress = defaultAddr;
-      
-      // 移除了这里的自动弹出提示框部分
-    }
-  } catch (error) {
-    console.error('获取地址失败:', error);
-    uni.showToast({
-      title: '地址获取失败',
-      icon: 'none'
-    });
-  }
-},
+				const res = await uni.request({
+					url: 'http://localhost:3000/api/address',
+					method: 'GET',
+					header: {
+						'Authorization': `Bearer ${token}`
+					},
+					data: {
+						user_id: userId // 通过参数传递用户ID
+					}
+				});
 
-  // 地址选择改变
-  bindAddressChange(e) {
-    const index = e.detail.value;
-    this.selectedAddress = this.addressList[index];
-  },
+				if (res.statusCode === 200) {
+					this.addressList = res.data.data.map(addr => ({
+						...addr,
+						fullAddress: `${addr.province} ${addr.city} ${addr.district || ''} ${addr.address}`
+					}));
+					// 设置默认地址
+					const defaultAddr = this.addressList.find(addr => addr.is_default);
+					if (defaultAddr) this.selectedAddress = defaultAddr;
+
+					// 移除了这里的自动弹出提示框部分
+				}
+			} catch (error) {
+				console.error('获取地址失败:', error);
+				uni.showToast({
+					title: '地址获取失败',
+					icon: 'none'
+				});
+			}
+		},
+
+		// 地址选择改变
+		bindAddressChange(e) {
+			const index = e.detail.value;
+			this.selectedAddress = this.addressList[index];
+		},
 
 		// 切换标签页
 		switchTab(index) {
@@ -366,28 +365,28 @@ export default {
 		},
 		formSubmit() {
 			console.log("Title:", this.title);
-  const token = uni.getStorageSync('token');
-  let isValid = true;
-  // 验证标题
-  if (!this.validateField('title')) {
-    isValid = false;
-  }
-  
-  // 验证地址
-  if (!this.selectedAddress.address_id) {
-    uni.showModal({
-      title: '提示',
-      content: '您还没有添加任何地址，请先添加收货地址',
-      showCancel: false,
-      success: () => {
-        uni.navigateTo({
-          url: '/pages/my/my_address/my_address'
-        });
-      }
-    });
-    return;
-  }
-  
+			const token = uni.getStorageSync('token');
+			let isValid = true;
+			// 验证标题
+			if (!this.validateField('title')) {
+				isValid = false;
+			}
+
+			// 验证地址
+			if (!this.selectedAddress.address_id) {
+				uni.showModal({
+					title: '提示',
+					content: '您还没有添加任何地址，请先添加收货地址',
+					showCancel: false,
+					success: () => {
+						uni.navigateTo({
+							url: '/pages/my/my_address/my_address'
+						});
+					}
+				});
+				return;
+			}
+
 			// 验证内容
 			if (!this.validateField('content')) {
 				isValid = false;
@@ -656,7 +655,7 @@ export default {
 				});
 				return;
 			}
-			let my_input=this.aiUserInput+`输出格式举例为：
+			let my_input = this.aiUserInput + `输出格式举例为：
 {
 "type": "卖",
 "title": "王道2024",
@@ -861,7 +860,7 @@ export default {
 
 	},
 	onShow() {
-this.loadUserAddress(); // 页面显示时加载地址
+		this.loadUserAddress(); // 页面显示时加载地址
 	},
 	onHide() {
 
@@ -994,18 +993,38 @@ this.loadUserAddress(); // 页面显示时加载地址
 	padding: 16rpx;
 }
 
+/* 确保图片容器有足够空间显示两个按钮 */
 .bg-img {
-	overflow: hidden;
-	border-radius: 12rpx;
-	box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.08);
 	position: relative;
+	min-height: 120rpx;
+	overflow: visible !important;
+	/* 允许按钮显示在边界外 */
+	margin: 10rpx;
+}
+
+/* 调整图片尺寸和边距 */
+.bg-img image {
+	width: 100%;
+	height: 100%;
+	border-radius: 8rpx;
 }
 
 .delete-icon {
-	padding: 8rpx;
-	border-radius: 50%;
-	font-size: 24rpx;
+  position: absolute;
+  top: 8rpx;
+  left: 8rpx;  /* 从右侧改为左侧 */
+  padding: 8rpx;
+  border-radius: 50%;
+  font-size: 24rpx;
+  z-index: 1;
+  background-color: rgba(255, 0, 0, 0.8); /* 保持红色背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40rpx;
+  height: 40rpx;
 }
+
 
 .upload-box {
 	border: 2rpx dashed #ddd;
@@ -1150,25 +1169,27 @@ this.loadUserAddress(); // 页面显示时加载地址
 
 /* 封面标记图标样式 */
 .cover-icon {
-	position: absolute;
-	top: 8rpx;
-	right: 8rpx;
-	padding: 8rpx;
-	border-radius: 8rpx;
-	font-size: 24rpx;
-	z-index: 1;
+  position: absolute;
+  top: 8rpx;     /* 改为 top 让它出现在顶部 */
+  right: 8rpx;   /* 保持在右边 */
+  padding: 8rpx;
+  border-radius: 50%;
+  font-size: 24rpx;
+  z-index: 1;
+  background-color: rgba(24, 144, 255, 0.8); /* 与删除按钮类似的圆形样式，但颜色维持蓝色 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40rpx;
+  height: 40rpx;
 }
-
+/* 
 .cover-text {
-	margin-left: 8rpx;
-	font-size: 22rpx;
-}
+	margin-left: 6rpx;
+	font-size: 20rpx;
+	white-space: nowrap;
+} */
 
-/* 当图片既是封面又要删除时，调整位置 */
-.bg-img .delete-icon {
-	top: 8rpx;
-	left: 8rpx;
-}
 
 /* 验证动画 */
 @keyframes shake {
@@ -1277,137 +1298,143 @@ this.loadUserAddress(); // 页面显示时加载地址
 	height: 56rpx;
 	line-height: 56rpx;
 }
+
 /* 美化后的AI模态框样式 */
 .ai-dialog-enhanced {
-  width: 90%;
-  max-width: 650rpx;
-  max-height: 80vh;
-  border-radius: 20rpx;
-  overflow: hidden;
-  padding-bottom: 30rpx;
+	width: 90%;
+	max-width: 650rpx;
+	max-height: 80vh;
+	border-radius: 20rpx;
+	overflow: hidden;
+	padding-bottom: 30rpx;
 }
 
 .ai-assistant-container {
-  display: flex;
-  padding: 20rpx;
+	display: flex;
+	padding: 20rpx;
 }
 
 .ai-mascot-container {
-  width: 180rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-right: 20rpx;
+	width: 180rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-right: 20rpx;
 }
 
 .ai-mascot-image {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  margin-bottom: 15rpx;
-  border: 4rpx solid #e6f7ff;
-  box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.15);
+	width: 120rpx;
+	height: 120rpx;
+	border-radius: 50%;
+	margin-bottom: 15rpx;
+	border: 4rpx solid #e6f7ff;
+	box-shadow: 0 4rpx 12rpx rgba(24, 144, 255, 0.15);
 }
 
 .ai-speech-bubble {
-  position: relative;
-  background-color: #e6f7ff;
-  border-radius: 12rpx;
-  padding: 12rpx;
-  margin-top: 10rpx;
-  width: 160rpx;
+	position: relative;
+	background-color: #e6f7ff;
+	border-radius: 12rpx;
+	padding: 12rpx;
+	margin-top: 10rpx;
+	width: 160rpx;
 }
 
 .ai-speech-bubble:before {
-  content: '';
-  position: absolute;
-  top: -10rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 10rpx solid transparent;
-  border-right: 10rpx solid transparent;
-  border-bottom: 10rpx solid #e6f7ff;
+	content: '';
+	position: absolute;
+	top: -10rpx;
+	left: 50%;
+	transform: translateX(-50%);
+	border-left: 10rpx solid transparent;
+	border-right: 10rpx solid transparent;
+	border-bottom: 10rpx solid #e6f7ff;
 }
 
 .ai-speech-text {
-  font-size: 20rpx;
-  color: #2563eb;
-  line-height: 1.4;
+	font-size: 20rpx;
+	color: #2563eb;
+	line-height: 1.4;
 }
 
 .ai-content-area {
-  flex: 1;
+	flex: 1;
 }
 
 .ai-input-container {
 	display: block;
-  margin-bottom: 15rpx;
-  width:100%;
+	margin-bottom: 15rpx;
+	width: 100%;
 }
 
 .ai-input {
 	width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  padding: 16rpx;  /* 增加内边距 */
-  background-color: #f8f9fa;
-  text-align: left;
-  text-indent: 0;
-  line-height: 40rpx; /* 增加行高 */
-  min-height: 80rpx; /* 设置最小高度 */
-  vertical-align: top; /* 确保文本顶部对齐 */
+	border: 1px solid #ddd;
+	border-radius: 12rpx;
+	font-size: 28rpx;
+	padding: 16rpx;
+	/* 增加内边距 */
+	background-color: #f8f9fa;
+	text-align: left;
+	text-indent: 0;
+	line-height: 40rpx;
+	/* 增加行高 */
+	min-height: 80rpx;
+	/* 设置最小高度 */
+	vertical-align: top;
+	/* 确保文本顶部对齐 */
 }
 
 .ai-button-container {
 	display: flex;
-  justify-content: flex-end; /* 按钮右对齐 */
-  margin-bottom: 20rpx;
-  width: 100%;
+	justify-content: flex-end;
+	/* 按钮右对齐 */
+	margin-bottom: 20rpx;
+	width: 100%;
 }
 
 .ai-generate-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 30rpx;
-  border-radius: 12rpx;
-  height: 70rpx;
-  background: linear-gradient(135deg, #3B7AEF, #2563eb);
-  min-width: 180rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 30rpx;
+	border-radius: 12rpx;
+	height: 70rpx;
+	background: linear-gradient(135deg, #3B7AEF, #2563eb);
+	min-width: 180rpx;
 }
 
 .ai-result-container {
-  background-color: #f8f9fa;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin-top: 20rpx;
-  border: 1px solid #e6f7ff;
-  max-height: 400rpx;
-  overflow-y: auto;
+	background-color: #f8f9fa;
+	border-radius: 16rpx;
+	padding: 24rpx;
+	margin-top: 20rpx;
+	border: 1px solid #e6f7ff;
+	max-height: 400rpx;
+	overflow-y: auto;
 }
 
 .ai-introduction {
-  display: block;
-  margin-top: 10rpx;
-  font-size: 28rpx;
-  line-height: 1.6;
-  color: #333;
-  background-color: white;
-  padding: 20rpx;
-  border-radius: 12rpx;
-  border: 1px solid #eee;
-  max-height: 200rpx;
-  overflow-y: auto;
+	display: block;
+	margin-top: 10rpx;
+	font-size: 28rpx;
+	line-height: 1.6;
+	color: #333;
+	background-color: white;
+	padding: 20rpx;
+	border-radius: 12rpx;
+	border: 1px solid #eee;
+	max-height: 200rpx;
+	overflow-y: auto;
 }
 
 .ai-use-btn {
-  margin-left: 16rpx;
-  padding: 0 20rpx;
-  height: 56rpx;
-  line-height: 56rpx;
-  background: linear-gradient(135deg, #3B7AEF, #2563eb);
-  border-radius: 8rpx;
-  color: #fff;
+	margin-left: 16rpx;
+	padding: 0 20rpx;
+	height: 56rpx;
+	line-height: 56rpx;
+	background: linear-gradient(135deg, #3B7AEF, #2563eb);
+	border-radius: 8rpx;
+	color: #fff;
 }
 </style>
