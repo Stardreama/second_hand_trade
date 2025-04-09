@@ -69,7 +69,7 @@
             <!-- 根据下架状态显示不同的操作按钮 -->
             <block v-if="item.is_sold">
               <view class="cu-tag line-red">已售出</view>
-              <view class="cu-tag line-yellow" @tap="actionSheetTap(item)">更多</view>
+              <view class="cu-tag line-gray">已售出商品不可操作</view>
             </block>
             <block v-else-if="item.is_off_shelf === 1">
               <view class="cu-tag line-blue" @tap="onShelfProduct(item.product_id)">重新上架</view>
@@ -374,8 +374,12 @@ export default {
   let itemList = [];
   
   if(item.is_sold) {
-    // 已售出的商品只能删除
-    itemList = ["删除"];
+    // 已售出的商品不提供任何操作选项
+    uni.showToast({
+      title: "已售出商品无法操作",
+      icon: "none"
+    });
+    return; // 直接返回，不显示操作菜单
   } else if(item.is_off_shelf === 1) {
     // 已下架但未售出的商品可以标记为已卖出或删除
     itemList = ["标记为已卖出", "删除"];
@@ -387,17 +391,12 @@ export default {
   uni.showActionSheet({
     itemList: itemList,
     success: (e) => {
-      if(item.is_sold) {
-        // 已售出商品
-        if(e.tapIndex === 0) {
-          this.deleteProduct(item.product_id);
-        }
-      } else if(item.is_off_shelf === 1) {
+      if(item.is_off_shelf === 1) {
         // 已下架商品
         if(e.tapIndex === 0) {
           this.markAsSold(item);
         } else if(e.tapIndex === 1) {
-          this.deleteProduct(item.product_id);
+          this.deleteProduct(item.product_id, item.is_sold);
         }
       } else {
         // 在售商品
@@ -406,7 +405,7 @@ export default {
         } else if(e.tapIndex === 1) {
           this.offShelfProduct(item.product_id);
         } else if(e.tapIndex === 2) {
-          this.deleteProduct(item.product_id);
+          this.deleteProduct(item.product_id, item.is_sold);
         }
       }
     },
@@ -510,56 +509,66 @@ export default {
     },
 
     // 删除商品的函数
-    async deleteProduct(productId) {
-      try {
-        // 先弹出确认弹窗
-        uni.showModal({
-          title: "确认删除",
-          content: "确定要删除这个商品吗？删除后无法恢复",
-          confirmColor: "#FF0000",
-          success: async (res) => {
-            if (res.confirm) {
-              // 用户点了确定，执行删除操作
-              const token = uni.getStorageSync("token");
-              const { data: res } = await uni.request({
-                url: "http://localhost:3000/api/products/delete",
-                method: "POST",
-                header: {
-                  "Content-Type": "application/json",
-                  Authorization: "Bearer " + token,
-                },
-                data: { productId },
-              });
+    async deleteProduct(productId, isSold) {
+  // 首先检查商品是否已售出
+  if (isSold) {
+    uni.showToast({
+      title: "已售出商品不能删除",
+      icon: "none",
+      duration: 2000
+    });
+    return; // 如果是已售出商品，直接返回不执行删除操作
+  }
 
-              if (res.code === 200) {
-                // 删除成功，显示成功提示
-                uni.showToast({
-                  title: "商品删除成功",
-                  icon: "success",
-                });
+  try {
+    // 先弹出确认弹窗
+    uni.showModal({
+      title: "确认删除",
+      content: "确定要删除这个商品吗？删除后无法恢复",
+      confirmColor: "#FF0000",
+      success: async (res) => {
+        if (res.confirm) {
+          // 用户点了确定，执行删除操作
+          const token = uni.getStorageSync("token");
+          const { data: res } = await uni.request({
+            url: "http://localhost:3000/api/products/delete",
+            method: "POST",
+            header: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+            },
+            data: { productId },
+          });
 
-                // 从界面列表中移除该商品（不重新加载）
-                this.productList = this.productList.filter(
-                  (item) => item.product_id !== productId
-                );
-              } else {
-                uni.showToast({
-                  title: res.message || "删除失败",
-                  icon: "none",
-                });
-              }
-            }
-            // 用户点了取消，不做任何操作
-          },
-        });
-      } catch (error) {
-        console.error("删除商品时发生错误:", error);
-        uni.showToast({
-          title: "删除失败，请稍后再试",
-          icon: "none",
-        });
-      }
-    },
+          if (res.code === 200) {
+            // 删除成功，显示成功提示
+            uni.showToast({
+              title: "商品删除成功",
+              icon: "success",
+            });
+
+            // 从界面列表中移除该商品（不重新加载）
+            this.productList = this.productList.filter(
+              (item) => item.product_id !== productId
+            );
+          } else {
+            uni.showToast({
+              title: res.message || "删除失败",
+              icon: "none",
+            });
+          }
+        }
+        // 用户点了取消，不做任何操作
+      },
+    });
+  } catch (error) {
+    console.error("删除商品时发生错误:", error);
+    uni.showToast({
+      title: "删除失败，请稍后再试",
+      icon: "none",
+    });
+  }
+},
 
     // 确认价格修改
     async confirmPriceChange() {

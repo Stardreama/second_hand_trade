@@ -180,7 +180,10 @@ const markProductAsSold = async (req, res) => {
       // 订单已存在，检查买家ID是否存在
       if (existingOrder[0].buyer_id) {
         // 买家ID已存在，更新商品为已下架
-        await query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [productId]);
+        await Promise.all([
+          query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [productId]),
+          query("UPDATE orders SET seller_id = ? WHERE product_id = ?", [sellerId, productId])
+        ]);
         return res.json({ code: 200, message: "商品已标记为售出" });
       } else {
         // 买家ID不存在，提示卖家通知买家
@@ -234,14 +237,9 @@ const markAsReceived = async (req, res) => {
 
       // 创建新订单
       await query(
-        "INSERT INTO orders (product_id, buyer_id, seller_id) VALUES (?, ?, ?)",
-        [productId, buyerId, product[0].seller_id]
+        "INSERT INTO orders (product_id, buyer_id) VALUES (?, ?)",
+        [productId, buyerId ]
       );
-
-      // // 将商品标记为下架
-      // await query("UPDATE products SET is_off_shelf = 1 WHERE product_id = ?", [
-      //   productId,
-      // ]);
     }
 
     res.json({ code: 200, message: "已确认收货" });

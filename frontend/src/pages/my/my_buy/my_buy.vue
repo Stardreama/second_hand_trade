@@ -90,42 +90,6 @@ export default {
         },
       });
     },
-    // 新增联系卖家方法
-    // async getConversationForOrder(item) {
-    //   return new Promise((resolve, reject) => {
-    //     const token = uni.getStorageSync("token");
-    //     if (!token) {
-    //       uni.showToast({ title: "请先登录", icon: "none" });
-    //       reject("用户未登录");
-    //       return;
-    //     }
-
-    //     uni.request({
-    //       url: "http://localhost:3000/api/conversations",
-    //       method: "GET",
-    //       header: { Authorization: `Bearer ${token}` },
-    //       success: (res) => {
-    //         if (res.statusCode === 200) {
-    //           const conversation = res.data.find(
-    //             (c) =>
-    //               c.product_id == item.product_id &&
-    //               c.seller_id == item.seller_id
-    //           );
-    //           if (conversation) {
-    //             resolve(conversation.conversation_id);
-    //           } else {
-    //             // 如果没有找到会话则创建新会话
-    //             this.createNewConversation(item)
-    //               .then((newConvId) => resolve(newConvId))
-    //               .catch((err) => reject(err));
-    //           }
-    //         }
-    //       },
-    //       fail: reject,
-    //     });
-    //   });
-    // },
-
     // 创建新会话
     async goChatSeller(item) {
       const token = uni.getStorageSync("token");

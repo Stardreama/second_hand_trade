@@ -48,7 +48,10 @@ const checkProductSold = async (req, res) => {
     res.status(200).json({
       code: 200,
       data: {
-        isSold: results && results.length > 0,
+        isSold: results && 
+        results.length > 0 && 
+        results[0].buyer_id !== null && 
+        results[0].seller_id !== null,
         hasBuyer: results && results.length > 0 && results[0].buyer_id !== null,
       },
     });
