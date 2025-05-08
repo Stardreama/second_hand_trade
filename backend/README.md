@@ -6,12 +6,6 @@
 - **数据库:** MySQL
 - **核心依赖库:** Express, MySQL2, JWT, Multer，websocket
 
-## 数据库配置
-
-- **数据库名称:** second_hand_trade
-- **数据库用户名:** root
-- **数据库密码:** admin123
-- **数据库端口:** 5000
 
 ### 数据库创建语句
 
@@ -203,8 +197,6 @@ DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=admin123
 DB_DATABASE=second_hand_trade
-BAIDU_OCR_AK="DoeM6YLmqZDOB9FTVOC6NsQE"
-BAIDU_OCR_SK="Ut9q9bvTw0LauqQMbc30PY0NJlx37FXb"
 ```
 
 ### 2. 运行项目
